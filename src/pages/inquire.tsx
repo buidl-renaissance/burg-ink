@@ -294,7 +294,8 @@ const InquirePage: FC = () => {
         inquiryType: 'tattoo',
         message: '',
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error(error);
       setErrors({ form: 'Something went wrong. Please try again later.' });
     } finally {
       setIsSubmitting(false);
@@ -308,7 +309,7 @@ const InquirePage: FC = () => {
 
         <IntroText>
           Interested in commissioning artwork or scheduling a tattoo
-          consultation? Fill out the form below, and I'll get back to you as
+          consultation? Fill out the form below, and I&apos;ll get back to you as
           soon as possible.
         </IntroText>
 
@@ -316,7 +317,7 @@ const InquirePage: FC = () => {
           <SuccessMessage>
             <h3>Thank you for your inquiry!</h3>
             <p>
-              I've received your message and will respond within 2-3 business
+              I&apos;ve received your message and will respond within 2-3 business
               days.
             </p>
           </SuccessMessage>

@@ -131,12 +131,12 @@ export const getUserId = () => {
   return jwtData.sub;
 };
 
-const authorizedRequest = async (endpoint: string, options: any = {}) => {
-  const headers = options?.headers ?? {};
+const authorizedRequest = async (endpoint: string, options: RequestInit = {} as RequestInit) => {
+  const headers = new Headers(options?.headers ?? {});
   const DPoPToken = getDPoPToken();
-  if (DPoPToken) headers["Authorization"] = `Bearer ${DPoPToken}`;
+  if (DPoPToken) headers.set('Authorization', `Bearer ${DPoPToken}`);
   const cid = getUserCID();
-  if (cid) headers["DPoP-CID"] = `${cid}`;
+  if (cid) headers.set('DPoP-CID', `${cid}`);
   options.headers = headers;
   // const res = await fetch(`http://localhost:9090/api/${endpoint}`, options);
   const res = await fetch(`${hostname}/api/${endpoint}`, options);
@@ -432,7 +432,7 @@ export const getUserEvents = async (user_cid?: string) => {
 
 export const createContact = async (contact: Contact, user_cid?: string) => {
   const data = {...contact};
-  if (user_cid) (data as any)["attestator"] = user_cid;
+  if (user_cid) (data as Record<string, unknown>)["attestator"] = user_cid;
   const result = await authorizedRequest(`user`, {
     method: "POST",
     headers: {
@@ -481,7 +481,7 @@ export const submitEventCheckIn = async (
   user_cid: string
 ) => {
   const data = {...contact};
-  if (user_cid) (data as any)["attestator"] = user_cid;
+  if (user_cid) (data as Record<string, unknown>)["attestator"] = user_cid;
   const result = await authorizedRequest(`event/${event}/check-in`, {
     method: "POST",
     headers: {
@@ -515,10 +515,10 @@ export const submitEventRsvp = async (
   contact?: Contact,
   referral?: string
 ) => {
-  const data = contact ? (contact as any) : {};
-  data.referral = referral;
+  const data = contact ? { ...contact } : {};
+  if (referral) (data as Record<string, unknown>).referral = referral;
   const result = await authorizedRequest(`event/${event}/rsvp`, {
-    method: "POST",
+    method: "POST", 
     headers: {
       "Content-Type": "application/json",
     },
@@ -579,56 +579,6 @@ export const createEventConnection = async (event: string, connection_user_cid: 
 
 export const getConnections = async () => {
   const result = await authorizedRequest("connections");
-  return result.data;
-};
-
-interface RsvpQueryParams {
-  user_id?: number;
-  limit?: number;
-  offset?: number;
-}
-
-export const getRsvps = async ({ user_id, limit, offset }: RsvpQueryParams) => {
-  const params = new URLSearchParams();
-  if (user_id) params.set("user_id", user_id.toString());
-  params.set("limit", limit?.toString() ?? "100");
-  params.set("offset", offset?.toString() ?? "0");
-  const result = await authorizedRequest(`rsvps?${params.toString()}`);
-  return result.data;
-};
-
-export const inRSVPs = (rsvps: any[]) => {
-  const userId = getUserId();
-  return rsvps.filter((rsvp) => rsvp.user?.id == userId)?.length ? true : false;
-};
-
-export const myRSVP = (rsvps: any[]) => {
-  const cid = getUserCID();
-  const user = getUser();
-  const matches = rsvps.filter(
-    (rsvp) => rsvp.user?.cid == cid || rsvp.user?.id == user?.id
-  );
-  return matches[0];
-};
-
-/** Bookmarks */
-
-export const getBookmarks = async () => {
-  const result = await authorizedRequest(`bookmarks`);
-  return result.data;
-};
-
-export const createEventBookmark = async (event: string) => {
-  const result = await authorizedRequest(`event/${event}/bookmark`, {
-    method: "POST",
-  });
-  return result.data;
-};
-
-export const deleteEventBookmark = async (event: string) => {
-  const result = await authorizedRequest(`event/${event}/bookmark`, {
-    method: "DELETE",
-  });
   return result.data;
 };
 

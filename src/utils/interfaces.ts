@@ -87,7 +87,7 @@ export interface Artwork {
   collaborators?: Artist[];
   content?: Content[];
   data: ArtworkData;
-  meta: any;
+  meta: Record<string, unknown>;
 }
 
 export interface Content {
@@ -161,14 +161,14 @@ export interface RAEventData {
     end_time?: string;
     venue?: string;
     venue_url?: string;
-    lineup?: any;
+    lineup?: Record<string, unknown> | string[];
     description?: string;
     image_url?: string;
     source?: string;
     ticket_url?: string;
     attendee_count?: string;
     is_ticketed?: boolean;
-    ticket_prices?: any;
+    ticket_prices?: Record<string, unknown>;
   };
   created_at?: string;
   updated_at?: string;

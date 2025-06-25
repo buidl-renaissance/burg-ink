@@ -388,7 +388,7 @@ const AboutPage: FC = () => {
               I am a multidisciplinary artist based in Portland, Oregon, with over 10 years of experience in various artistic mediums. My work explores the intersection of traditional craftsmanship and contemporary expression, often drawing inspiration from natural forms, cultural narratives, and the human experience.
             </BioParagraph>
             <BioParagraph>
-              After completing my BFA at the Pacific Northwest College of Art in 2013, I've dedicated my practice to pushing boundaries between different art forms. My background in sculpture informs my approach to tattoo art, while my experience in performance art influences how I think about the body as a canvas and medium.
+              After completing my BFA at the Pacific Northwest College of Art in 2013, I&apos;ve dedicated my practice to pushing boundaries between different art forms. My background in sculpture informs my approach to tattoo art, while my experience in performance art influences how I think about the body as a canvas and medium.
             </BioParagraph>
             <BioParagraph>
               Whether creating sculptural installations, performance pieces, or permanent body art, I strive to create work that resonates on both aesthetic and emotional levels. I believe in art as a transformative experience and a powerful form of communication that transcends conventional language.
@@ -402,7 +402,7 @@ const AboutPage: FC = () => {
             <SkillItem>
               <SkillTitle>Tattoo Art</SkillTitle>
               <SkillDescription>
-                Specializing in fine line work, blackwork, and botanical designs with a focus on custom, personalized pieces that honor the individual's story and body.
+                Specializing in fine line work, blackwork, and botanical designs with a focus on custom, personalized pieces that honor the individual&apos;s story and body.
               </SkillDescription>
             </SkillItem>
             <SkillItem>
@@ -480,7 +480,7 @@ const AboutPage: FC = () => {
         <ContactSection>
           <ContactHeading>Work With Me</ContactHeading>
           <ContactText>
-            I'm always open to new collaborations, commissions, and tattoo projects. Whether you have a specific vision or are looking for creative guidance, I'd love to hear from you and discuss how we can bring your ideas to life.
+            I&apos;m always open to new collaborations, commissions, and tattoo projects. Whether you have a specific vision or are looking for creative guidance, I&apos;d love to hear from you and discuss how we can bring your ideas to life.
           </ContactText>
           <ContactButton href="/inquire">Get In Touch</ContactButton>
         </ContactSection>

@@ -13,15 +13,11 @@ interface GalleryProps {
 }
 
 const Gallery: FC<GalleryProps> = ({ title = 'Performance Art', artworks }) => {
-  const categories = [
-    'All',
-    ...new Set(artworks.map((artwork) => artwork.data?.category)),
-  ];
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, ] = useState('All');
   const [modalOpen, setModalOpen] = useState(false);
   const [currentArtwork, setCurrentArtwork] = useState<Artwork | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
