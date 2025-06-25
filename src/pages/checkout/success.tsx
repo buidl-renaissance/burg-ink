@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { CheckoutSession } from 'buidl-ticketing';
-import axios from 'axios';
 
 const SuccessContainer = styled.div`
   max-width: 800px;
@@ -87,8 +86,12 @@ export default function CheckoutSuccess() {
   const fetchSessionDetails = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/checkout/session?session_id=${session_id}`);
-      setSession(response.data);
+      const response = await fetch(`/api/checkout/session?session_id=${session_id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch session details');
+      }
+      const data = await response.json();
+      setSession(data);
     } catch (err) {
       console.error('Error fetching session details:', err);
       setError('Unable to load order details. Please contact support.');
