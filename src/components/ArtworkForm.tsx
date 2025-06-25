@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { UploadButton } from './UploadButton';  
 import { createArtwork, getArtist } from '@/utils/dpop';
 import { Artwork, Artist } from '@/utils/interfaces';
 import { ArtistSearch } from './ArtistSearch';
+import Image from 'next/image';
 
 interface ArtworkFormProps {
   onSuccess?: (artwork: Artwork) => void;
@@ -115,10 +116,11 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
 
           {imageUrl && (
             <ImagePreview>
-              <img
+              <Image
                 src={imageUrl}
                 alt="Artwork preview"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                fill
+                style={{ objectFit: 'contain' }}
               />
             </ImagePreview>
           )}

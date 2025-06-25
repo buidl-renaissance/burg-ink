@@ -8,20 +8,17 @@ import { getArtists } from '@/utils/dpop';
 interface ArtistSearchProps {
   onSelect: (artist: Artist) => void;
   placeholder?: string;
-  initialValue?: Artist | null;
 }
 
 export function ArtistSearch({ 
   onSelect, 
-  placeholder = 'Search for an artist...', 
-  initialValue = null 
+  placeholder = 'Search for an artist...'
 }: ArtistSearchProps) {
   const [query, setQuery] = useState('');
   const [artists, setArtists] = useState<Artist[]>([]);
   const [filteredArtists, setFilteredArtists] = useState<Artist[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(initialValue);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Fetch artists on component mount
@@ -86,7 +83,6 @@ export function ArtistSearch({
   };
 
   const handleArtistSelect = (artist: Artist) => {
-    setSelectedArtist(artist);
     setQuery(artist.name);
     setShowResults(false);
     onSelect(artist);

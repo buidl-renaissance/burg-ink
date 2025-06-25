@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import Link from 'next/link';
@@ -77,13 +77,7 @@ export default function CheckoutSuccess() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (session_id) {
-      fetchSessionDetails();
-    }
-  }, [session_id]);
-
-  const fetchSessionDetails = async () => {
+  const fetchSessionDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/checkout/session?session_id=${session_id}`);
@@ -98,7 +92,13 @@ export default function CheckoutSuccess() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session_id]);
+
+  useEffect(() => {
+    if (session_id) {
+      fetchSessionDetails();
+    }
+  }, [session_id, fetchSessionDetails]);
 
   if (loading) {
     return (

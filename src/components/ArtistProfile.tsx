@@ -1,6 +1,7 @@
 import { Artist } from '@/utils/interfaces';
 import React from 'react';
 import styled from 'styled-components';
+import Image from 'next/image';
 
 interface ArtistProfileProps {
   artist: Artist;
@@ -20,16 +21,11 @@ const ProfileImage = styled.div`
   overflow: hidden;
   margin-bottom: 1rem;
   border: 2px solid #444;
+  position: relative;
   
   @media (max-width: 768px) {
     width: 120px;
     height: 120px;
-  }
-  
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 `;
 
@@ -52,7 +48,12 @@ export const ArtistProfile: React.FC<ArtistProfileProps> = ({ artist }) => {
     <ProfileContainer className="artist-profile">
       {artist.profile_picture && (
         <ProfileImage>
-          <img src={artist.profile_picture} alt={artist.name} />
+          <Image 
+            src={artist.profile_picture} 
+            alt={artist.name}
+            fill
+            style={{ objectFit: 'cover' }}
+          />
         </ProfileImage>
       )}
       <ArtistName>{artist.name}</ArtistName>

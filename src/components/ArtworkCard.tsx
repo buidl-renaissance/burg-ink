@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { Artwork } from '@/utils/interfaces';
 import { convertDefaultToResized } from '@/utils/image';
+import Image from 'next/image';
 
 const ArtworkContainer = styled.div`
   border-radius: 8px;
@@ -75,10 +76,12 @@ export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
     <ArtworkContainer>
       <div className="image-container">
         {artwork.data?.image && (
-          <img
+          <Image
             alt={artwork.title}
             className="image"
             src={convertDefaultToResized(artwork.data.image)}
+            fill
+            style={{ objectFit: 'cover' }}
           />
         )}
       </div>

@@ -4,6 +4,7 @@ import { Artwork } from '@/utils/interfaces';
 import Head from 'next/head';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
+import Image from 'next/image';
 
 interface ArtworkDetailPageProps {
   artwork: Artwork;
@@ -25,7 +26,15 @@ export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
 
       <ArtworkContainer>
         <ImageContainer>
-          <img src={artwork.data.image} alt={artwork.title} />
+          {artwork.data.image && (
+            <Image 
+              src={artwork.data.image} 
+              alt={artwork.title}
+              width={800}
+              height={600}
+              style={{ width: '100%', height: 'auto' }}
+            />
+          )}
         </ImageContainer>
 
         <ArtworkDetails>

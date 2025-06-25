@@ -38,7 +38,7 @@ export const isAuthorized = () => {
   return localStorage.getItem("DPoPToken") ? true : false;
 };
 
-export const getContact = (): Contact => {
+export const getContact = (): Contact | null => {
   const contact = localStorage.getItem("DPoPContact");
   return contact ? JSON.parse(contact) : null;
 };

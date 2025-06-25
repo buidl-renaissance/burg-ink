@@ -4,11 +4,8 @@ import UploadButton from './UploadButton';
 
 interface UploadMediaProps {
   onUploadComplete?: (url: string) => void;
-  onError?: (error: string) => void;
   mediaUrl?: string;
   accept?: string;
-  maxSize?: number; // in MB
-  label?: string;
 }
 
 const UploadContainer = styled.div`
@@ -32,38 +29,16 @@ const PreviewImage = styled.img`
   border-radius: 4px;
 `;
 
-const ErrorMessage = styled.p`
-  color: #FF3366;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-`;
-
-const LoadingIndicator = styled.div`
-  margin-top: 1rem;
-  color: #666;
-  font-size: 0.875rem;
-`;
-
 export const UploadMedia: React.FC<UploadMediaProps> = ({
   onUploadComplete,
-  onError,
   mediaUrl,
-  accept = 'image/*',
-  maxSize = 5, // Default 5MB
-  label = 'Upload Media'
+  accept = 'image/*'
 }) => {
   const [preview, setPreview] = useState<string | null>(mediaUrl || null);
-  const [error, setError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadComplete = async (url: string) => {
     setPreview(url);
     if (onUploadComplete) onUploadComplete(url);
-  };
-
-  const handleError = (error: string) => {
-    setError(error);
-    if (onError) onError(error);
   };
 
   return (
@@ -73,15 +48,7 @@ export const UploadMedia: React.FC<UploadMediaProps> = ({
         accept={accept}
       />
       
-      {isUploading && (
-        <LoadingIndicator>Uploading...</LoadingIndicator>
-      )}
-      
-      {error && (
-        <ErrorMessage>{error}</ErrorMessage>
-      )}
-      
-      {preview && !isUploading && (
+      {preview && (
         <PreviewContainer>
           <PreviewImage src={preview} alt="Preview" />
         </PreviewContainer>
