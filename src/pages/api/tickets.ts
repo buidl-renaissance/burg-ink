@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { fetchTicketsHandler, redeemTicketHandler } from '@gods.work/ticketing';
+import { fetchTicketsHandler, redeemTicketHandler } from 'buidl-ticketing';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (req.method) {

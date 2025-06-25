@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import { TicketedEvent, TicketType, getEvent, getTicketTypes } from '@gods.work/ticketing';
+import { TicketedEvent, TicketType, getEvent, getTicketTypes } from 'buidl-ticketing';
 import { formatDate } from '@gods.work/utils';
 import Tickets from '../../app/components/tickets';
 

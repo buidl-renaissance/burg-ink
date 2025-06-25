@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { CheckoutSession } from '@gods.work/ticketing';
+import { CheckoutSession } from 'buidl-ticketing';
 import axios from 'axios';
 
 const SuccessContainer = styled.div`

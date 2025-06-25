@@ -4,7 +4,7 @@ import { FC } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import Tickets from '../../app/components/tickets';
-import { getEvent, TicketedEvent, TicketType } from '@gods.work/ticketing';
+import { getEvent, TicketedEvent, TicketType } from 'buidl-ticketing';
 
 export const getServerSideProps = async () => {
   const event = await getEvent(1);

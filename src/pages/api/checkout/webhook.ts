@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { handleStripeWebhook } from '@gods.work/ticketing';
+import { handleStripeWebhook } from 'buidl-ticketing';
 
 export const config = {
   api: {

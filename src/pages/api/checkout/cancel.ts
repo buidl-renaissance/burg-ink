@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getCheckoutSession, updateCheckoutSession } from '@gods.work/ticketing';
+import { getCheckoutSession, updateCheckoutSession } from 'buidl-ticketing';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

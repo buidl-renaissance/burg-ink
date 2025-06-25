@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
-import { TicketedEvent } from '@gods.work/ticketing';
-import { getEvents } from '@gods.work/ticketing';
+import { TicketedEvent } from 'buidl-ticketing';
+import { getEvents } from 'buidl-ticketing';
 import { EventCard } from '../../app/components/event-card';
 
 interface EventsPageProps {
