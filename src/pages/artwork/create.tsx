@@ -2,8 +2,8 @@
 
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
-import { ArtworkForm } from '@gods.work/ui';
-import { Artwork } from '@gods.work/utils';
+import { ArtworkForm } from '@/components/ArtworkForm';
+import { Artwork } from '@/utils/interfaces';
 
 const StyledPage = styled.div`
   padding: 2rem;
@@ -33,6 +33,7 @@ export default function CreateArtworkPage() {
   
   const handleArtworkCreated = (artwork: Artwork) => {
     // Redirect to the artwork page or gallery after successful creation
+    console.log('artwork', artwork);
     router.push('/artwork');
   };
 

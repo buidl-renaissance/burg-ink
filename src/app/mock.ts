@@ -1,4 +1,4 @@
-import { Artwork } from '@gods.work/utils';
+import { Artwork } from '@/utils/interfaces';
 
 export const TATTOOS: Artwork[] = [
   {

@@ -1,5 +1,6 @@
 import styled from 'styled-components';
-import { getArtwork, Artwork } from '@gods.work/utils';
+import { getArtwork } from '@/utils/dpop';
+import { Artwork } from '@/utils/interfaces';
 import Head from 'next/head';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
