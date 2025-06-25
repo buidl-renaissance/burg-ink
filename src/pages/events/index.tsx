@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
 import { TicketedEvent } from 'buidl-ticketing';
 import { getEvents } from 'buidl-ticketing';
-import { EventCard } from '../../app/components/event-card';
+import { TicketedEventCard } from '@/components/TicketedEventCard';
 
 interface EventsPageProps {
   initialEvents: TicketedEvent[];
@@ -23,7 +23,7 @@ export default function EventsPage({ initialEvents }: EventsPageProps) {
       ) : (
         <EventGrid>
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <TicketedEventCard key={event.id} event={event} />
           ))}
         </EventGrid>
       )}

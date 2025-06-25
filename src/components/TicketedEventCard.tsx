@@ -2,11 +2,11 @@ import { formatDate } from '@/utils/datetime';
 import { TicketedEvent } from 'buidl-ticketing';
 import styled from 'styled-components';
 
-interface EventCardProps {
+interface TicketedEventCardProps {
   event: TicketedEvent;
 }
 
-export function EventCard({ event }: EventCardProps) {
+export function TicketedEventCard({ event }: TicketedEventCardProps) {
   return (
     <Card>
       <CardContent>

@@ -3,7 +3,7 @@
 import { FC } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import Tickets from '../../app/components/tickets';
+import Tickets from '../../components/Tickets';
 import { getEvent, TicketedEvent, TicketType } from 'buidl-ticketing';
 
 export const getServerSideProps = async () => {

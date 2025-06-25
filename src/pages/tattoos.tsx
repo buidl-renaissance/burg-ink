@@ -2,11 +2,11 @@
 
 import { FC, useState } from 'react';
 import styled from 'styled-components';
-import ArtworkModal from '../app/components/artwork-modal';
-import { TATTOOS } from '../app/mock';
+import ArtworkModal from '../components/ArtworkModal';
+import { TATTOOS } from '../data/mock';
 import { Artwork } from '@/utils/interfaces';
 import { ArtworkCard, ArtworkCardClickableContainer } from '@/components/ArtworkCard';
-import PageLayout, { PageContainer } from '../app/components/page-layout';
+import PageLayout, { PageContainer } from '../components/PageLayout';
 
 const tattoos: Artwork[] = TATTOOS;
 

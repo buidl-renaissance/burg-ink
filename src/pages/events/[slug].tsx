@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { TicketedEvent, TicketType, getEvent, getTicketTypes } from 'buidl-ticketing';
 import { formatDate } from '@/utils/datetime';
-import Tickets from '../../app/components/tickets';
+import Tickets from '../../components/Tickets';
 
 interface EventPageProps {
   event: TicketedEvent;

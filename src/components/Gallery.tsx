@@ -2,7 +2,7 @@
 
 import { FC, useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ArtworkModal from './artwork-modal';
+import ArtworkModal from '@/components/ArtworkModal';
 import { Artwork } from '@/utils/interfaces';
 import { ArtworkCardClickableContainer, ArtworkCard } from '@/components/ArtworkCard';
 

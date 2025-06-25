@@ -3,7 +3,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import Tickets from '../app/components/tickets';
+import Tickets from '../components/Tickets';
 import { getEvent, getTicketTypes, TicketedEvent, TicketType } from 'buidl-ticketing';
 
 const StyledPage = styled.div`

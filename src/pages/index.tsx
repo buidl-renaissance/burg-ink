@@ -1,8 +1,8 @@
 'use client';
 
 import styled from 'styled-components';
-import Hero from '../app/components/hero';
-import Gallery from '../app/components/gallery';
+import Hero from '@/components/Hero';
+import Gallery from '@/components/Gallery';
 import { Artwork } from '@/utils/interfaces';
 import { getArtworks } from '@/utils/dpop';
 import { Metadata } from 'next';

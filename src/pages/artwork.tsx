@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ArtworkModal from '../app/components/artwork-modal';
+import ArtworkModal from '../components/ArtworkModal';
 import {
   ArtworkCard,
   ArtworkCardClickableContainer,
@@ -10,7 +10,7 @@ import {
 import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { Artwork } from '@/utils/interfaces';
 import { getArtworks } from '@/utils/dpop';
-import PageLayout from '../app/components/page-layout';
+import PageLayout from '../components/PageLayout';
 
 const ArtworkContainer = styled.div`
   max-width: 1200px;
