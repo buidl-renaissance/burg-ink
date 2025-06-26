@@ -6,7 +6,7 @@ import { ArtworkCard } from '@/components/ArtworkCard';
 import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { Artwork } from '@/utils/interfaces';
 import PageLayout from '../components/PageLayout';
-import { getAllArtwork } from '@/lib/db';
+import { getPublishedArtworkFromArtist } from '@/lib/db';
 
 const ArtworkContainer = styled.div`
   max-width: 1200px;
@@ -145,7 +145,7 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
 
 export const getServerSideProps = async () => {
   try {
-    const artworks = await getAllArtwork();
+    const artworks = await getPublishedArtworkFromArtist();
     return {
       props: { artworks },
     };

@@ -98,7 +98,7 @@ export const getServerSideProps = async ({
 }) => {
   try {
     const { slug } = params;
-    const artwork = await getArtworkBySlug(slug);
+    const artwork = await getArtworkBySlug(slug, true);
     
     if (!artwork) {
       return {

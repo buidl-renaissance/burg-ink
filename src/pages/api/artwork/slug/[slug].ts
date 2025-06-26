@@ -6,7 +6,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    const { slug } = req.query;
+    const { slug, published } = req.query;
 
     if (!slug || typeof slug !== 'string') {
       return res.status(400).json({ error: 'Invalid slug' });
@@ -14,7 +14,8 @@ export default async function handler(
 
     switch (req.method) {
       case 'GET':
-        const artwork = await getArtworkBySlug(slug);
+        const publishedOnly = published === 'true';
+        const artwork = await getArtworkBySlug(slug, publishedOnly);
         
         if (!artwork) {
           return res.status(404).json({ error: 'Artwork not found' });

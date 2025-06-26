@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Hero from '@/components/Hero';
 import Gallery from '@/components/Gallery';
 import { Artwork } from '@/utils/interfaces';
-import { getAllArtwork } from '@/lib/db';
+import { getPublishedArtworkFromArtist } from '@/lib/db';
 import { Metadata } from 'next';
 
 
@@ -304,7 +304,7 @@ export const metadata: Metadata = {
 
 export const getServerSideProps = async () => {
   try {
-    const artworks = await getAllArtwork();
+    const artworks = await getPublishedArtworkFromArtist();
     return { props: { artworks } };
   } catch (error) {
     console.error('Failed to fetch artworks:', error);

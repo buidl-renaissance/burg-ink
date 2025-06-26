@@ -1,6 +1,6 @@
 import { Artwork } from '@/utils/interfaces';
 import { db, artwork, artists } from '../../db';
-import { eq, desc, asc, isNull } from 'drizzle-orm';
+import { eq, desc, asc, isNull, and } from 'drizzle-orm';
 
 // Re-export the database instance
 export { db };
@@ -40,6 +40,59 @@ export async function getAllArtwork() {
   });
 }
 
+// Helper function to get published artwork from the main artist
+export async function getPublishedArtworkFromArtist(artistId?: string) {
+  const mainArtistId = artistId || process.env.NEXT_PUBLIC_DPOP_ARTIST_ID;
+  
+  if (!mainArtistId) {
+    console.warn('No artist ID provided for filtering published artwork');
+    return [];
+  }
+
+  const result = await db
+    .select()
+    .from(artwork)
+    .leftJoin(artists, eq(artwork.artist_id, artists.id))
+    .where(
+      and(
+        eq(artwork.artist_id, parseInt(mainArtistId)),
+        isNull(artwork.deleted_at)
+      )
+    )
+    .orderBy(desc(artwork.created_at));
+  
+  return result.map(row => {
+    let parsedMeta: Record<string, unknown> = {};
+    try {
+      parsedMeta = row.artwork.meta ? JSON.parse(row.artwork.meta) : {};
+    } catch (error) {
+      console.error('Error parsing meta for artwork:', row.artwork.id, error);
+      parsedMeta = {};
+    }
+    
+    // Only return artwork that is published
+    if (parsedMeta.status !== 'published') {
+      return null;
+    }
+    
+    return {
+      ...row.artwork,
+      meta: parsedMeta,
+      data: row.artwork.data ? JSON.parse(row.artwork.data) : {},
+      artist: row.artists ? {
+        id: row.artists.id,
+        name: row.artists.name,
+        slug: row.artists.slug,
+        profile_picture: row.artists.profile_picture,
+        bio: row.artists.bio,
+        created_at: row.artists.created_at,
+        updated_at: row.artists.updated_at,
+        deleted_at: row.artists.deleted_at,
+      } : undefined,
+    } as Artwork;
+  }).filter(Boolean) as Artwork[];
+}
+
 export async function getArtist(id: string) {
   const result = await db
     .select()
@@ -49,7 +102,7 @@ export async function getArtist(id: string) {
 }
 
 // Helper function to get artwork by slug
-export async function getArtworkBySlug(slug: string) {
+export async function getArtworkBySlug(slug: string, publishedOnly: boolean = false) {
   const result = await db
     .select()
     .from(artwork)
@@ -60,12 +113,22 @@ export async function getArtworkBySlug(slug: string) {
   if (result.length === 0) return null;
   
   const row = result[0];
-  let parsedMeta = {};
+  let parsedMeta: Record<string, unknown> = {};
   try {
     parsedMeta = row.artwork.meta ? JSON.parse(row.artwork.meta) : {};
   } catch (error) {
     console.error('Error parsing meta for artwork:', row.artwork.id, error);
     parsedMeta = {};
+  }
+  
+  // If publishedOnly is true, check if artwork is published and from the main artist
+  if (publishedOnly) {
+    const mainArtistId = process.env.NEXT_PUBLIC_DPOP_ARTIST_ID;
+    if (!mainArtistId || 
+        row.artwork.artist_id !== parseInt(mainArtistId) || 
+        parsedMeta.status !== 'published') {
+      return null;
+    }
   }
   
   return {

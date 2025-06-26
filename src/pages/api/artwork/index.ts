@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getAllArtwork, createArtwork } from '@/lib/db';
+import { getAllArtwork, createArtwork, getPublishedArtworkFromArtist } from '@/lib/db';
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,13 +8,19 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET':
-        const { artist_id, category, is_for_sale, limit, offset } = req.query;
+        const { artist_id, category, is_for_sale, limit, offset, published } = req.query;
         
-        // Get all artwork and filter in memory for now
-        // TODO: Implement proper database filtering
-        let artworks = await getAllArtwork();
+        // Determine which function to use based on the 'published' parameter
+        let artworks;
+        if (published === 'true') {
+          // Get only published artwork from the main artist
+          artworks = await getPublishedArtworkFromArtist();
+        } else {
+          // Get all artwork (for admin interfaces)
+          artworks = await getAllArtwork();
+        }
         
-        // Apply filters
+        // Apply additional filters
         if (artist_id) {
           artworks = artworks.filter(art => art.artist_id === parseInt(artist_id as string));
         }

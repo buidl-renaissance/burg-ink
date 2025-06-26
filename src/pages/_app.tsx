@@ -7,6 +7,7 @@ import { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/react';
 import { StyleSheetManager } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
+import FloatingUserProfile from '@/components/FloatingUserProfile';
 
 // Default metadata for the application
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       />
       <StyleSheetManager shouldForwardProp={isPropValid}>
         <Component {...pageProps} />
+        <FloatingUserProfile />
       </StyleSheetManager>
       <Analytics />
     </>
