@@ -97,4 +97,68 @@ export const users = sqliteTable("users", {
 }, (table) => ({
   cidIdx: uniqueIndex("user_cid_idx").on(table.cid),
   emailIdx: uniqueIndex("user_email_idx").on(table.email),
+}));
+
+// Venues table for events
+export const venues = sqliteTable("venues", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  zip_code: text("zip_code"),
+  country: text("country"),
+  place_id: text("place_id"),
+  geo: text("geo"),
+  data: text("data"), // JSON string for additional data
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: text("deleted_at"),
+});
+
+// Events table
+export const events = sqliteTable("events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  cid: text("cid").notNull(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content"),
+  excerpt: text("excerpt"),
+  image: text("image"),
+  image_data: text("image_data"), // JSON string for image metadata
+  start_date: text("start_date").notNull(),
+  end_date: text("end_date").notNull(),
+  categories: text("categories"), // JSON string of categories
+  event_categories: text("event_categories"), // JSON string of event categories
+  featured: integer("featured").default(0), // boolean as integer
+  host: text("host"),
+  venue_id: integer("venue_id").references(() => venues.id),
+  url: text("url"),
+  data: text("data"), // JSON string for additional data
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: text("deleted_at"),
+}, (table) => ({
+  slugIdx: uniqueIndex("event_slug_idx").on(table.slug),
+  cidIdx: index("event_cid_idx").on(table.cid),
+  venueIdx: index("event_venue_idx").on(table.venue_id),
+  startDateIdx: index("event_start_date_idx").on(table.start_date),
+  featuredIdx: index("event_featured_idx").on(table.featured),
+}));
+
+// Event comments table
+export const eventComments = sqliteTable("event_comments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  event_id: integer("event_id").references(() => events.id).notNull(),
+  user_id: integer("user_id").references(() => users.id),
+  content: text("content").notNull(),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: text("deleted_at"),
+}, (table) => ({
+  eventIdx: index("comment_event_idx").on(table.event_id),
+  userIdx: index("comment_user_idx").on(table.user_id),
 })); 
