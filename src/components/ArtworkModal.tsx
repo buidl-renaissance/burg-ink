@@ -44,6 +44,7 @@ const ImageContainer = styled.div`
   flex: 1;
   max-width: 70%;
   position: relative;
+  background-color: black;
   
   @media (max-width: 800px) {
     max-width: 100%;
@@ -64,7 +65,7 @@ const ModalImage = styled.img`
 `;
 
 const InfoPanel = styled.div`
-  flex: 0 0 300px;
+  flex: 0 0 400px;
   padding: 30px;
   background-color: white;
   display: flex;
