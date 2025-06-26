@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaPalette, FaUsers, FaCalendar, FaEnvelope } from 'react-icons/fa';
+import { FaPalette, FaUsers, FaCalendar, FaEnvelope, FaImages } from 'react-icons/fa';
 import Link from 'next/link';
 
 interface DashboardStats {
@@ -11,6 +11,7 @@ interface DashboardStats {
   totalUsers: number;
   totalEvents: number;
   totalEmails: number;
+  totalMedia: number;
   totalViews: number;
 }
 
@@ -20,6 +21,7 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalEvents: 0,
     totalEmails: 0,
+    totalMedia: 0,
     totalViews: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -30,15 +32,18 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Mock data - replace with actual API calls
+        // Fetch media stats
+        const mediaResponse = await fetch('/api/media/stats');
+        const mediaStats = mediaResponse.ok ? await mediaResponse.json() : { total: 0 };
+        
+        // Mock data for other stats - replace with actual API calls
         setStats({
           totalArtworks: 25,
           totalUsers: 150,
           totalEvents: 8,
           totalEmails: 45,
+          totalMedia: mediaStats.total,
           totalViews: 1250,
         });
       } catch (error) {
@@ -138,6 +143,13 @@ export default function AdminDashboard() {
             color="#96885f"
           />
           <StatCard
+            title="Total Media"
+            value={stats.totalMedia}
+            icon={FaImages}
+            href="/admin/media"
+            color="#17a2b8"
+          />
+          <StatCard
             title="Total Users"
             value={stats.totalUsers}
             icon={FaUsers}
@@ -167,6 +179,11 @@ export default function AdminDashboard() {
               <ActionIcon>🎨</ActionIcon>
               <ActionTitle>Manage Artwork</ActionTitle>
               <ActionDescription>Add, edit, or remove artwork from your gallery</ActionDescription>
+            </ActionCard>
+            <ActionCard href="/admin/media">
+              <ActionIcon>🖼️</ActionIcon>
+              <ActionTitle>Manage Media</ActionTitle>
+              <ActionDescription>View and manage media files and assets</ActionDescription>
             </ActionCard>
             <ActionCard href="/admin/users">
               <ActionIcon>👥</ActionIcon>

@@ -2,7 +2,7 @@
 
 import styled from 'styled-components';
 import Link from 'next/link';
-import { FaHome, FaPalette, FaUsers, FaCalendar, FaEnvelope, FaCog } from 'react-icons/fa';
+import { FaHome, FaPalette, FaUsers, FaCalendar, FaEnvelope, FaCog, FaImages } from 'react-icons/fa';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -13,6 +13,7 @@ export function AdminLayout({ children, currentPage = 'dashboard' }: AdminLayout
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FaHome, href: '/admin' },
     { id: 'artwork', label: 'Artwork', icon: FaPalette, href: '/admin/artwork' },
+    { id: 'media', label: 'Media', icon: FaImages, href: '/admin/media' },
     { id: 'users', label: 'Users', icon: FaUsers, href: '/admin/users' },
     { id: 'events', label: 'Events', icon: FaCalendar, href: '/admin/events' },
     { id: 'emails', label: 'Emails', icon: FaEnvelope, href: '/admin/emails' },
