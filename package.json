@@ -12,13 +12,18 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.837.0",
+    "@aws-sdk/s3-request-presigner": "^3.837.0",
     "@libsql/client": "^0.15.9",
     "@stripe/stripe-js": "^7.4.0",
+    "@types/formidable": "^3.4.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@vercel/analytics": "^1.5.0",
     "buidl-ticketing": "^0.0.3",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
+    "formidable": "^3.5.4",
+    "google-auth-library": "^10.1.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "mysql2": "^3.14.1",

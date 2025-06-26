@@ -82,7 +82,7 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
       const formData = new FormData();
       formData.append('image', files[0]);
 
-      const response = await fetch('https://api.detroiter.network/api/upload-media', {
+      const response = await fetch('/api/upload-media', {
         method: 'POST',
         body: formData,
       });

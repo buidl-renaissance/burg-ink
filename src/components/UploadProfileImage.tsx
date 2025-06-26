@@ -70,7 +70,7 @@ const UploadProfileImage: FC<UploadProfileImageProps> = ({
       formData.append('image', file);
 
       const response = await fetch(
-        'https://api.detroiter.network/api/upload-media',
+        '/api/upload-media',
         {
           method: 'POST',
           body: formData,

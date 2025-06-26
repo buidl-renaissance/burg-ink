@@ -90,8 +90,16 @@ export const users = sqliteTable("users", {
   cid: text("cid").unique(),
   name: text("name").notNull(),
   email: text("email").unique(),
+  password: text("password"),
   bio: text("bio"),
   profile_picture: text("profile_picture"),
+  data: text("data"), // JSON string for additional data
+  google_id: text("google_id"),
+  google_drive_token: text("google_drive_token"),
+  google_drive_refresh_token: text("google_drive_refresh_token"),
+  google_drive_folder_id: text("google_drive_folder_id"),
+  google_drive_sync_enabled: integer("google_drive_sync_enabled").default(0),
+  last_sync_at: text("last_sync_at"),
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
@@ -161,4 +169,28 @@ export const eventComments = sqliteTable("event_comments", {
 }, (table) => ({
   eventIdx: index("comment_event_idx").on(table.event_id),
   userIdx: index("comment_user_idx").on(table.user_id),
+}));
+
+export const googleDriveAssets = sqliteTable("google_drive_assets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  file_id: text("file_id").notNull(),
+  folder_id: text("folder_id"),
+  name: text("name").notNull(),
+  mime_type: text("mime_type").notNull(),
+  size: text("size"),
+  web_content_link: text("web_content_link"),
+  thumbnail_link: text("thumbnail_link"),
+  spaces_key: text("spaces_key"), // DigitalOcean Spaces object key
+  spaces_url: text("spaces_url"), // DigitalOcean Spaces public URL
+  created_time: text("created_time"),
+  modified_time: text("modified_time"),
+  sync_status: text("sync_status").default("pending"),
+  artwork_id: integer("artwork_id").references(() => artwork.id),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  fileIdx: uniqueIndex("gdrive_file_id_idx").on(table.file_id),
+  userIdx: index("gdrive_user_idx").on(table.user_id),
+  folderIdx: index("gdrive_folder_idx").on(table.folder_id),
 })); 
