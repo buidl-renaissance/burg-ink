@@ -12,20 +12,39 @@ export async function getAllArtwork() {
     .leftJoin(artists, eq(artwork.artist_id, artists.id))
     .orderBy(desc(artwork.created_at));
   
-  return result.map(row => ({
-    ...row.artwork,
-    artist: row.artists ? {
-      id: row.artists.id,
-      name: row.artists.name,
-      handle: row.artists.handle,
-      slug: row.artists.slug,
-      profile_picture: row.artists.profile_picture,
-      bio: row.artists.bio,
-      created_at: row.artists.created_at,
-      updated_at: row.artists.updated_at,
-      deleted_at: row.artists.deleted_at,
-    } : undefined,
-  }));
+  return result.map(row => {
+    let parsedMeta = {};
+    try {
+      parsedMeta = row.artwork.meta ? JSON.parse(row.artwork.meta) : {};
+    } catch (error) {
+      console.error('Error parsing meta for artwork:', row.artwork.id, error);
+      parsedMeta = {};
+    }
+    
+    return {
+      ...row.artwork,
+      meta: parsedMeta,
+      artist: row.artists ? {
+        id: row.artists.id,
+        name: row.artists.name,
+        handle: row.artists.handle,
+        slug: row.artists.slug,
+        profile_picture: row.artists.profile_picture,
+        bio: row.artists.bio,
+        created_at: row.artists.created_at,
+        updated_at: row.artists.updated_at,
+        deleted_at: row.artists.deleted_at,
+      } : undefined,
+    };
+  });
+}
+
+export async function getArtist(id: string) {
+  const result = await db
+    .select()
+    .from(artists)
+    .where(eq(artists.id, parseInt(id)));
+  return result[0] || null;
 }
 
 // Helper function to get artwork by slug
@@ -40,8 +59,17 @@ export async function getArtworkBySlug(slug: string) {
   if (result.length === 0) return null;
   
   const row = result[0];
+  let parsedMeta = {};
+  try {
+    parsedMeta = row.artwork.meta ? JSON.parse(row.artwork.meta) : {};
+  } catch (error) {
+    console.error('Error parsing meta for artwork:', row.artwork.id, error);
+    parsedMeta = {};
+  }
+  
   return {
     ...row.artwork,
+    meta: parsedMeta,
     artist: row.artists ? {
       id: row.artists.id,
       name: row.artists.name,
@@ -98,4 +126,4 @@ export async function getArtistBySlug(slug: string) {
     .limit(1);
   
   return result[0] || null;
-} 
+}

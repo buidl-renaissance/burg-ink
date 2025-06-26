@@ -1,7 +1,8 @@
 import styled from 'styled-components';
 import { Artwork } from '@/utils/interfaces';
-import { convertDefaultToResized } from '@/utils/image';
+// import { convertDefaultToResized } from '@/utils/image';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const ArtworkContainer = styled.div`
   border-radius: 8px;
@@ -9,6 +10,10 @@ const ArtworkContainer = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   background-color: white;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
 
   &:hover {
     transform: translateY(-5px);
@@ -73,28 +78,30 @@ interface ArtworkCardProps {
 
 export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
   return (
-    <ArtworkContainer>
-      <div className="image-container">
-        {artwork.data?.image && (
-          <Image
-            alt={artwork.title}
-            className="image"
-            src={convertDefaultToResized(artwork.data.image)}
-            fill
-            style={{ objectFit: 'cover' }}
-          />
-        )}
-      </div>
-      <div className="content">
-        <div className="title">{artwork.title}</div>
-        {artwork.description && (
-          <div className="description">{artwork.description}</div>
-        )}
-        {artwork.artist && (
-          <div className="artist">by {artwork.artist.name}</div>
-        )}
-      </div>
-    </ArtworkContainer>
+    <Link href={`/artwork/${artwork.slug}`} passHref>
+      <ArtworkContainer>
+        <div className="image-container">
+          {artwork.image && (
+            <Image
+              alt={artwork.title}
+              className="image"
+              src={artwork.image}
+              fill
+              style={{ objectFit: 'cover' }}
+            />
+          )}
+        </div>
+        <div className="content">
+          <div className="title">{artwork.title}</div>
+          {artwork.description && (
+            <div className="description">{artwork.description}</div>
+          )}
+          {artwork.artist && (
+            <div className="artist">by {artwork.artist.name}</div>
+          )}
+        </div>
+      </ArtworkContainer>
+    </Link>
   );
 };
 

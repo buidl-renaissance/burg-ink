@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { Artist } from '@/utils/interfaces';
-import { getArtists } from '@/utils/dpop';
+import { getArtists } from '@/utils/api';
 
 interface ArtistSearchProps {
   onSelect: (artist: Artist) => void;

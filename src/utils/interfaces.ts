@@ -84,6 +84,7 @@ export interface Artwork {
   description: string;
   type: string;
   artist_id?: number;
+  image?: string;
   artist?: Artist;
   collaborators?: Artist[];
   content?: Content[];

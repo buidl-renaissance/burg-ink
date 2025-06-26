@@ -4,8 +4,13 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { DPoPEvent } from '@/utils/interfaces';
-import { getEvents } from '@/utils/dpop';
 import { EventCard } from './EventCard';
+
+// Mock function for events - this can be replaced with actual API calls later
+const getEvents = async (): Promise<DPoPEvent[]> => {
+  // Return empty array for now - this can be implemented with actual API calls
+  return [];
+};
 
 const EventsGridContainer = styled.div`
   display: grid;
@@ -38,10 +43,9 @@ const LoadMoreButton = styled.button`
 
 interface EventsGridProps {
   events: DPoPEvent[];
-  eventType?: string;
 }
 
-export const EventsGrid: React.FC<EventsGridProps> = ({ events: initialEvents, eventType = 'ArtNight' }) => {
+export const EventsGrid: React.FC<EventsGridProps> = ({ events: initialEvents }) => {
   const [events, setEvents] = useState<DPoPEvent[]>(initialEvents);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialEvents.length >= 18);
@@ -49,11 +53,7 @@ export const EventsGrid: React.FC<EventsGridProps> = ({ events: initialEvents, e
   const loadMoreEvents = async () => {
     setLoading(true);
     try {
-      const moreEvents = await getEvents({
-        type: eventType,
-        offset: events.length,
-        limit: 18
-      });
+      const moreEvents = await getEvents();
       
       if (moreEvents.length > 0) {
         setEvents([...events, ...moreEvents]);

@@ -5,9 +5,10 @@ import styled from 'styled-components';
 import { Artwork } from '@/utils/interfaces';
 import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { AdminLayout } from '@/components/AdminLayout';
+import { StatusDropdown } from '@/components/StatusDropdown';
 import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
 import Image from 'next/image';
-import { convertDefaultToResized } from '@/utils/image';
+// import { convertDefaultToResized } from '@/utils/image';
 
 const AdminContainer = styled.div`
   max-width: 1400px;
@@ -116,21 +117,6 @@ const ActionButton = styled.button`
   &.view {
     color: #28a745;
   }
-`;
-
-const StatusBadge = styled.span<{ status: string }>`
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  background: ${props => 
-    props.status === 'published' ? '#d4edda' : 
-    props.status === 'draft' ? '#fff3cd' : '#f8d7da'
-  };
-  color: ${props => 
-    props.status === 'published' ? '#155724' : 
-    props.status === 'draft' ? '#856404' : '#721c24'
-  };
 `;
 
 const EmptyState = styled.div`
@@ -274,9 +260,9 @@ export default function AdminArtworkPage() {
                   <tr key={artwork.id}>
                     <Td>
                       <ImageCell>
-                        {artwork.data?.image && (
+                        {artwork.image && (
                           <Image
-                            src={convertDefaultToResized(artwork.data.image)}
+                            src={artwork.image}
                             alt={artwork.title}
                             fill
                             style={{ objectFit: 'cover' }}
@@ -297,9 +283,10 @@ export default function AdminArtworkPage() {
                     <Td>{artwork.artist?.name || 'Unknown'}</Td>
                     <Td>{artwork.data?.category || 'Uncategorized'}</Td>
                     <Td>
-                      <StatusBadge status={(artwork.meta?.status as string) || 'draft'}>
-                        {(artwork.meta?.status as string) || 'draft'}
-                      </StatusBadge>
+                      <StatusDropdown
+                        artwork={artwork}
+                        onError={setError}
+                      />
                     </Td>
                     <Td>
                       <ActionButton 

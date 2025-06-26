@@ -1,9 +1,8 @@
 import styled from 'styled-components';
-import { getArtwork } from '@/utils/dpop';
+import { getArtworkBySlug } from '@/lib/db';
 import { Artwork } from '@/utils/interfaces';
 import Head from 'next/head';
-import Link from 'next/link';
-import { FaArrowLeft } from 'react-icons/fa';
+import PageLayout from '@/components/PageLayout';
 import Image from 'next/image';
 
 interface ArtworkDetailPageProps {
@@ -12,23 +11,23 @@ interface ArtworkDetailPageProps {
 
 export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
   return (
-    <StyledPage>
+    <PageLayout 
+      title={artwork.title}
+      backLink={{
+        href: "/artwork",
+        text: "Back to Gallery"
+      }}
+    >
       <Head>
         <title>{artwork.title} | Artwork Gallery</title>
         <meta name="description" content={artwork.description} />
       </Head>
 
-      <Link href="/artwork" passHref>
-        <BackButton>
-          <FaArrowLeft /> Back to Gallery
-        </BackButton>
-      </Link>
-
       <ArtworkContainer>
         <ImageContainer>
-          {artwork.data.image && (
+          {artwork.image && (
             <Image 
-              src={artwork.data.image} 
+              src={artwork.image} 
               alt={artwork.title}
               width={800}
               height={600}
@@ -43,7 +42,7 @@ export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
           <Description>{artwork.description}</Description>
 
           <MetaInfo>
-            {artwork.data.category && (
+            {artwork.data?.category && (
               <MetaItem>
                 <span>Category:</span> {artwork.data.category}
               </MetaItem>
@@ -59,7 +58,7 @@ export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
           </MetaInfo>
         </ArtworkDetails>
       </ArtworkContainer>
-    </StyledPage>
+    </PageLayout>
   );
 }
 
@@ -74,7 +73,7 @@ export const getMetadata = async (artwork: Artwork) => {
         artwork.description || 'View this beautiful artwork in our gallery',
       images: [
         {
-          url: artwork.data.image || '',
+          url: artwork.image || '',
           width: 1200,
           height: 630,
           alt: artwork.title,
@@ -87,7 +86,7 @@ export const getMetadata = async (artwork: Artwork) => {
       title: artwork.title,
       description:
         artwork.description || 'View this beautiful artwork in our gallery',
-      images: [artwork.data.image || ''],
+      images: [artwork.image || ''],
     },
   };
 };
@@ -97,48 +96,37 @@ export const getServerSideProps = async ({
 }: {
   params: { slug: string };
 }) => {
-  const { slug } = params;
-  const artwork = await getArtwork(slug);
-  const metadata = await getMetadata(artwork);
-  return { props: { artwork, metadata } };
+  try {
+    const { slug } = params;
+    const artwork = await getArtworkBySlug(slug);
+    
+    if (!artwork) {
+      return {
+        notFound: true,
+      };
+    }
+    
+    const metadata = await getMetadata(artwork);
+    return { props: { artwork, metadata } };
+  } catch (error) {
+    console.error('Failed to fetch artwork:', error);
+    return {
+      notFound: true,
+    };
+  }
 };
-
-const StyledPage = styled.div`
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
-`;
-
-const BackButton = styled.a`
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 2rem;
-  color: #96885f;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: #7a6e4e;
-  }
-
-  svg {
-    margin-right: 0.5rem;
-  }
-`;
 
 const ArtworkContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 2rem;
+    padding: 0 1rem;
   }
 `;
 

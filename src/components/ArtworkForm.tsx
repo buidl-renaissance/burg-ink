@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { UploadButton } from './UploadButton';  
-import { createArtwork, updateArtwork, getArtist } from '@/utils/dpop';
+import { createArtwork, updateArtwork, getArtist } from '@/utils/api';
 import { Artwork, Artist } from '@/utils/interfaces';
 import { ArtistSearch } from './ArtistSearch';
 import Image from 'next/image';
@@ -18,7 +18,7 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
   const [description, setDescription] = useState(artwork?.description || '');
   const [artist, setArtist] = useState<Artist | null>(artwork?.artist || null);
   const [defaultArtist, setDefaultArtist] = useState<Artist | null>(null);
-  const [imageUrl, setImageUrl] = useState(artwork?.data?.image || '');
+  const [imageUrl, setImageUrl] = useState(artwork?.image || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{
     message: string;
@@ -30,12 +30,16 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
       setTitle(artwork.title);
       setDescription(artwork.description);
       setArtist(artwork.artist || null);
-      setImageUrl(artwork.data?.image || '');
+      setImageUrl(artwork.image || '');
     } else if (process.env.NEXT_PUBLIC_DPOP_ARTIST_ID) {
       const fetchArtist = async () => {
-        const artist = await getArtist(process.env.NEXT_PUBLIC_DPOP_ARTIST_ID as string);
-        setArtist(artist);
-        setDefaultArtist(artist);
+        try {
+          const artist = await getArtist(process.env.NEXT_PUBLIC_DPOP_ARTIST_ID as string);
+          setArtist(artist);
+          setDefaultArtist(artist);
+        } catch (error) {
+          console.error('Failed to fetch default artist:', error);
+        }
       };
       fetchArtist();
     }
@@ -68,12 +72,15 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
     setStatus(null);
 
     try {
-      const artworkData: Partial<Artwork> = {
+      const artworkData = {
         title: title || 'Untitled Artwork',
         description: description || 'No description provided',
         artist_id: artist?.id,
-        data: {
-          ...artwork?.data,
+        image: imageUrl,
+        type: 'artwork',
+        category: 'general',
+        meta: {
+          ...artwork?.meta,
           image: imageUrl,
         },
       };

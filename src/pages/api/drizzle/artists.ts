@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getAllArtists, getArtistBySlug } from '@/lib/db';
+import { getAllArtists, getArtistBySlug, getArtist } from '@/lib/db';
 import { db, artists, socialLinks } from '../../../../db';
 
 export default async function handler(
@@ -9,11 +9,17 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET':
-        const { slug } = req.query;
-        
+        const { id, slug } = req.query;
         if (slug) {
           // Get specific artist by slug
           const artist = await getArtistBySlug(slug as string);
+          if (!artist) {
+            return res.status(404).json({ error: 'Artist not found' });
+          }
+          return res.status(200).json({ data: artist });
+        } else if (id) {
+          // Get specific artist by id
+          const artist = await getArtist(id as string);
           if (!artist) {
             return res.status(404).json({ error: 'Artist not found' });
           }

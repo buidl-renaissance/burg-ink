@@ -179,7 +179,7 @@ const ArtworkModal: FC<ArtworkModalProps> = ({
       onClick={onClose}
     >
       <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ModalImage src={convertDefaultToResized(currentArtwork.data?.image ?? '')} alt={currentArtwork.title} />
+        <ModalImage src={convertDefaultToResized(currentArtwork.image ?? '')} alt={currentArtwork.title} />
         <CloseButton onClick={onClose}>×</CloseButton>
         
         <ImageInfo>

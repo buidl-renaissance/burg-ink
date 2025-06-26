@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Hero from '@/components/Hero';
 import Gallery from '@/components/Gallery';
 import { Artwork } from '@/utils/interfaces';
-import { getArtworks } from '@/utils/dpop';
+import { getAllArtwork } from '@/lib/db';
 import { Metadata } from 'next';
 
 
@@ -303,9 +303,11 @@ export const metadata: Metadata = {
 };
 
 export const getServerSideProps = async () => {
-  const artworks = await getArtworks({
-    artist_id: parseInt(process.env.DPOP_ARTIST_ID ?? '0'),
-    limit: 100,
-  });
-  return { props: { artworks, metadata } };
+  try {
+    const artworks = await getAllArtwork();
+    return { props: { artworks } };
+  } catch (error) {
+    console.error('Failed to fetch artworks:', error);
+    return { props: { artworks: [] } };
+  }
 };

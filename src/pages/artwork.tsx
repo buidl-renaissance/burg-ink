@@ -2,15 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ArtworkModal from '../components/ArtworkModal';
-import {
-  ArtworkCard,
-  ArtworkCardClickableContainer,
-} from '@/components/ArtworkCard';
+import { ArtworkCard } from '@/components/ArtworkCard';
 import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { Artwork } from '@/utils/interfaces';
-import { getArtworks } from '@/utils/dpop';
 import PageLayout from '../components/PageLayout';
+import { getAllArtwork } from '@/lib/db';
 
 const ArtworkContainer = styled.div`
   max-width: 1200px;
@@ -76,8 +72,6 @@ const AddText = styled.p`
 
 export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
   const [selectedCategory, ] = useState<string>('all');
-  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [visibleArtworks, setVisibleArtworks] = useState<Artwork[]>(artworks);
@@ -103,22 +97,6 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
       : visibleArtworks.filter(
           (artwork) => artwork.data?.category === selectedCategory
         );
-
-  const openModal = (artwork: Artwork) => {
-    setSelectedArtwork(artwork);
-  };
-
-  const closeModal = () => {
-    setSelectedArtwork(null);
-  };
-
-  const handleNavigate = (direction: 'prev' | 'next') => {
-    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex >= 0 && newIndex < filteredArtwork?.length) {
-      setCurrentIndex(newIndex);
-      setSelectedArtwork(filteredArtwork[newIndex]);
-    }
-  };
 
   const handleArtworkCreated = (artwork: Artwork) => {
     setVisibleArtworks([...visibleArtworks, artwork]);
@@ -147,12 +125,7 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
 
         <ArtworkGrid>
           {filteredArtwork.map((artwork) => (
-            <ArtworkCardClickableContainer
-              key={artwork.id}
-              onClick={() => openModal(artwork)}
-            >
-              <ArtworkCard artwork={artwork} />
-            </ArtworkCardClickableContainer>
+            <ArtworkCard key={artwork.id} artwork={artwork} />
           ))}
           <AddArtworkCard onClick={() => setIsModalOpen(true)}>
             <PlusIcon>+</PlusIcon>
@@ -160,17 +133,6 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
           </AddArtworkCard>
         </ArtworkGrid>
       </ArtworkContainer>
-
-      {selectedArtwork && (
-        <ArtworkModal
-          isOpen={!!selectedArtwork}
-          onClose={closeModal}
-          currentArtwork={selectedArtwork}
-          artworks={filteredArtwork}
-          currentIndex={filteredArtwork.indexOf(selectedArtwork)}
-          onNavigate={handleNavigate}
-        />
-      )}
 
       <ArtworkFormModal
         isOpen={isModalOpen}
@@ -182,11 +144,15 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
 }
 
 export const getServerSideProps = async () => {
-  const artworks = await getArtworks({
-    artist_id: parseInt(process.env.DPOP_ARTIST_ID ?? '0'),
-    limit: 100,
-  });
-  return {
-    props: { artworks },
-  };
+  try {
+    const artworks = await getAllArtwork();
+    return {
+      props: { artworks },
+    };
+  } catch (error) {
+    console.error('Failed to fetch artworks:', error);
+    return {
+      props: { artworks: [] },
+    };
+  }
 };
