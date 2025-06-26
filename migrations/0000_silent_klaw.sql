@@ -25,19 +25,12 @@ CREATE TABLE `artwork` (
 	`type` text NOT NULL,
 	`artist_id` integer,
 	`image` text,
-	`collaborator_ids` text,
 	`category` text,
-	`is_for_sale` integer DEFAULT false,
-	`price` real,
-	`num_collaborators` integer DEFAULT 0,
-	`review_text` text,
-	`review_image` text,
-	`artist_name` text,
-	`uploaded_by` text,
-	`transaction_digest` text,
 	`meta` text,
+	`data` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text,
 	FOREIGN KEY (`artist_id`) REFERENCES `artists`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

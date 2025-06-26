@@ -1,8 +1,7 @@
-import styled from 'styled-components';
-import { Artwork } from '@/utils/interfaces';
+import styled from "styled-components";
+import { Artwork } from "@/utils/interfaces";
 // import { convertDefaultToResized } from '@/utils/image';
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
 
 const ArtworkContainer = styled.div`
   border-radius: 8px;
@@ -78,30 +77,28 @@ interface ArtworkCardProps {
 
 export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
   return (
-    <Link href={`/artwork/${artwork.slug}`} passHref>
-      <ArtworkContainer>
-        <div className="image-container">
-          {artwork.image && (
-            <Image
-              alt={artwork.title}
-              className="image"
-              src={artwork.image}
-              fill
-              style={{ objectFit: 'cover' }}
-            />
-          )}
-        </div>
-        <div className="content">
-          <div className="title">{artwork.title}</div>
-          {artwork.description && (
-            <div className="description">{artwork.description}</div>
-          )}
-          {artwork.artist && (
-            <div className="artist">by {artwork.artist.name}</div>
-          )}
-        </div>
-      </ArtworkContainer>
-    </Link>
+    <ArtworkContainer>
+      <div className="image-container">
+        {artwork.image && (
+          <Image
+            alt={artwork.title}
+            className="image"
+            src={artwork.image}
+            fill
+            style={{ objectFit: "cover" }}
+          />
+        )}
+      </div>
+      <div className="content">
+        <div className="title">{artwork.title}</div>
+        {artwork.description && (
+          <div className="description">{artwork.description}</div>
+        )}
+        {artwork.artist && (
+          <div className="artist">by {artwork.artist.name}</div>
+        )}
+      </div>
+    </ArtworkContainer>
   );
 };
 

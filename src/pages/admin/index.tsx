@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaPalette, FaUsers, FaCalendar, FaEye } from 'react-icons/fa';
+import { FaPalette, FaUsers, FaCalendar, FaEnvelope } from 'react-icons/fa';
 import Link from 'next/link';
 
 interface DashboardStats {
   totalArtworks: number;
   totalUsers: number;
   totalEvents: number;
+  totalEmails: number;
   totalViews: number;
 }
 
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
     totalArtworks: 0,
     totalUsers: 0,
     totalEvents: 0,
+    totalEmails: 0,
     totalViews: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,7 @@ export default function AdminDashboard() {
           totalArtworks: 25,
           totalUsers: 150,
           totalEvents: 8,
+          totalEmails: 45,
           totalViews: 1250,
         });
       } catch (error) {
@@ -149,10 +152,11 @@ export default function AdminDashboard() {
             color="#28a745"
           />
           <StatCard
-            title="Total Views"
-            value={stats.totalViews}
-            icon={FaEye}
-            color="#6c757d"
+            title="Total Emails"
+            value={stats.totalEmails}
+            icon={FaEnvelope}
+            href="/admin/emails"
+            color="#ffc107"
           />
         </StatsGrid>
 
@@ -173,6 +177,11 @@ export default function AdminDashboard() {
               <ActionIcon>📅</ActionIcon>
               <ActionTitle>Manage Events</ActionTitle>
               <ActionDescription>Create and manage upcoming events</ActionDescription>
+            </ActionCard>
+            <ActionCard href="/admin/emails">
+              <ActionIcon>📧</ActionIcon>
+              <ActionTitle>Manage Emails</ActionTitle>
+              <ActionDescription>Compose and manage email campaigns</ActionDescription>
             </ActionCard>
             <ActionCard href="/admin/settings">
               <ActionIcon>⚙️</ActionIcon>

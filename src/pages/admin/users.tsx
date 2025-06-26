@@ -1,0 +1,540 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import styled from 'styled-components';
+import { AdminLayout } from '@/components/AdminLayout';
+import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
+
+interface User {
+  id: number;
+  cid: string;
+  name: string;
+  email: string;
+  bio?: string;
+  profile_picture?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export default function AdminUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      // Mock data - replace with actual API call
+      const mockUsers: User[] = [
+        {
+          id: 1,
+          cid: 'user_001',
+          name: 'John Doe',
+          email: 'john@example.com',
+          bio: 'Artist and designer',
+          profile_picture: '/api/placeholder/150/150',
+          created_at: '2024-01-15T10:30:00Z',
+          updated_at: '2024-01-15T10:30:00Z',
+        },
+        {
+          id: 2,
+          cid: 'user_002',
+          name: 'Jane Smith',
+          email: 'jane@example.com',
+          bio: 'Digital artist',
+          created_at: '2024-01-20T14:20:00Z',
+          updated_at: '2024-01-20T14:20:00Z',
+        },
+        {
+          id: 3,
+          cid: 'user_003',
+          name: 'Mike Johnson',
+          email: 'mike@example.com',
+          created_at: '2024-01-25T09:15:00Z',
+          updated_at: '2024-01-25T09:15:00Z',
+        },
+      ];
+      
+      setUsers(mockUsers);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.cid.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    // Implement edit functionality
+    console.log('Edit user:', user);
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (confirm('Are you sure you want to delete this user?')) {
+      try {
+        // Implement delete API call
+        console.log('Delete user:', userId);
+        setUsers(users.filter(user => user.id !== userId));
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+      }
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  return (
+    <AdminLayout currentPage="users">
+      <Container>
+        <Header>
+          <Title>Users Management</Title>
+          <AddButton>
+            <FaPlus />
+            Add User
+          </AddButton>
+        </Header>
+
+        <SearchContainer>
+          <SearchWrapper>
+            <SearchIcon>
+              <FaSearch />
+            </SearchIcon>
+            <SearchInput
+              type="text"
+              placeholder="Search users by name, email, or CID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchWrapper>
+        </SearchContainer>
+
+        <StatsContainer>
+          <StatCard>
+            <StatNumber>{users.length}</StatNumber>
+            <StatLabel>Total Users</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatNumber>{users.filter(u => u.profile_picture).length}</StatNumber>
+            <StatLabel>With Profile Picture</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatNumber>{users.filter(u => u.bio).length}</StatNumber>
+            <StatLabel>With Bio</StatLabel>
+          </StatCard>
+        </StatsContainer>
+
+        <TableContainer>
+          <Table>
+            <thead>
+              <tr>
+                <Th>User</Th>
+                <Th>Email</Th>
+                <Th>CID</Th>
+                <Th>Joined</Th>
+                <Th>Actions</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5}>
+                    <LoadingMessage>Loading users...</LoadingMessage>
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5}>
+                    <EmptyMessage>No users found</EmptyMessage>
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <UserCell>
+                        <UserAvatar>
+                          {user.profile_picture ? (
+                            <img src={user.profile_picture} alt={user.name} />
+                          ) : (
+                            <DefaultAvatar>{user.name.charAt(0)}</DefaultAvatar>
+                          )}
+                        </UserAvatar>
+                        <UserInfo>
+                          <UserName>{user.name}</UserName>
+                          {user.bio && <UserBio>{user.bio}</UserBio>}
+                        </UserInfo>
+                      </UserCell>
+                    </td>
+                    <td>{user.email}</td>
+                    <td>
+                      <CidBadge>{user.cid}</CidBadge>
+                    </td>
+                    <td>{formatDate(user.created_at)}</td>
+                    <td>
+                      <ActionButtons>
+                        <ActionButton onClick={() => handleViewUser(user)}>
+                          <FaEye />
+                        </ActionButton>
+                        <ActionButton onClick={() => handleEditUser(user)}>
+                          <FaEdit />
+                        </ActionButton>
+                        <ActionButton 
+                          onClick={() => handleDeleteUser(user.id)}
+                          danger
+                        >
+                          <FaTrash />
+                        </ActionButton>
+                      </ActionButtons>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
+        </TableContainer>
+
+        {showUserModal && selectedUser && (
+          <UserModal onClose={() => setShowUserModal(false)} user={selectedUser} />
+        )}
+      </Container>
+    </AdminLayout>
+  );
+}
+
+function UserModal({ user, onClose }: { user: User; onClose: () => void }) {
+  return (
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalHeader>
+          <ModalTitle>User Details</ModalTitle>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
+        </ModalHeader>
+        <ModalBody>
+          <DetailRow>
+            <DetailLabel>Name:</DetailLabel>
+            <DetailValue>{user.name}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Email:</DetailLabel>
+            <DetailValue>{user.email}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>CID:</DetailLabel>
+            <DetailValue>{user.cid}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Bio:</DetailLabel>
+            <DetailValue>{user.bio || 'No bio provided'}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Joined:</DetailLabel>
+            <DetailValue>{new Date(user.created_at).toLocaleString()}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Last Updated:</DetailLabel>
+            <DetailValue>{new Date(user.updated_at).toLocaleString()}</DetailValue>
+          </DetailRow>
+        </ModalBody>
+      </ModalContent>
+    </ModalOverlay>
+  );
+}
+
+const Container = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+`;
+
+const Title = styled.h1`
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+`;
+
+const AddButton = styled.button`
+  background: #96885f;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background: #7a6f4d;
+  }
+`;
+
+const SearchContainer = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const SearchWrapper = styled.div`
+  position: relative;
+  max-width: 400px;
+`;
+
+const SearchIcon = styled.div`
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+
+  &:focus {
+    border-color: #96885f;
+    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const StatsContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+`;
+
+const StatCard = styled.div`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+`;
+
+const StatNumber = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #96885f;
+  margin-bottom: 0.5rem;
+`;
+
+const StatLabel = styled.div`
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
+
+const TableContainer = styled.div`
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const Th = styled.th`
+  background: #f8f9fa;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e9ecef;
+`;
+
+const UserCell = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+`;
+
+const UserAvatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const DefaultAvatar = styled.div`
+  width: 100%;
+  height: 100%;
+  background: #96885f;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+`;
+
+const UserInfo = styled.div`
+  flex: 1;
+`;
+
+const UserName = styled.div`
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+`;
+
+const UserBio = styled.div`
+  font-size: 0.8rem;
+  color: #6c757d;
+  line-height: 1.4;
+`;
+
+const CidBadge = styled.span`
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: monospace;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const ActionButton = styled.button<{ danger?: boolean }>`
+  background: ${props => props.danger ? '#dc3545' : '#6c757d'};
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background: ${props => props.danger ? '#c82333' : '#5a6268'};
+  }
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6c757d;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: 1.5rem;
+`;
+
+const DetailRow = styled.div`
+  display: flex;
+  margin-bottom: 1rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const DetailLabel = styled.div`
+  font-weight: 600;
+  color: #333;
+  width: 120px;
+  flex-shrink: 0;
+`;
+
+const DetailValue = styled.div`
+  color: #6c757d;
+  flex: 1;
+`; 
