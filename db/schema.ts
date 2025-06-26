@@ -193,4 +193,33 @@ export const googleDriveAssets = sqliteTable("google_drive_assets", {
   fileIdx: uniqueIndex("gdrive_file_id_idx").on(table.file_id),
   userIdx: index("gdrive_user_idx").on(table.user_id),
   folderIdx: index("gdrive_folder_idx").on(table.folder_id),
+}));
+
+// Media table for storing media assets from various sources
+export const media = sqliteTable("media", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  source: text("source").notNull(), // 'google_drive', 'upload', 'url', etc.
+  source_id: text("source_id"), // Original file ID from source
+  filename: text("filename").notNull(),
+  mime_type: text("mime_type").notNull(),
+  size: integer("size"),
+  width: integer("width"),
+  height: integer("height"),
+  spaces_key: text("spaces_key"), // DigitalOcean Spaces object key
+  spaces_url: text("spaces_url"), // DigitalOcean Spaces public URL
+  thumbnail_url: text("thumbnail_url"),
+  processing_status: text("processing_status").default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  ai_analysis: text("ai_analysis"), // JSON string of AI analysis results
+  metadata: text("metadata"), // JSON string of additional metadata
+  tags: text("tags"), // JSON string of extracted tags
+  description: text("description"), // AI-generated description
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  processed_at: text("processed_at"),
+}, (table) => ({
+  sourceIdx: index("media_source_idx").on(table.source),
+  userIdx: index("media_user_idx").on(table.user_id),
+  statusIdx: index("media_status_idx").on(table.processing_status),
+  sourceIdIdx: index("media_source_id_idx").on(table.source_id),
 })); 

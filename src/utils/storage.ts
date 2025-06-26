@@ -11,21 +11,18 @@ export interface StorageStats {
  */
 export async function getStorageStats(): Promise<StorageStats> {
   try {
-    const uploadsDir = storageService.getUploadsDir();
-    const fs = await import('fs/promises');
-    const path = await import('path');
-    
-    const files = await fs.readdir(uploadsDir);
+    const files = await storageService.listFiles('uploads/');
     let totalSize = 0;
     const fileTypes: { [key: string]: number } = {};
     
     for (const file of files) {
-      const filePath = path.join(uploadsDir, file);
-      const stats = await fs.stat(filePath);
-      totalSize += stats.size;
-      
-      const ext = path.extname(file).toLowerCase();
-      fileTypes[ext] = (fileTypes[ext] || 0) + 1;
+      const fileInfo = await storageService.getFileInfo(file);
+      if (fileInfo) {
+        totalSize += fileInfo.size;
+        
+        const ext = file.toLowerCase().substring(file.lastIndexOf('.'));
+        fileTypes[ext] = (fileTypes[ext] || 0) + 1;
+      }
     }
     
     return {
@@ -44,17 +41,14 @@ export async function getStorageStats(): Promise<StorageStats> {
 }
 
 /**
- * Clean up orphaned files (files that exist on disk but not in database)
+ * Clean up orphaned files (files that exist in storage but not in database)
  */
 export async function cleanupOrphanedFiles(knownFilenames: string[]): Promise<{
   cleaned: number;
   errors: string[];
 }> {
   try {
-    const uploadsDir = storageService.getUploadsDir();
-    const fs = await import('fs/promises');
-    
-    const files = await fs.readdir(uploadsDir);
+    const files = await storageService.listFiles('uploads/');
     const orphanedFiles = files.filter(file => !knownFilenames.includes(file));
     
     let cleaned = 0;

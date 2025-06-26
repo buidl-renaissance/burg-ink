@@ -40,7 +40,7 @@ export class GoogleDriveService {
     }
 
     const data = await response.json();
-    return data.files.map((folder: any) => ({
+    return data.files.map((folder: { id: string; name: string }) => ({
       id: folder.id,
       name: folder.name,
       files: [],
