@@ -6,8 +6,11 @@ import { Artwork } from '@/utils/interfaces';
 import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { AdminLayout } from '@/components/AdminLayout';
 import { StatusDropdown } from '@/components/StatusDropdown';
-import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload } from 'react-icons/fa';
 import Image from 'next/image';
+import { ImportArtworkModal } from '@/components/ImportArtworkModal';
+import { Artist } from '@/utils/interfaces';
+import { getArtist } from '@/lib/db';
 // import { convertDefaultToResized } from '@/utils/image';
 
 const AdminContainer = styled.div`
@@ -140,12 +143,18 @@ const ErrorState = styled.div`
   margin: 1rem 0;
 `;
 
-export default function AdminArtworkPage() {
+export async function getServerSideProps() {
+  const artist = await getArtist(process.env.NEXT_PUBLIC_ARTIST_ID || '');
+  return { props: { artist } };
+}
+
+export default function AdminArtworkPage({ artist }: { artist: Artist }) {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchArtworks();
@@ -210,6 +219,20 @@ export default function AdminArtworkPage() {
     setEditingArtwork(null);
   };
 
+  const handleImportArtwork = (imported: Artwork[]) => {
+    setArtworks([
+      ...imported.map((artwork) => ({
+        ...artwork,
+        id: Date.now() + Math.floor(Math.random() * 10000), // temp id
+        slug: artwork.title?.toLowerCase().replace(/\s+/g, '-') || 'imported-artwork',
+        type: 'artwork',
+        data: { ...artwork.data, image: artwork.image, category: 'imported' },
+        meta: {},
+      })),
+      ...artworks,
+    ]);
+  };
+
   if (loading) {
     return (
       <AdminLayout currentPage="artwork">
@@ -223,9 +246,14 @@ export default function AdminArtworkPage() {
       <AdminContainer>
         <Header>
           <Title>Artwork Management</Title>
-          <AddButton onClick={() => setIsModalOpen(true)}>
-            <FaPlus /> Add Artwork
-          </AddButton>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <AddButton onClick={() => setIsModalOpen(true)}>
+              <FaPlus /> Add Artwork
+            </AddButton>
+            <AddButton onClick={() => setIsImportModalOpen(true)}>
+              <FaDownload /> Import Artwork
+            </AddButton>
+          </div>
         </Header>
 
         {error && (
@@ -324,6 +352,13 @@ export default function AdminArtworkPage() {
           onSuccess={handleArtworkCreated}
           title={editingArtwork ? 'Edit Artwork' : 'Create New Artwork'}
           artwork={editingArtwork}
+        />
+
+        <ImportArtworkModal
+          artist={artist}
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportArtwork}
         />
       </AdminContainer>
     </AdminLayout>

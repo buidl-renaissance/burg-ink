@@ -57,6 +57,7 @@ export const artwork = sqliteTable("artwork", {
   uploaded_by: text("uploaded_by"),
   transaction_digest: text("transaction_digest"),
   meta: text("meta"), // JSON string for additional metadata
+  data: text("data"), // JSON string for additional data
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({

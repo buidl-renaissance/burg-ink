@@ -1,3 +1,4 @@
+import { Artwork } from '@/utils/interfaces';
 import { db, artwork, artists } from '../../db';
 import { eq, desc, asc, isNull } from 'drizzle-orm';
 
@@ -70,6 +71,13 @@ export async function getArtworkBySlug(slug: string) {
   return {
     ...row.artwork,
     meta: parsedMeta,
+    data: {
+      image: row.artwork.image,
+      category: row.artwork.category,
+      is_for_sale: row.artwork.is_for_sale,
+      price: row.artwork.price,
+      num_collaborators: row.artwork.num_collaborators,
+    },
     artist: row.artists ? {
       id: row.artists.id,
       name: row.artists.name,
@@ -81,7 +89,7 @@ export async function getArtworkBySlug(slug: string) {
       updated_at: row.artists.updated_at,
       deleted_at: row.artists.deleted_at,
     } : undefined,
-  };
+  } as Artwork;
 }
 
 // Helper function to create new artwork
@@ -91,6 +99,7 @@ export async function createArtwork(artworkData: {
   description?: string;
   type: string;
   artist_id?: number;
+  data?: Record<string, unknown>;
   image?: string;
   category?: string;
   is_for_sale?: boolean;
@@ -100,7 +109,22 @@ export async function createArtwork(artworkData: {
   const result = await db
     .insert(artwork)
     .values({
-      ...artworkData,
+      slug: artworkData.slug,
+      title: artworkData.title,
+      description: artworkData.description,
+      type: artworkData.type,
+      artist_id: artworkData.artist_id,
+      image: artworkData.image,
+      category: artworkData.category,
+      is_for_sale: artworkData.is_for_sale,
+      price: artworkData.price,
+      data: artworkData.data ? JSON.stringify({
+        ...artworkData.data,
+        image: artworkData.image,
+        category: artworkData.category,
+        is_for_sale: artworkData.is_for_sale,
+        price: artworkData.price,
+      }) : null,
       meta: artworkData.meta ? JSON.stringify(artworkData.meta) : null,
     })
     .returning();
