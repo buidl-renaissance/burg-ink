@@ -10,6 +10,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/B42D6363-A4C0-400C-B18A-CBBEEC828A7E.jpeg?fit=1029%2C1440&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/B42D6363-A4C0-400C-B18A-CBBEEC828A7E.jpeg?fit=1029%2C1440&ssl=1',
       category: 'Floral'
@@ -25,6 +26,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/5-scaled.jpeg?fit=1829%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/5-scaled.jpeg?fit=1829%2C2560&ssl=1',
       category: 'Geometric'
@@ -40,6 +42,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/11.jpeg?fit=1552%2C2173&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/11.jpeg?fit=1552%2C2173&ssl=1',
       category: 'Nature'
@@ -55,6 +58,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/57DC7857-21EF-46D6-8158-3B848749018A-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/57DC7857-21EF-46D6-8158-3B848749018A-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Minimalist'
@@ -70,6 +74,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_8053-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_8053-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Traditional'
@@ -85,6 +90,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/12.jpeg?fit=1483%2C2076&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/12.jpeg?fit=1483%2C2076&ssl=1',
       category: 'Abstract'
@@ -100,6 +106,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_0718.jpeg?fit=776%2C1087&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_0718.jpeg?fit=776%2C1087&ssl=1',
       category: 'Blackwork'
@@ -115,6 +122,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/50188BCD-6874-4E35-B89D-CC943F948ACA-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/50188BCD-6874-4E35-B89D-CC943F948ACA-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Fine Line'
@@ -130,6 +138,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/967DEFF0-C1CC-4BE5-9D57-5C2A7DCE3F0C-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/967DEFF0-C1CC-4BE5-9D57-5C2A7DCE3F0C-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Floral'
@@ -145,6 +154,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/7CBFE347-9155-49B4-A6F8-54BA2E0AB77D.jpeg?fit=887%2C1242&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/7CBFE347-9155-49B4-A6F8-54BA2E0AB77D.jpeg?fit=887%2C1242&ssl=1',
       category: 'Ornamental'
@@ -160,6 +170,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_6271-scaled.jpeg?fit=1829%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_6271-scaled.jpeg?fit=1829%2C2560&ssl=1',
       category: 'Symbolic'
@@ -175,6 +186,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/99EDD62D-5C4B-406D-8EB7-D0D6D0427247.jpeg?fit=1958%2C1958&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/99EDD62D-5C4B-406D-8EB7-D0D6D0427247.jpeg?fit=1958%2C1958&ssl=1',
       category: 'Dotwork'
@@ -190,6 +202,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_6277.jpeg?fit=2048%2C2048&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_6277.jpeg?fit=2048%2C2048&ssl=1',
       category: 'Script'
@@ -205,6 +218,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/14.jpeg?fit=1505%2C2107&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/14.jpeg?fit=1505%2C2107&ssl=1',
       category: 'Neo-Traditional'
@@ -220,6 +234,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/089D3AD0-02F2-4615-B5D0-2B62E990F4A4-scaled.jpeg?fit=1829%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/089D3AD0-02F2-4615-B5D0-2B62E990F4A4-scaled.jpeg?fit=1829%2C2560&ssl=1',
       category: 'Illustrative'
@@ -235,6 +250,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/16-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/16-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Watercolor'
@@ -250,6 +266,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/6487F5DC-D077-4B5C-BBEE-42587B49D637.jpeg?fit=832%2C1165&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/6487F5DC-D077-4B5C-BBEE-42587B49D637.jpeg?fit=832%2C1165&ssl=1',
       category: 'Portrait'
@@ -265,6 +282,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_6323-scaled.jpeg?fit=1829%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_6323-scaled.jpeg?fit=1829%2C2560&ssl=1',
       category: 'Blackwork'
@@ -280,6 +298,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/489357CE-B3C4-4E46-AAD4-575025AE6064.jpeg?fit=1282%2C1795&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/489357CE-B3C4-4E46-AAD4-575025AE6064.jpeg?fit=1282%2C1795&ssl=1',
       category: 'Animal'
@@ -295,6 +314,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/9A45CE04-B07C-4906-9ECC-6BBD252E9B88-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/9A45CE04-B07C-4906-9ECC-6BBD252E9B88-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Spiritual'
@@ -310,6 +330,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_7889-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_7889-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Japanese'
@@ -325,6 +346,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_6908-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_6908-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Surreal'
@@ -340,6 +362,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/AA12B568-7F67-4BB1-97AB-A7A9A5E29C6E.jpeg?fit=1028%2C1439&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/AA12B568-7F67-4BB1-97AB-A7A9A5E29C6E.jpeg?fit=1028%2C1439&ssl=1',
       category: 'Micro'
@@ -355,6 +378,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_3438-scaled.jpeg?fit=1828%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_3438-scaled.jpeg?fit=1828%2C2560&ssl=1',
       category: 'Custom'
@@ -370,6 +394,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_8917-scaled.jpeg?fit=2560%2C1829&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/03/IMG_8917-scaled.jpeg?fit=2560%2C1829&ssl=1',
       category: 'Portrait'
@@ -385,6 +410,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/13F17556-757F-4B76-9541-EDE097737292.jpeg?fit=1261%2C1765&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/13F17556-757F-4B76-9541-EDE097737292.jpeg?fit=1261%2C1765&ssl=1',
       category: 'Floral'
@@ -400,6 +426,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/B1CF3959-BFF7-4F2B-B5A1-DB40F9557F12.jpeg?fit=1440%2C1029&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/B1CF3959-BFF7-4F2B-B5A1-DB40F9557F12.jpeg?fit=1440%2C1029&ssl=1',
       category: 'Geometric'
@@ -415,6 +442,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/3AEE07FC-DB48-4F96-AE88-D85E65FE25AA.jpeg?fit=1829%2C2560&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/3AEE07FC-DB48-4F96-AE88-D85E65FE25AA.jpeg?fit=1829%2C2560&ssl=1',
       category: 'Nature'
@@ -430,6 +458,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_0728.jpeg?fit=834%2C1045&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_0728.jpeg?fit=834%2C1045&ssl=1',
       category: 'Fine Line'
@@ -445,6 +474,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_0691.jpeg?fit=873%2C1087&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/IMG_0691.jpeg?fit=873%2C1087&ssl=1',
       category: 'Symbolic'
@@ -460,6 +490,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/C1C6C9CD-83F4-4BAF-BEA6-CF2A4FE9D4E4.jpeg?fit=1440%2C1440&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/C1C6C9CD-83F4-4BAF-BEA6-CF2A4FE9D4E4.jpeg?fit=1440%2C1440&ssl=1',
       category: 'Ornamental'
@@ -475,6 +506,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/CF5215BB-2DB3-490D-BFF7-75AF5B59605D.jpeg?fit=1440%2C1440&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/CF5215BB-2DB3-490D-BFF7-75AF5B59605D.jpeg?fit=1440%2C1440&ssl=1',
       category: 'Minimalist'
@@ -490,6 +522,7 @@ export const TATTOOS: Artwork[] = [
     artist_id: 1,
     collaborators: [],
     content: [],
+    image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/8.jpeg?fit=1008%2C1411&ssl=1',
     data: {
       image: 'https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/04/8.jpeg?fit=1008%2C1411&ssl=1',
       category: 'Portrait'
