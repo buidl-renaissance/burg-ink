@@ -11,13 +11,22 @@ interface DriveFolder {
   files: Record<string, unknown>[];
 }
 
+interface SyncResult {
+  message: string;
+  eventId?: string;
+  status: string;
+  processingMode?: string;
+  note?: string;
+  benefits?: string[];
+}
+
 export const DriveSync = () => {
   const { isAuthenticated } = useAuth();
   const [folders, setFolders] = useState<DriveFolder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<Record<string, unknown> | null>(null);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -142,17 +151,27 @@ export const DriveSync = () => {
 
       {syncResult && (
         <SyncResult>
-          <ResultTitle>Sync Complete!</ResultTitle>
-          <ResultStats>
-            <Stat>
-              <StatNumber>{syncResult.filesProcessed as number}</StatNumber>
-              <StatLabel>Images Found</StatLabel>
-            </Stat>
-            <Stat>
-              <StatNumber>{syncResult.artworksCreated as number}</StatNumber>
-              <StatLabel>Artworks Created</StatLabel>
-            </Stat>
-          </ResultStats>
+          <ResultTitle>Sync Started!</ResultTitle>
+          <ResultDescription>
+            {syncResult.processingMode === 'parallel' ? (
+              <>
+                <strong>Parallel Processing Mode</strong> - Files are being processed simultaneously for faster completion.
+                {syncResult.benefits && syncResult.benefits.length > 0 && (
+                  <BenefitsList>
+                    {syncResult.benefits.map((benefit: string, index: number) => (
+                      <BenefitItem key={index}>• {benefit}</BenefitItem>
+                    ))}
+                  </BenefitsList>
+                )}
+              </>
+            ) : (
+              'Files are being processed in the background. Check back later for results.'
+            )}
+          </ResultDescription>
+          {syncResult.note && <ResultNote>{syncResult.note}</ResultNote>}
+          {syncResult.eventId && (
+            <EventId>Event ID: {syncResult.eventId}</EventId>
+          )}
         </SyncResult>
       )}
     </SyncContainer>
@@ -264,26 +283,33 @@ const ResultTitle = styled.h3`
   margin: 0 0 1rem 0;
 `;
 
-const ResultStats = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+const ResultDescription = styled.div`
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1rem;
 `;
 
-const Stat = styled.div`
-  text-align: center;
-`;
-
-const StatNumber = styled.div`
-  font-size: 2rem;
-  font-weight: 700;
-  color: #333;
-`;
-
-const StatLabel = styled.div`
+const ResultNote = styled.div`
   font-size: 0.9rem;
   color: #666;
-  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+`;
+
+const EventId = styled.div`
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+`;
+
+const BenefitsList = styled.ul`
+  list-style-type: disc;
+  padding-left: 20px;
+`;
+
+const BenefitItem = styled.li`
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.5rem;
 `;
 
 const ErrorMessage = styled.div`

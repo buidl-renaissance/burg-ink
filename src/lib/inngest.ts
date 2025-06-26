@@ -1,13 +1,29 @@
 import { Inngest } from "inngest";
 
-// Create an Inngest client
+// Create a client to send and receive events
 export const inngest = new Inngest({ 
-  id: "burg-ink",
-  name: "Burg Ink Background Jobs"
+  name: "Burg Ink App",
+  id: "burg-ink-app"
 });
 
-// Utility function to trigger Google images processing
+// Utility function to trigger Google images processing (parallel - recommended)
 export async function triggerGoogleImagesProcessing(
+  userId: number,
+  folderId: string,
+  accessToken: string
+) {
+  return await inngest.send({
+    name: "google.images.process.parallel",
+    data: {
+      userId,
+      folderId,
+      accessToken,
+    },
+  });
+}
+
+// Utility function to trigger Google images processing (sequential - for compatibility)
+export async function triggerGoogleImagesProcessingSequential(
   userId: number,
   folderId: string,
   accessToken: string
@@ -18,6 +34,64 @@ export async function triggerGoogleImagesProcessing(
       userId,
       folderId,
       accessToken,
+    },
+  });
+}
+
+// Utility function to trigger individual file processing
+export async function triggerFileProcessing(
+  userId: number,
+  fileId: string,
+  fileName: string,
+  fileMimeType: string,
+  fileSize: string,
+  fileThumbnailLink: string,
+  fileWebContentLink: string,
+  fileCreatedTime: string,
+  fileModifiedTime: string,
+  folderId: string,
+  accessToken: string
+) {
+  return await inngest.send({
+    name: "file.process",
+    data: {
+      userId,
+      fileId,
+      fileName,
+      fileMimeType,
+      fileSize,
+      fileThumbnailLink,
+      fileWebContentLink,
+      fileCreatedTime,
+      fileModifiedTime,
+      folderId,
+      accessToken,
+    },
+  });
+}
+
+// Utility function to trigger media analysis
+export async function triggerMediaAnalysis(
+  mediaId: number,
+  imageUrl: string
+) {
+  return await inngest.send({
+    name: "media.analyze",
+    data: {
+      mediaId,
+      imageUrl,
+    },
+  });
+}
+
+// Utility function to trigger batch media analysis
+export async function triggerBatchMediaAnalysis(
+  mediaIds: number[] = []
+) {
+  return await inngest.send({
+    name: "media.analyze.batch",
+    data: {
+      mediaIds,
     },
   });
 } 

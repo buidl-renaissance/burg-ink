@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Google Drive not connected' });
     }
 
-    // Trigger the background job to process Google images
+    // Trigger the background job to process Google images (now using parallel processing)
     const event = await triggerGoogleImagesProcessing(
       user.id,
       folderId,
@@ -47,7 +47,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: 'Google Drive sync started in background',
       eventId: event.ids[0],
       status: 'processing',
-      note: 'Files are being processed in the background. Check back later for results.',
+      processingMode: 'parallel',
+      concurrencyLimit: 6,
+      note: 'Files are being processed in parallel for better performance. Each file is processed independently, so one failure won\'t stop the others. AI analysis is triggered automatically after each file is processed. Check back later for results.',
+      benefits: [
+        'Parallel processing for faster completion (max 6 concurrent)',
+        'Better error isolation (one file failing doesn\'t stop others)',
+        'Automatic AI analysis triggering',
+        'Individual file monitoring and retry capability',
+        'Improved scalability for large folders',
+        'Controlled concurrency prevents system overload'
+      ]
     });
 
   } catch (error) {

@@ -17,7 +17,7 @@ export interface ImageAnalysis {
 export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o",
       messages: [
         {
           role: "user",
@@ -26,6 +26,7 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
               type: "text",
               text: `Analyze this image and provide a detailed response in JSON format with the following structure:
               {
+                "title": "Title of the image",
                 "description": "A detailed description of what's in the image",
                 "tags": ["tag1", "tag2", "tag3"],
                 "content": "Main content/subject of the image",
@@ -59,8 +60,14 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
       throw new Error('No response from OpenAI');
     }
 
-    // Parse the JSON response
-    const analysis = JSON.parse(content) as ImageAnalysis;
+    // Parse the JSON response, handling potential code block wrapping
+    const jsonContent = content.includes('```json') 
+      ? content.split('```json')[1].split('```')[0].trim()
+      : content.includes('```')
+        ? content.split('```')[1].trim() 
+        : content.trim();
+
+    const analysis = JSON.parse(jsonContent) as ImageAnalysis;
     
     return {
       description: analysis.description || '',
