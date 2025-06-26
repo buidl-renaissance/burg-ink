@@ -82,6 +82,7 @@ export interface Artwork {
   slug: string;
   title: string;
   description: string;
+  type: string;
   artist_id?: number;
   artist?: Artist;
   collaborators?: Artist[];

@@ -10,6 +10,7 @@ interface ArtworkFormModalProps {
   onClose: () => void;
   onSuccess?: (artwork: Artwork) => void;
   title?: string;
+  artwork?: Artwork | null;
 }
 
 export function ArtworkFormModal({
@@ -17,6 +18,7 @@ export function ArtworkFormModal({
   onClose,
   onSuccess,
   title = 'Create New Artwork',
+  artwork,
 }: ArtworkFormModalProps) {
   const handleSuccess = (artwork: Artwork) => {
     if (onSuccess) {
@@ -33,25 +35,13 @@ export function ArtworkFormModal({
       maxWidth="600px"
     >
       <ModalContentWrapper>
-        <ArtworkForm onSuccess={handleSuccess} />
+        <ArtworkForm onSuccess={handleSuccess} artwork={artwork} />
       </ModalContentWrapper>
     </Modal>
   );
 }
 
 const ModalContentWrapper = styled.div`
-  padding: 0;
-  
-  /* Override the default margin and padding from the ArtworkForm */
-  > div {
-    margin: 0;
-    padding: 0;
-    box-shadow: none;
-  }
-  
-  /* Hide the form title since we're using the modal title */
-  h2 {
-    display: none;
-  }
+  padding: 1rem;
 `;
 

@@ -3,21 +3,22 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { UploadButton } from './UploadButton';  
-import { createArtwork, getArtist } from '@/utils/dpop';
+import { createArtwork, updateArtwork, getArtist } from '@/utils/dpop';
 import { Artwork, Artist } from '@/utils/interfaces';
 import { ArtistSearch } from './ArtistSearch';
 import Image from 'next/image';
 
 interface ArtworkFormProps {
   onSuccess?: (artwork: Artwork) => void;
+  artwork?: Artwork | null;
 }
 
-export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [artist, setArtist] = useState<Artist | null>(null);
+export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
+  const [title, setTitle] = useState(artwork?.title || '');
+  const [description, setDescription] = useState(artwork?.description || '');
+  const [artist, setArtist] = useState<Artist | null>(artwork?.artist || null);
   const [defaultArtist, setDefaultArtist] = useState<Artist | null>(null);
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState(artwork?.data?.image || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{
     message: string;
@@ -25,7 +26,12 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
   } | null>(null);
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_DPOP_ARTIST_ID) {
+    if (artwork) {
+      setTitle(artwork.title);
+      setDescription(artwork.description);
+      setArtist(artwork.artist || null);
+      setImageUrl(artwork.data?.image || '');
+    } else if (process.env.NEXT_PUBLIC_DPOP_ARTIST_ID) {
       const fetchArtist = async () => {
         const artist = await getArtist(process.env.NEXT_PUBLIC_DPOP_ARTIST_ID as string);
         setArtist(artist);
@@ -33,7 +39,7 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
       };
       fetchArtist();
     }
-  }, []);
+  }, [artwork]);
 
   const handleUploadComplete = (url: string) => {
     setImageUrl(url);
@@ -67,22 +73,30 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
         description: description || 'No description provided',
         artist_id: artist?.id,
         data: {
+          ...artwork?.data,
           image: imageUrl,
         },
       };
 
-      const result = await createArtwork(artworkData);
+      let result;
+      if (artwork?.id) {
+        result = await updateArtwork({ ...artworkData, id: artwork.id });
+      } else {
+        result = await createArtwork(artworkData);
+      }
 
       setStatus({
-        message: 'Artwork successfully created!',
+        message: `Artwork successfully ${artwork?.id ? 'updated' : 'created'}!`,
         isError: false,
       });
 
-      // Reset form
-      setTitle('');
-      setDescription('');
-      setArtist(defaultArtist);
-      setImageUrl('');
+      // Reset form only if creating new artwork
+      if (!artwork?.id) {
+        setTitle('');
+        setDescription('');
+        setArtist(defaultArtist);
+        setImageUrl('');
+      }
 
       if (onSuccess && result) {
         onSuccess(result);
@@ -90,7 +104,7 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
     } catch (error) {
       setStatus({
         message:
-          error instanceof Error ? error.message : 'Failed to create artwork',
+          error instanceof Error ? error.message : `Failed to ${artwork?.id ? 'update' : 'create'} artwork`,
         isError: true,
       });
     } finally {
@@ -100,7 +114,7 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
 
   return (
     <FormContainer>
-      <FormTitle>Create New Artwork</FormTitle>
+      <FormTitle>{artwork?.id ? 'Edit Artwork' : 'Create New Artwork'}</FormTitle>
 
       <form onSubmit={handleSubmit}>
         <UploadContainer>
@@ -111,7 +125,7 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
             onUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
           >
-            Select Image
+            {imageUrl ? 'Change Image' : 'Select Image'}
           </UploadButton>
 
           {imageUrl && (
@@ -172,7 +186,7 @@ export function ArtworkForm({ onSuccess }: ArtworkFormProps) {
         )}
 
         <SubmitButton type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating...' : 'Create Artwork'}
+          {isSubmitting ? (artwork?.id ? 'Updating...' : 'Creating...') : (artwork?.id ? 'Update Artwork' : 'Create Artwork')}
         </SubmitButton>
       </form>
     </FormContainer>
