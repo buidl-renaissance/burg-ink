@@ -3,7 +3,9 @@ import { inngest } from "@/lib/inngest";
 import { processGoogleImages } from "@/lib/functions/processGoogleImages";
 
 // Create the handler to serve your functions
-export const { GET, POST, PUT } = serve({
+const handler = serve({
   client: inngest,
   functions: [processGoogleImages],
-}); 
+});
+
+export default handler; 
