@@ -28,21 +28,62 @@ const ModalContent = styled.div`
   position: relative;
   max-width: 90%;
   max-height: 90%;
+  display: flex;
+  background-color: white;
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 800px) {
+    flex-direction: column;
+    max-height: 95%;
+  }
+`;
+
+const ImageContainer = styled.div`
+  flex: 1;
+  max-width: 70%;
+  position: relative;
+  
+  @media (max-width: 800px) {
+    max-width: 100%;
+    max-height: 60vh;
+  }
 `;
 
 const ModalImage = styled.img`
   display: block;
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
   max-height: 90vh;
   object-fit: contain;
+  
+  @media (max-width: 800px) {
+    max-height: 60vh;
+  }
+`;
+
+const InfoPanel = styled.div`
+  flex: 0 0 300px;
+  padding: 30px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
+  
+  @media (max-width: 800px) {
+    flex: none;
+    padding: 20px;
+    max-height: 35vh;
+    overflow-y: auto;
+  }
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 15px;
-  right: 15px;
+  position: fixed;
+  top: 20px;
+  right: 20px;
   width: 40px;
   height: 40px;
   background-color: rgba(0, 0, 0, 0.5);
@@ -55,51 +96,40 @@ const CloseButton = styled.button`
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  z-index: 1010;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.8);
   }
 `;
 
-const ImageInfo = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-  
-  ${ModalContent}:hover & {
-    transform: translateY(0);
-  }
-`;
-
-const ImageTitle = styled.h3`
-  margin: 0 0 5px 0;
-  font-size: 1.2rem;
+const ImageTitle = styled.h2`
+  margin: 0 0 15px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
 `;
 
 const ImageDescription = styled.p`
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
+  margin: 0 0 20px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #666;
 `;
 
 const ImageCategory = styled.span`
   display: inline-block;
-  margin-top: 5px;
-  padding: 3px 8px;
+  padding: 6px 12px;
   background-color: #96885f;
+  color: white;
   border-radius: 4px;
   font-size: 0.8rem;
   text-transform: uppercase;
+  font-weight: 500;
 `;
 
 const NavigationButton = styled.button`
-  position: absolute;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
   background-color: rgba(0, 0, 0, 0.5);
@@ -114,6 +144,7 @@ const NavigationButton = styled.button`
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  z-index: 1010;
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.8);
@@ -178,34 +209,44 @@ const ArtworkModal: FC<ArtworkModalProps> = ({
       className={isVisible ? 'visible' : ''} 
       onClick={onClose}
     >
+      <CloseButton onClick={onClose}>×</CloseButton>
       <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ModalImage src={convertDefaultToResized(currentArtwork.image ?? '')} alt={currentArtwork.title} />
-        <CloseButton onClick={onClose}>×</CloseButton>
+        <ImageContainer>
+          <ModalImage src={convertDefaultToResized(currentArtwork.image ?? '')} alt={currentArtwork.title} />
+        </ImageContainer>
         
-        <ImageInfo>
+        <InfoPanel>
           <ImageTitle>{currentArtwork.title}</ImageTitle>
           <ImageDescription>{currentArtwork.description}</ImageDescription>
-          <ImageCategory>{currentArtwork.data?.category}</ImageCategory>
-        </ImageInfo>
-        
-        {currentIndex > 0 && (
-          <NavigationButton 
-            className="prev" 
-            onClick={() => onNavigate('prev')}
-          >
-            ‹
-          </NavigationButton>
-        )}
-        
-        {currentIndex < artworks.length - 1 && (
-          <NavigationButton 
-            className="next" 
-            onClick={() => onNavigate('next')}
-          >
-            ›
-          </NavigationButton>
-        )}
+          {currentArtwork.data?.category && (
+            <ImageCategory>{currentArtwork.data.category}</ImageCategory>
+          )}
+        </InfoPanel>
       </ModalContent>
+      
+      {currentIndex > 0 && (
+        <NavigationButton 
+          className="prev" 
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate('prev');
+          }}
+        >
+          ‹
+        </NavigationButton>
+      )}
+      
+      {currentIndex < artworks.length - 1 && (
+        <NavigationButton 
+          className="next" 
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate('next');
+          }}
+        >
+          ›
+        </NavigationButton>
+      )}
     </ModalOverlay>
   );
 };
