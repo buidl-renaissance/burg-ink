@@ -25,10 +25,10 @@ export async function getAllArtwork() {
     return {
       ...row.artwork,
       meta: parsedMeta,
+      data: row.artwork.data ? JSON.parse(row.artwork.data) : {},
       artist: row.artists ? {
         id: row.artists.id,
         name: row.artists.name,
-        handle: row.artists.handle,
         slug: row.artists.slug,
         profile_picture: row.artists.profile_picture,
         bio: row.artists.bio,
@@ -36,7 +36,7 @@ export async function getAllArtwork() {
         updated_at: row.artists.updated_at,
         deleted_at: row.artists.deleted_at,
       } : undefined,
-    };
+    } as Artwork;
   });
 }
 
@@ -72,16 +72,13 @@ export async function getArtworkBySlug(slug: string) {
     ...row.artwork,
     meta: parsedMeta,
     data: {
+      ...(row.artwork.data ? JSON.parse(row.artwork.data) : {}),
       image: row.artwork.image,
       category: row.artwork.category,
-      is_for_sale: row.artwork.is_for_sale,
-      price: row.artwork.price,
-      num_collaborators: row.artwork.num_collaborators,
     },
     artist: row.artists ? {
       id: row.artists.id,
       name: row.artists.name,
-      handle: row.artists.handle,
       slug: row.artists.slug,
       profile_picture: row.artists.profile_picture,
       bio: row.artists.bio,
@@ -102,8 +99,6 @@ export async function createArtwork(artworkData: {
   data?: Record<string, unknown>;
   image?: string;
   category?: string;
-  is_for_sale?: boolean;
-  price?: number;
   meta?: Record<string, unknown>;
 }) {
   const result = await db
@@ -116,14 +111,10 @@ export async function createArtwork(artworkData: {
       artist_id: artworkData.artist_id,
       image: artworkData.image,
       category: artworkData.category,
-      is_for_sale: artworkData.is_for_sale,
-      price: artworkData.price,
       data: artworkData.data ? JSON.stringify({
         ...artworkData.data,
         image: artworkData.image,
         category: artworkData.category,
-        is_for_sale: artworkData.is_for_sale,
-        price: artworkData.price,
       }) : null,
       meta: artworkData.meta ? JSON.stringify(artworkData.meta) : null,
     })

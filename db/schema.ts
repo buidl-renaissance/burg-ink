@@ -3,7 +3,6 @@ import {
   text, 
   sqliteTable, 
   integer, 
-  real, 
   index,
   uniqueIndex
 } from "drizzle-orm/sqlite-core";
@@ -23,7 +22,6 @@ export const socialLinks = sqliteTable("social_links", {
 export const artists = sqliteTable("artists", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  handle: text("handle").notNull().unique(),
   slug: text("slug").notNull().unique(),
   profile_picture: text("profile_picture"),
   bio: text("bio"),
@@ -33,7 +31,6 @@ export const artists = sqliteTable("artists", {
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   deleted_at: text("deleted_at"),
 }, (table) => ({
-  handleIdx: uniqueIndex("handle_idx").on(table.handle),
   slugIdx: uniqueIndex("slug_idx").on(table.slug),
 }));
 
@@ -46,20 +43,12 @@ export const artwork = sqliteTable("artwork", {
   type: text("type").notNull(),
   artist_id: integer("artist_id").references(() => artists.id),
   image: text("image"), // Main artwork image
-  collaborator_ids: text("collaborator_ids"), // JSON array of collaborator IDs
   category: text("category"),
-  is_for_sale: integer("is_for_sale", { mode: "boolean" }).default(false),
-  price: real("price"),
-  num_collaborators: integer("num_collaborators").default(0),
-  review_text: text("review_text"),
-  review_image: text("review_image"),
-  artist_name: text("artist_name"),
-  uploaded_by: text("uploaded_by"),
-  transaction_digest: text("transaction_digest"),
   meta: text("meta"), // JSON string for additional metadata
   data: text("data"), // JSON string for additional data
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: text("deleted_at"),
 }, (table) => ({
   slugIdx: uniqueIndex("artwork_slug_idx").on(table.slug),
   artistIdx: index("artwork_artist_idx").on(table.artist_id),

@@ -20,11 +20,11 @@ export default async function handler(
         }
         
         if (category) {
-          artworks = artworks.filter(art => art.category?.includes(category as string));
+          artworks = artworks.filter(art => art.data?.category?.includes(category as string));
         }
         
         if (is_for_sale !== undefined) {
-          artworks = artworks.filter(art => art.is_for_sale === (is_for_sale === 'true'));
+          artworks = artworks.filter(art => art.data?.is_for_sale === (is_for_sale === 'true'));
         }
         
         // Apply pagination

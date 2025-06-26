@@ -56,7 +56,6 @@ export default async function handler(
           .insert(artists)
           .values({
             name: artistData.name,
-            handle: artistData.handle,
             slug: artistData.slug,
             profile_picture: artistData.profile_picture,
             bio: artistData.bio,
