@@ -1,0 +1,1 @@
+ALTER TABLE `artwork` ADD `embedding` text;

@@ -4,6 +4,7 @@ import {
   sqliteTable, 
   integer, 
   index,
+  blob,
   uniqueIndex
 } from "drizzle-orm/sqlite-core";
 
@@ -46,6 +47,7 @@ export const artwork = sqliteTable("artwork", {
   category: text("category"),
   meta: text("meta"), // JSON string for additional metadata
   data: text("data"), // JSON string for additional data
+  embedding: blob("embedding"), // Float32Array vector as binary
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   deleted_at: text("deleted_at"),
