@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus, FaCalendar, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaEye, FaCalendar, FaMapMarkerAlt, FaTh, FaList } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
 interface Event {
@@ -39,6 +39,7 @@ export default function AdminEvents() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
   useEffect(() => {
     fetchEvents();
@@ -167,41 +168,6 @@ export default function AdminEvents() {
   return (
     <AdminLayout currentPage="events">
       <Container>
-        <Header>
-          <Title>Events Management</Title>
-          <AddButton>
-            <FaPlus />
-            Add Event
-          </AddButton>
-        </Header>
-
-        <FiltersContainer>
-          <SearchWrapper>
-            <SearchIcon>
-              <FaSearch />
-            </SearchIcon>
-            <SearchInput
-              type="text"
-              placeholder="Search events by title, description, or location..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </SearchWrapper>
-          
-          <StatusFilter>
-            <StatusSelect
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </StatusSelect>
-          </StatusFilter>
-        </FiltersContainer>
-
         <StatsContainer>
           <StatCard>
             <StatNumber>{events.length}</StatNumber>
@@ -223,65 +189,201 @@ export default function AdminEvents() {
           </StatCard>
         </StatsContainer>
 
+        <FiltersContainer>
+          <SearchWrapper>
+            <SearchIcon>
+              <FaSearch />
+            </SearchIcon>
+            <SearchInput
+              type="text"
+              placeholder="Search events by title, description, or location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchWrapper>
+          
+          <FilterControls>
+            <StatusFilter>
+              <StatusSelect
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </StatusSelect>
+            </StatusFilter>
+            
+            <ViewToggle>
+              <ViewButton 
+                active={viewMode === 'table'} 
+                onClick={() => setViewMode('table')}
+                title="Table View"
+              >
+                <FaList />
+              </ViewButton>
+              <ViewButton 
+                active={viewMode === 'cards'} 
+                onClick={() => setViewMode('cards')}
+                title="Card View"
+              >
+                <FaTh />
+              </ViewButton>
+            </ViewToggle>
+          </FilterControls>
+        </FiltersContainer>
+
         <TableContainer>
-          <Table>
-            <thead>
-              <tr>
-                <Th>Event</Th>
-                <Th>Date & Time</Th>
-                <Th>Location</Th>
-                <Th>Tickets</Th>
-                <Th>Status</Th>
-                <Th>Actions</Th>
-              </tr>
-            </thead>
-            <tbody>
+          {viewMode === 'table' ? (
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Event</Th>
+                  <Th>Date & Time</Th>
+                  <Th>Location</Th>
+                  <Th>Tickets</Th>
+                  <Th>Status</Th>
+                  <Th>Actions</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6}>
+                      <LoadingMessage>Loading events...</LoadingMessage>
+                    </td>
+                  </tr>
+                ) : filteredEvents.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>
+                      <EmptyMessage>No events found</EmptyMessage>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEvents.map((event) => (
+                    <tr key={event.id}>
+                      <td>
+                        <EventCell>
+                          <EventImage>
+                            {event.image ? (
+                              <img src={event.image} alt={event.title} />
+                            ) : (
+                              <DefaultImage>
+                                <FaCalendar />
+                              </DefaultImage>
+                            )}
+                          </EventImage>
+                          <EventInfo>
+                            <EventTitle>{event.title}</EventTitle>
+                            <EventDescription>{event.description}</EventDescription>
+                          </EventInfo>
+                        </EventCell>
+                      </td>
+                      <td>
+                        <DateTimeCell>
+                          <DateText>{formatDate(event.date)}</DateText>
+                          <TimeText>{event.time}</TimeText>
+                        </DateTimeCell>
+                      </td>
+                      <td>
+                        <LocationCell>
+                          <FaMapMarkerAlt />
+                          <span>{event.location}</span>
+                        </LocationCell>
+                      </td>
+                      <td>
+                        <TicketCell>
+                          <TicketInfo>
+                            <TicketCount>{event.sold_tickets}</TicketCount>
+                            {event.max_tickets && (
+                              <>
+                                <span>/</span>
+                                <TicketMax>{event.max_tickets}</TicketMax>
+                              </>
+                            )}
+                          </TicketInfo>
+                          {event.max_tickets && (
+                            <TicketProgress>
+                              <ProgressBar>
+                                <ProgressFill 
+                                  percentage={getTicketPercentage(event.sold_tickets, event.max_tickets)}
+                                />
+                              </ProgressBar>
+                              <ProgressText>{getTicketPercentage(event.sold_tickets, event.max_tickets)}%</ProgressText>
+                            </TicketProgress>
+                          )}
+                          {event.ticket_price !== undefined && (
+                            <TicketPrice>
+                              {event.ticket_price === 0 ? 'Free' : `$${event.ticket_price}`}
+                            </TicketPrice>
+                          )}
+                        </TicketCell>
+                      </td>
+                      <td>
+                        <StatusBadge color={getStatusColor(event.status)}>
+                          {getStatusLabel(event.status)}
+                        </StatusBadge>
+                      </td>
+                      <td>
+                        <ActionButtons>
+                          <ActionButton onClick={() => handleViewEvent(event)}>
+                            <FaEye />
+                          </ActionButton>
+                          <ActionButton onClick={() => handleEditEvent(event)}>
+                            <FaEdit />
+                          </ActionButton>
+                          <ActionButton 
+                            onClick={() => handleDeleteEvent(event.id)}
+                            danger
+                          >
+                            <FaTrash />
+                          </ActionButton>
+                        </ActionButtons>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </Table>
+          ) : (
+            <CardsContainer>
               {loading ? (
-                <tr>
-                  <td colSpan={6}>
-                    <LoadingMessage>Loading events...</LoadingMessage>
-                  </td>
-                </tr>
+                <LoadingMessage>Loading events...</LoadingMessage>
               ) : filteredEvents.length === 0 ? (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyMessage>No events found</EmptyMessage>
-                  </td>
-                </tr>
+                <EmptyMessage>No events found</EmptyMessage>
               ) : (
                 filteredEvents.map((event) => (
-                  <tr key={event.id}>
-                    <td>
-                      <EventCell>
-                        <EventImage>
-                          {event.image ? (
-                            <img src={event.image} alt={event.title} />
-                          ) : (
-                            <DefaultImage>
-                              <FaCalendar />
-                            </DefaultImage>
-                          )}
-                        </EventImage>
-                        <EventInfo>
-                          <EventTitle>{event.title}</EventTitle>
-                          <EventDescription>{event.description}</EventDescription>
-                        </EventInfo>
-                      </EventCell>
-                    </td>
-                    <td>
-                      <DateTimeCell>
-                        <DateText>{formatDate(event.date)}</DateText>
-                        <TimeText>{event.time}</TimeText>
-                      </DateTimeCell>
-                    </td>
-                    <td>
-                      <LocationCell>
-                        <FaMapMarkerAlt />
-                        <span>{event.location}</span>
-                      </LocationCell>
-                    </td>
-                    <td>
-                      <TicketCell>
+                  <EventCard key={event.id}>
+                    <CardImage>
+                      {event.image ? (
+                        <img src={event.image} alt={event.title} />
+                      ) : (
+                        <DefaultCardImage>
+                          <FaCalendar />
+                        </DefaultCardImage>
+                      )}
+                    </CardImage>
+                    <CardContent>
+                      <CardHeader>
+                        <CardTitle>{event.title}</CardTitle>
+                        <StatusBadge color={getStatusColor(event.status)}>
+                          {getStatusLabel(event.status)}
+                        </StatusBadge>
+                      </CardHeader>
+                      <CardDescription>{event.description}</CardDescription>
+                      <CardDetails>
+                        <DetailItem>
+                          <FaCalendar />
+                          <span>{formatDate(event.date)} at {event.time}</span>
+                        </DetailItem>
+                        <DetailItem>
+                          <FaMapMarkerAlt />
+                          <span>{event.location}</span>
+                        </DetailItem>
+                      </CardDetails>
+                      <CardTickets>
                         <TicketInfo>
                           <TicketCount>{event.sold_tickets}</TicketCount>
                           {event.max_tickets && (
@@ -290,6 +392,7 @@ export default function AdminEvents() {
                               <TicketMax>{event.max_tickets}</TicketMax>
                             </>
                           )}
+                          <span> tickets sold</span>
                         </TicketInfo>
                         {event.max_tickets && (
                           <TicketProgress>
@@ -306,15 +409,8 @@ export default function AdminEvents() {
                             {event.ticket_price === 0 ? 'Free' : `$${event.ticket_price}`}
                           </TicketPrice>
                         )}
-                      </TicketCell>
-                    </td>
-                    <td>
-                      <StatusBadge color={getStatusColor(event.status)}>
-                        {getStatusLabel(event.status)}
-                      </StatusBadge>
-                    </td>
-                    <td>
-                      <ActionButtons>
+                      </CardTickets>
+                      <CardActions>
                         <ActionButton onClick={() => handleViewEvent(event)}>
                           <FaEye />
                         </ActionButton>
@@ -327,13 +423,13 @@ export default function AdminEvents() {
                         >
                           <FaTrash />
                         </ActionButton>
-                      </ActionButtons>
-                    </td>
-                  </tr>
+                      </CardActions>
+                    </CardContent>
+                  </EventCard>
                 ))
               )}
-            </tbody>
-          </Table>
+            </CardsContainer>
+          )}
         </TableContainer>
 
         {showEventModal && selectedEvent && (
@@ -436,55 +532,50 @@ const Container = styled.div`
   margin: 0 auto;
 `;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+const StatsContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+const StatCard = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
 
   @media (max-width: 768px) {
-    font-size: 1.75rem;
-    text-align: center;
+    padding: 1rem;
   }
 `;
 
-const AddButton = styled.button`
-  background: #96885f;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background: #7a6f4d;
-  }
+const StatNumber = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #96885f;
+  margin-bottom: 0.5rem;
 
   @media (max-width: 768px) {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    justify-content: center;
+    font-size: 1.5rem;
+  }
+`;
+
+const StatLabel = styled.div`
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
   }
 `;
 
@@ -539,6 +630,17 @@ const SearchInput = styled.input`
   }
 `;
 
+const FilterControls = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+`;
+
 const StatusFilter = styled.div`
   min-width: 150px;
 
@@ -566,50 +668,39 @@ const StatusSelect = styled.select`
   }
 `;
 
-const StatsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+const ViewToggle = styled.div`
+  display: flex;
+  gap: 0.5rem;
 
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    flex-direction: row;
+    gap: 0.25rem;
   }
 `;
 
-const StatCard = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
+const ViewButton = styled.button<{ active: boolean }>`
+  background: ${props => props.active ? '#96885f' : '#e9ecef'};
+  color: ${props => props.active ? 'white' : '#6c757d'};
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
 
-  @media (max-width: 768px) {
-    padding: 1rem;
+  &:hover {
+    background: ${props => props.active ? '#7a6f4d' : '#dee2e6'};
   }
-`;
-
-const StatNumber = styled.div`
-  font-size: 2rem;
-  font-weight: 700;
-  color: #96885f;
-  margin-bottom: 0.5rem;
 
   @media (max-width: 768px) {
-    font-size: 1.5rem;
-  }
-`;
-
-const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    min-width: 40px;
   }
 `;
 
@@ -617,7 +708,10 @@ const TableContainer = styled.div`
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: scroll;
+  max-width: calc(100vw - 2rem);
+  width: 100%;
+  margin: 0 auto;
 `;
 
 const Table = styled.table`
@@ -632,6 +726,11 @@ const Th = styled.th`
   font-weight: 600;
   color: #333;
   border-bottom: 1px solid #e9ecef;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
 `;
 
 const EventCell = styled.div`
@@ -639,6 +738,11 @@ const EventCell = styled.div`
   align-items: center;
   gap: 1rem;
   padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+    gap: 0.75rem;
+  }
 `;
 
 const EventImage = styled.div`
@@ -647,6 +751,11 @@ const EventImage = styled.div`
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 50px;
+    height: 35px;
+  }
 
   img {
     width: 100%;
@@ -664,6 +773,10 @@ const DefaultImage = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
 `;
 
 const EventInfo = styled.div`
@@ -674,6 +787,11 @@ const EventTitle = styled.div`
   font-weight: 600;
   color: #333;
   margin-bottom: 0.25rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-bottom: 0.125rem;
+  }
 `;
 
 const EventDescription = styled.div`
@@ -684,21 +802,39 @@ const EventDescription = styled.div`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 1;
+  }
 `;
 
 const DateTimeCell = styled.div`
   padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+  }
 `;
 
 const DateText = styled.div`
   font-weight: 600;
   color: #333;
   margin-bottom: 0.25rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+    margin-bottom: 0.125rem;
+  }
 `;
 
 const TimeText = styled.div`
   font-size: 0.8rem;
   color: #6c757d;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 `;
 
 const LocationCell = styled.div`
@@ -708,10 +844,20 @@ const LocationCell = styled.div`
   padding: 1rem;
   color: #6c757d;
   font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
 `;
 
 const TicketCell = styled.div`
   padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+  }
 `;
 
 const TicketInfo = styled.div`
@@ -720,6 +866,11 @@ const TicketInfo = styled.div`
   gap: 0.25rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
 `;
 
 const TicketCount = styled.span`
@@ -735,6 +886,11 @@ const TicketProgress = styled.div`
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
 `;
 
 const ProgressBar = styled.div`
@@ -743,6 +899,10 @@ const ProgressBar = styled.div`
   background: #e9ecef;
   border-radius: 2px;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    height: 3px;
+  }
 `;
 
 const ProgressFill = styled.div<{ percentage: number }>`
@@ -756,12 +916,21 @@ const ProgressText = styled.span`
   font-size: 0.8rem;
   color: #6c757d;
   min-width: 30px;
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+    min-width: 25px;
+  }
 `;
 
 const TicketPrice = styled.div`
   font-size: 0.8rem;
   color: #96885f;
   font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 `;
 
 const StatusBadge = styled.span<{ color: string }>`
@@ -771,11 +940,20 @@ const StatusBadge = styled.span<{ color: string }>`
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
+
+  @media (max-width: 768px) {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+  }
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+  }
 `;
 
 const ActionButton = styled.button<{ danger?: boolean }>`
@@ -786,6 +964,11 @@ const ActionButton = styled.button<{ danger?: boolean }>`
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
 
   &:hover {
     background: ${props => props.danger ? '#c82333' : '#5a6268'};
@@ -875,4 +1058,138 @@ const DetailLabel = styled.div`
 const DetailValue = styled.div`
   color: #6c757d;
   flex: 1;
-`; 
+`;
+
+const CardsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+`;
+
+const EventCard = styled.div`
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: calc(33.33% - 1rem);
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const CardImage = styled.div`
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const DefaultCardImage = styled.div`
+  width: 100%;
+  height: 100%;
+  background: #e9ecef;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+`;
+
+const CardContent = styled.div`
+  padding: 1.5rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+`;
+
+const CardTitle = styled.h3`
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+`;
+
+const CardDescription = styled.p`
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 1;
+  }
+`;
+
+const CardDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+  }
+`;
+
+const DetailItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+`;
+
+const CardTickets = styled.div`
+  margin-bottom: 1rem;
+`;
+
+const CardActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+  }
+`;
