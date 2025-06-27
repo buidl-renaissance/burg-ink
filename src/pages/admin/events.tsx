@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaSearch, FaEdit, FaTrash, FaEye, FaCalendar, FaMapMarkerAlt, FaTh, FaList } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
+import { TableContainer, Table, Th, LoadingMessage, EmptyMessage, ActionButtons, ActionButton } from '@/components/AdminTableStyles';
 
 interface Event {
   id: number;
@@ -704,35 +705,6 @@ const ViewButton = styled.button<{ active: boolean }>`
   }
 `;
 
-const TableContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow-x: scroll;
-  max-width: calc(100vw - 2rem);
-  width: 100%;
-  margin: 0 auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const Th = styled.th`
-  background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #e9ecef;
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
-  }
-`;
-
 const EventCell = styled.div`
   display: flex;
   align-items: center;
@@ -945,46 +917,6 @@ const StatusBadge = styled.span<{ color: string }>`
     padding: 0.2rem 0.5rem;
     font-size: 0.7rem;
   }
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 0.5rem;
-
-  @media (max-width: 768px) {
-    gap: 0.25rem;
-  }
-`;
-
-const ActionButton = styled.button<{ danger?: boolean }>`
-  background: ${props => props.danger ? '#dc3545' : '#6c757d'};
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  @media (max-width: 768px) {
-    padding: 0.4rem;
-    font-size: 0.8rem;
-  }
-
-  &:hover {
-    background: ${props => props.danger ? '#c82333' : '#5a6268'};
-  }
-`;
-
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-`;
-
-const EmptyMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
 `;
 
 const ModalOverlay = styled.div`

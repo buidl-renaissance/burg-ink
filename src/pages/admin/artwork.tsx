@@ -12,7 +12,7 @@ import { ImportArtworkModal } from '@/components/ImportArtworkModal';
 import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
 import { GetServerSideProps } from 'next';
-// import { convertDefaultToResized } from '@/utils/image';
+import { TableContainer, Table, Th, Td, ActionButton, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
 
 const AdminContainer = styled.div`
   max-width: 1400px;
@@ -68,138 +68,6 @@ const AddButton = styled.button`
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
     justify-content: center;
-  }
-`;
-
-const TableContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    border-radius: 8px;
-    overflow-x: auto;
-    width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  @media (max-width: 768px) {
-    min-width: 100%;
-    width: max-content;
-  }
-`;
-
-const Th = styled.th`
-  background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    min-width: 80px;
-  }
-`;
-
-const Td = styled.td`
-  padding: 1rem;
-  border-bottom: 1px solid #e9ecef;
-  vertical-align: middle;
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 0.5rem;
-    white-space: nowrap;
-    min-width: 80px;
-  }
-`;
-
-const ImageCell = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  background: #f8f9fa;
-
-  @media (max-width: 768px) {
-    width: 60px;
-    height: 60px;
-  }
-`;
-
-const ActionButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-right: 0.5rem;
-
-  &:hover {
-    background: #f8f9fa;
-  }
-
-  &.edit {
-    color: #007bff;
-  }
-
-  &.delete {
-    color: #dc3545;
-  }
-
-  &.view {
-    color: #28a745;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.4rem;
-    margin-right: 0.25rem;
-    font-size: 0.9rem;
-  }
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 3rem;
-  color: #6c757d;
-`;
-
-const LoadingState = styled.div`
-  text-align: center;
-  padding: 3rem;
-  color: #6c757d;
-`;
-
-const ErrorState = styled.div`
-  text-align: center;
-  padding: 3rem;
-  color: #dc3545;
-  background: #f8d7da;
-  border-radius: 8px;
-  margin: 1rem 0;
-`;
-
-const TitleCell = styled.div`
-  max-width: 200px;
-
-  @media (max-width: 768px) {
-    max-width: 150px;
-    white-space: normal;
-    word-break: break-word;
   }
 `;
 
@@ -383,22 +251,22 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
                       />
                     </Td>
                     <Td>
-                      <ActionButton 
-                        className="view" 
+                      <ActionButton
+                        className="view"
                         onClick={() => handleView(artwork)}
                         title="View"
                       >
                         <FaEye />
                       </ActionButton>
-                      <ActionButton 
-                        className="edit" 
+                      <ActionButton
+                        className="edit"
                         onClick={() => handleEdit(artwork)}
                         title="Edit"
                       >
                         <FaEdit />
                       </ActionButton>
-                      <ActionButton 
-                        className="delete" 
+                      <ActionButton
+                        className="delete"
                         onClick={() => handleDelete(artwork.id)}
                         title="Delete"
                       >
