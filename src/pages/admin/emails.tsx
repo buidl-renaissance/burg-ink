@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus, FaEnvelope, FaPaperPlane, FaClock } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
+import { TableContainer, Table, Th, Td, ActionButton, LoadingMessage, EmptyMessage, ActionButtons } from '@/components/AdminTableStyles';
 
 interface Email {
   id: number;
@@ -240,32 +241,32 @@ export default function AdminEmails() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5}>
+                  <Td colSpan={5}>
                     <LoadingMessage>Loading emails...</LoadingMessage>
-                  </td>
+                  </Td>
                 </tr>
               ) : filteredEmails.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>
+                  <Td colSpan={5}>
                     <EmptyMessage>No emails found</EmptyMessage>
-                  </td>
+                  </Td>
                 </tr>
               ) : (
                 filteredEmails.map((email) => (
                   <tr key={email.id}>
-                    <td>
+                    <Td>
                       <SubjectCell>
                         <SubjectText>{email.subject}</SubjectText>
                         <SenderText>From: {email.sender}</SenderText>
                       </SubjectCell>
-                    </td>
-                    <td>
+                    </Td>
+                    <Td>
                       <RecipientCell>
                         <FaEnvelope />
                         <span>{email.recipient}</span>
                       </RecipientCell>
-                    </td>
-                    <td>
+                    </Td>
+                    <Td>
                       <StatusCell>
                         <StatusBadge color={getStatusColor(email.status)}>
                           {getStatusLabel(email.status)}
@@ -277,16 +278,16 @@ export default function AdminEmails() {
                           </ScheduledTime>
                         )}
                       </StatusCell>
-                    </td>
-                    <td>
+                    </Td>
+                    <Td>
                       <DateCell>
                         <DateText>{formatDate(email.created_at)}</DateText>
                         {email.sent_at && (
                           <SentTime>Sent: {formatDateTime(email.sent_at)}</SentTime>
                         )}
                       </DateCell>
-                    </td>
-                    <td>
+                    </Td>
+                    <Td>
                       <ActionButtons>
                         <ActionButton onClick={() => handleViewEmail(email)}>
                           <FaEye />
@@ -306,7 +307,7 @@ export default function AdminEmails() {
                           <FaTrash />
                         </ActionButton>
                       </ActionButtons>
-                    </td>
+                    </Td>
                   </tr>
                 ))
               )}
@@ -585,44 +586,6 @@ const StatLabel = styled.div`
   }
 `;
 
-const TableContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    border-radius: 8px;
-    overflow-x: auto;
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  @media (max-width: 768px) {
-    min-width: 600px;
-  }
-`;
-
-const Th = styled.th`
-  background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
-  }
-`;
-
 const SubjectCell = styled.div`
   padding: 1rem;
 `;
@@ -682,62 +645,6 @@ const DateText = styled.div`
 
 const SentTime = styled.div`
   font-size: 0.8rem;
-  color: #6c757d;
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 0.5rem;
-
-  @media (max-width: 768px) {
-    gap: 0.25rem;
-  }
-`;
-
-const ActionButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  color: #6c757d;
-
-  &:hover {
-    background: #f8f9fa;
-  }
-
-  &.view {
-    color: #28a745;
-  }
-
-  &.edit {
-    color: #007bff;
-  }
-
-  &.delete {
-    color: #dc3545;
-  }
-
-  &.send {
-    color: #96885f;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.4rem;
-    font-size: 0.9rem;
-  }
-`;
-
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-`;
-
-const EmptyMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
   color: #6c757d;
 `;
 

@@ -133,6 +133,10 @@ export const ActionButton = styled.button<{ danger?: boolean }>`
     color: #28a745;
   }
 
+  &.send {
+    color: #96885f;
+  }
+
   &:hover {
     background: ${props => props.danger ? '#c82333' : '#5a6268'};
   }
