@@ -76,9 +76,19 @@ export async function getPublishedArtworkFromArtist(artistId?: string) {
     }
     
     return {
-      ...row.artwork,
+      id: row.artwork.id,
+      slug: row.artwork.slug,
+      title: row.artwork.title,
+      description: row.artwork.description,
+      type: row.artwork.type,
+      artist_id: row.artwork.artist_id,
+      image: row.artwork.image,
+      category: row.artwork.category,
+      data: row.artwork.data,
       meta: parsedMeta,
-      data: row.artwork.data ? JSON.parse(row.artwork.data) : {},
+      created_at: row.artwork.created_at,
+      updated_at: row.artwork.updated_at,
+      deleted_at: row.artwork.deleted_at,
       artist: row.artists ? {
         id: row.artists.id,
         name: row.artists.name,
@@ -132,13 +142,23 @@ export async function getArtworkBySlug(slug: string, publishedOnly: boolean = fa
   }
   
   return {
-    ...row.artwork,
-    meta: parsedMeta,
+    id: row.artwork.id,
+    slug: row.artwork.slug,
+    title: row.artwork.title,
+    description: row.artwork.description,
+    type: row.artwork.type,
+    artist_id: row.artwork.artist_id,
+    image: row.artwork.image,
+    category: row.artwork.category,
     data: {
       ...(row.artwork.data ? JSON.parse(row.artwork.data) : {}),
       image: row.artwork.image,
       category: row.artwork.category,
     },
+    meta: parsedMeta,
+    created_at: row.artwork.created_at,
+    updated_at: row.artwork.updated_at,
+    deleted_at: row.artwork.deleted_at,
     artist: row.artists ? {
       id: row.artists.id,
       name: row.artists.name,

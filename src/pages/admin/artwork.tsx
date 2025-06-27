@@ -6,9 +6,10 @@ import { Artwork } from '@/utils/interfaces';
 import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { AdminLayout } from '@/components/AdminLayout';
 import { StatusDropdown } from '@/components/StatusDropdown';
-import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload, FaSearch } from 'react-icons/fa';
 import Image from 'next/image';
 import { ImportArtworkModal } from '@/components/ImportArtworkModal';
+import VectorSearchModal from '@/components/VectorSearchModal';
 import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
 import { GetServerSideProps } from 'next';
@@ -71,6 +72,41 @@ const AddButton = styled.button`
   }
 `;
 
+const SearchButton = styled.button`
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background: #218838;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    justify-content: center;
+  }
+`;
+
+interface SearchResult {
+  id: number;
+  title: string;
+  description: string | null;
+  slug: string;
+  image: string | null;
+  category: string | null;
+  similarity: number;
+}
+
 export const getServerSideProps: GetServerSideProps = async () => {
   const artist = await getArtist(process.env.NEXT_PUBLIC_ARTIST_ID || '');
   return {
@@ -89,6 +125,7 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isVectorSearchOpen, setIsVectorSearchOpen] = useState(false);
 
   useEffect(() => {
     fetchArtworks();
@@ -167,6 +204,15 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
     ]);
   };
 
+  const handleVectorSearchSelect = (searchResult: SearchResult) => {
+    // Find the artwork in the current list and scroll to it
+    const artwork = artworks.find(a => a.id === searchResult.id);
+    if (artwork) {
+      // You could add highlighting or scrolling logic here
+      console.log('Selected artwork from vector search:', artwork);
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout currentPage="artwork">
@@ -181,6 +227,9 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
         <Header>
           <Title>Artwork Management</Title>
           <div style={{ display: 'flex', gap: '1rem' }}>
+            <SearchButton onClick={() => setIsVectorSearchOpen(true)}>
+              <FaSearch /> AI Search
+            </SearchButton>
             <AddButton onClick={() => setIsModalOpen(true)}>
               <FaPlus /> Add Artwork
             </AddButton>
@@ -293,6 +342,12 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           onImport={handleImportArtwork}
+        />
+
+        <VectorSearchModal
+          isOpen={isVectorSearchOpen}
+          onClose={() => setIsVectorSearchOpen(false)}
+          onSelectArtwork={handleVectorSearchSelect}
         />
       </AdminContainer>
     </AdminLayout>
