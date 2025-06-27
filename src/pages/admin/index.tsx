@@ -75,6 +75,11 @@ export default function AdminDashboard() {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
       }
+
+      @media (max-width: 768px) {
+        padding: 1rem;
+        border-radius: 8px;
+      }
     `;
 
     const IconWrapper = styled.div`
@@ -88,6 +93,13 @@ export default function AdminDashboard() {
       color: white;
       font-size: 1.5rem;
       margin-bottom: 1rem;
+
+      @media (max-width: 768px) {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+      }
     `;
 
     const Title = styled.h3`
@@ -96,6 +108,11 @@ export default function AdminDashboard() {
       margin: 0 0 0.5rem 0;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+
+      @media (max-width: 768px) {
+        font-size: 0.8rem;
+        margin: 0 0 0.25rem 0;
+      }
     `;
 
     const Value = styled.div`
@@ -103,6 +120,10 @@ export default function AdminDashboard() {
       font-weight: 700;
       color: #333;
       margin: 0;
+
+      @media (max-width: 768px) {
+        font-size: 1.5rem;
+      }
     `;
 
     const content = (
@@ -243,6 +264,12 @@ const StatsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 const QuickActions = styled.div`
@@ -260,6 +287,11 @@ const ActionsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
 `;
 
 const ActionCard = styled(Link)`
@@ -275,11 +307,21 @@ const ActionCard = styled(Link)`
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    border-radius: 8px;
+  }
 `;
 
 const ActionIcon = styled.div`
   font-size: 2rem;
   margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
 `;
 
 const ActionTitle = styled.h3`
@@ -287,6 +329,11 @@ const ActionTitle = styled.h3`
   font-weight: 600;
   color: #333;
   margin: 0 0 0.5rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin: 0 0 0.25rem 0;
+  }
 `;
 
 const ActionDescription = styled.p`
@@ -294,4 +341,9 @@ const ActionDescription = styled.p`
   color: #6c757d;
   margin: 0;
   line-height: 1.5;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
 `; 

@@ -19,6 +19,10 @@ const Container = styled.div<{ sidebarOpen?: boolean }>`
 
 const Header = styled.div`
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -26,11 +30,19 @@ const Title = styled.h1`
   font-weight: 700;
   color: #333;
   margin: 0 0 0.5rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Subtitle = styled.p`
   color: #6c757d;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const Controls = styled.div`
@@ -39,12 +51,23 @@ const Controls = styled.div`
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const SearchSection = styled.div`
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
 `;
 
 const SearchInput = styled.input`
@@ -58,6 +81,11 @@ const SearchInput = styled.input`
     outline: none;
     border-color: #96885f;
     box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.9rem;
   }
 `;
 
@@ -73,6 +101,11 @@ const SearchButton = styled.button`
   &:hover {
     background: #7a6f4d;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
 `;
 
 const FiltersSection = styled.div`
@@ -80,18 +113,32 @@ const FiltersSection = styled.div`
   gap: 2rem;
   align-items: center;
   flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
 `;
 
 const FilterGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    justify-content: space-between;
+  }
 `;
 
 const FilterLabel = styled.label`
   font-weight: 500;
   color: #333;
   font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
 `;
 
 const FilterSelect = styled.select`
@@ -104,6 +151,12 @@ const FilterSelect = styled.select`
   &:focus {
     outline: none;
     border-color: #96885f;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    min-width: 120px;
   }
 `;
 
@@ -118,11 +171,19 @@ const SortButton = styled.button`
   &:hover {
     background: #e9ecef;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+  }
 `;
 
 const ViewToggle = styled.div`
   display: flex;
   gap: 0.25rem;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
 const ViewButton = styled.button<{ active: boolean }>`
@@ -136,6 +197,10 @@ const ViewButton = styled.button<{ active: boolean }>`
   
   &:hover {
     background: ${props => props.active ? '#7a6f4d' : '#e9ecef'};
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
   }
 `;
 
@@ -190,12 +255,22 @@ const StatsBar = styled.div`
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
 `;
 
 const StatItem = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    justify-content: space-between;
+  }
 `;
 
 const StatLabel = styled.span`

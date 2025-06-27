@@ -34,6 +34,301 @@ interface UserSettings {
   requireStrongPassword: boolean;
 }
 
+// Styled Components
+const Container = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+    text-align: center;
+  }
+`;
+
+const SaveButton = styled.button`
+  background: #96885f;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background: #7a6f4d;
+  }
+
+  &:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    justify-content: center;
+  }
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const Tab = styled.button<{ active: boolean }>`
+  background: none;
+  border: none;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${props => props.active ? '#96885f' : '#6c757d'};
+  border-bottom: 2px solid ${props => props.active ? '#96885f' : 'transparent'};
+  font-weight: ${props => props.active ? '600' : '500'};
+  transition: all 0.3s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: #96885f;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    gap: 0.25rem;
+  }
+`;
+
+const SettingsContainer = styled.div`
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+const SettingsSection = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1.5rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+    margin: 0 0 1rem 0;
+  }
+`;
+
+const SettingsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const SettingField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+  }
+`;
+
+const Label = styled.label`
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1rem;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+`;
+
+const Textarea = styled.textarea`
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+`;
+
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+`;
+
+const Toggle = styled.input`
+  width: 40px;
+  height: 20px;
+  appearance: none;
+  background: #e9ecef;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:checked {
+    background: #96885f;
+  }
+
+  &:checked::before {
+    transform: translateX(20px);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+  }
+
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 18px;
+
+    &:checked::before {
+      transform: translateX(18px);
+    }
+
+    &::before {
+      width: 14px;
+      height: 14px;
+    }
+  }
+`;
+
+const ToggleLabel = styled.span`
+  font-size: 0.9rem;
+  color: #6c757d;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+`;
+
+const ColorInput = styled.input`
+  width: 60px;
+  height: 40px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+
+  &:focus {
+    border-color: #96885f;
+    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+`;
+
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('site');
   const [loading, setLoading] = useState(false);
@@ -557,13 +852,13 @@ export default function AdminSettings() {
         )}
 
         <Content>
-          <TabsContainer>
+          <TabContainer>
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <Tab
                   key={tab.id}
-                  isActive={activeTab === tab.id}
+                  active={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
                 >
                   <Icon />
@@ -571,7 +866,7 @@ export default function AdminSettings() {
                 </Tab>
               );
             })}
-          </TabsContainer>
+          </TabContainer>
 
           <SettingsContainer>
             {loading ? (
@@ -585,49 +880,6 @@ export default function AdminSettings() {
     </AdminLayout>
   );
 }
-
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-`;
-
-const Title = styled.h1`
-  font-size: 2rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-`;
-
-const SaveButton = styled.button`
-  background: #96885f;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
-
-  &:hover:not(:disabled) {
-    background: #7a6f4d;
-  }
-
-  &:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-  }
-`;
 
 const SuccessMessage = styled.div`
   background: #d4edda;
@@ -654,178 +906,4 @@ const Content = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
   }
-`;
-
-const TabsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-width: 200px;
-  
-  @media (max-width: 768px) {
-    flex-direction: row;
-    overflow-x: auto;
-    min-width: auto;
-  }
-`;
-
-const Tab = styled.button<{ isActive: boolean }>`
-  background: ${props => props.isActive ? '#96885f' : 'transparent'};
-  color: ${props => props.isActive ? 'white' : '#333'};
-  border: none;
-  padding: 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  text-align: left;
-
-  &:hover {
-    background: ${props => props.isActive ? '#7a6f4d' : 'rgba(150, 136, 95, 0.1)'};
-  }
-`;
-
-const SettingsContainer = styled.div`
-  flex: 1;
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-`;
-
-const SettingsSection = styled.div`
-  margin-bottom: 2rem;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 1.5rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e9ecef;
-`;
-
-const SettingsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-`;
-
-const SettingField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-`;
-
-const Input = styled.input`
-  padding: 0.75rem;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  outline: none;
-
-  &:focus {
-    border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
-  }
-`;
-
-const Textarea = styled.textarea`
-  padding: 0.75rem;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  outline: none;
-  resize: vertical;
-
-  &:focus {
-    border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
-  }
-`;
-
-const Select = styled.select`
-  padding: 0.75rem;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  outline: none;
-  background: white;
-
-  &:focus {
-    border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
-  }
-`;
-
-const Toggle = styled.input.attrs({ type: 'checkbox' })`
-  width: 40px;
-  height: 20px;
-  appearance: none;
-  background: #e9ecef;
-  border-radius: 10px;
-  position: relative;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:checked {
-    background: #96885f;
-  }
-
-  &:checked::after {
-    transform: translateX(20px);
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-  }
-`;
-
-const ToggleLabel = styled.span`
-  font-size: 0.9rem;
-  color: #6c757d;
-  margin-left: 0.5rem;
-`;
-
-const ColorInput = styled.input`
-  width: 60px;
-  height: 40px;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  cursor: pointer;
-  outline: none;
-
-  &:focus {
-    border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
-  }
-`;
-
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
 `; 

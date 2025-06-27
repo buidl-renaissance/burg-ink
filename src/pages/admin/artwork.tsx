@@ -25,6 +25,12 @@ const Header = styled.div`
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -34,7 +40,8 @@ const Title = styled.h1`
   margin: 0;
 
   @media (max-width: 768px) {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    text-align: center;
   }
 `;
 
@@ -55,6 +62,12 @@ const AddButton = styled.button`
   &:hover {
     background: #7a6f4d;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    justify-content: center;
+  }
 `;
 
 const TableContainer = styled.div`
@@ -62,11 +75,20 @@ const TableContainer = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+
+  @media (max-width: 768px) {
+    min-width: 600px;
+  }
 `;
 
 const Th = styled.th`
@@ -79,12 +101,21 @@ const Th = styled.th`
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
 `;
 
 const Td = styled.td`
   padding: 1rem;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+  }
 `;
 
 const ImageCell = styled.div`
@@ -94,6 +125,11 @@ const ImageCell = styled.div`
   overflow: hidden;
   position: relative;
   background: #f8f9fa;
+
+  @media (max-width: 768px) {
+    width: 60px;
+    height: 60px;
+  }
 `;
 
 const ActionButton = styled.button`
@@ -119,6 +155,12 @@ const ActionButton = styled.button`
 
   &.view {
     color: #28a745;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.4rem;
+    margin-right: 0.25rem;
+    font-size: 0.9rem;
   }
 `;
 

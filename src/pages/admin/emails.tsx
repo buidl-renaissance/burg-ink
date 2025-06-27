@@ -291,7 +291,7 @@ export default function AdminEmails() {
                         )}
                         <ActionButton 
                           onClick={() => handleDeleteEmail(email.id)}
-                          danger
+                          className="delete"
                         >
                           <FaTrash />
                         </ActionButton>
@@ -403,13 +403,26 @@ const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+    text-align: center;
+  }
 `;
 
 const AddButton = styled.button`
@@ -418,7 +431,7 @@ const AddButton = styled.button`
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   display: flex;
@@ -429,20 +442,35 @@ const AddButton = styled.button`
   &:hover {
     background: #7a6f4d;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    justify-content: center;
+  }
 `;
 
 const FiltersContainer = styled.div`
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
-  align-items: center;
   flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const SearchWrapper = styled.div`
-  position: relative;
   flex: 1;
-  max-width: 400px;
+  position: relative;
+  min-width: 300px;
+
+  @media (max-width: 768px) {
+    min-width: auto;
+  }
 `;
 
 const SearchIcon = styled.div`
@@ -451,6 +479,7 @@ const SearchIcon = styled.div`
   top: 50%;
   transform: translateY(-50%);
   color: #6c757d;
+  z-index: 1;
 `;
 
 const SearchInput = styled.input`
@@ -458,17 +487,26 @@ const SearchInput = styled.input`
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  font-size: 0.9rem;
-  outline: none;
-
+  font-size: 1rem;
+  
   &:focus {
+    outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    font-size: 0.9rem;
   }
 `;
 
 const StatusFilter = styled.div`
   min-width: 150px;
+
+  @media (max-width: 768px) {
+    min-width: auto;
+  }
 `;
 
 const StatusSelect = styled.select`
@@ -476,29 +514,43 @@ const StatusSelect = styled.select`
   padding: 0.75rem 1rem;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  font-size: 0.9rem;
-  outline: none;
+  font-size: 1rem;
   background: white;
-
+  
   &:focus {
+    outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
   }
 `;
 
 const StatsContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const StatCard = styled.div`
   background: white;
-  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const StatNumber = styled.div`
@@ -506,6 +558,10 @@ const StatNumber = styled.div`
   font-weight: 700;
   color: #96885f;
   margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const StatLabel = styled.div`
@@ -513,18 +569,31 @@ const StatLabel = styled.div`
   color: #6c757d;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
 const TableContainer = styled.div`
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+
+  @media (max-width: 768px) {
+    min-width: 600px;
+  }
 `;
 
 const Th = styled.th`
@@ -534,6 +603,24 @@ const Th = styled.th`
   font-weight: 600;
   color: #333;
   border-bottom: 1px solid #e9ecef;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+`;
+
+const Td = styled.td`
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+  }
 `;
 
 const SubjectCell = styled.div`
@@ -601,19 +688,44 @@ const SentTime = styled.div`
 const ActionButtons = styled.div`
   display: flex;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+  }
 `;
 
-const ActionButton = styled.button<{ danger?: boolean }>`
-  background: ${props => props.danger ? '#dc3545' : '#6c757d'};
-  color: white;
+const ActionButton = styled.button`
+  background: none;
   border: none;
   padding: 0.5rem;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  color: #6c757d;
 
   &:hover {
-    background: ${props => props.danger ? '#c82333' : '#5a6268'};
+    background: #f8f9fa;
+  }
+
+  &.view {
+    color: #28a745;
+  }
+
+  &.edit {
+    color: #007bff;
+  }
+
+  &.delete {
+    color: #dc3545;
+  }
+
+  &.send {
+    color: #96885f;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.4rem;
+    font-size: 0.9rem;
   }
 `;
 
@@ -709,4 +821,4 @@ const EmailContent = styled.div`
   border-left: 4px solid #96885f;
   white-space: pre-wrap;
   line-height: 1.6;
-`; 
+`;

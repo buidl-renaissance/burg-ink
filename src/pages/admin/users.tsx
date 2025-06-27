@@ -268,13 +268,26 @@ const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 600;
   color: #333;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+    text-align: center;
+  }
 `;
 
 const AddButton = styled.button`
@@ -283,7 +296,7 @@ const AddButton = styled.button`
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   display: flex;
@@ -294,15 +307,29 @@ const AddButton = styled.button`
   &:hover {
     background: #7a6f4d;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    justify-content: center;
+  }
 `;
 
 const SearchContainer = styled.div`
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const SearchWrapper = styled.div`
   position: relative;
-  max-width: 400px;
+  max-width: 500px;
+
+  @media (max-width: 768px) {
+    max-width: none;
+  }
 `;
 
 const SearchIcon = styled.div`
@@ -311,6 +338,7 @@ const SearchIcon = styled.div`
   top: 50%;
   transform: translateY(-50%);
   color: #6c757d;
+  z-index: 1;
 `;
 
 const SearchInput = styled.input`
@@ -318,28 +346,43 @@ const SearchInput = styled.input`
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  font-size: 0.9rem;
-  outline: none;
-
+  font-size: 1rem;
+  
   &:focus {
+    outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    font-size: 0.9rem;
   }
 `;
 
 const StatsContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const StatCard = styled.div`
   background: white;
-  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const StatNumber = styled.div`
@@ -347,6 +390,10 @@ const StatNumber = styled.div`
   font-weight: 700;
   color: #96885f;
   margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const StatLabel = styled.div`
@@ -354,18 +401,31 @@ const StatLabel = styled.div`
   color: #6c757d;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
 const TableContainer = styled.div`
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+
+  @media (max-width: 768px) {
+    min-width: 600px;
+  }
 `;
 
 const Th = styled.th`
@@ -375,13 +435,34 @@ const Th = styled.th`
   font-weight: 600;
   color: #333;
   border-bottom: 1px solid #e9ecef;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+`;
+
+const Td = styled.td`
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.5rem;
+  }
 `;
 
 const UserCell = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 0.75rem;
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+  }
 `;
 
 const UserAvatar = styled.div`
@@ -396,6 +477,11 @@ const UserAvatar = styled.div`
     height: 100%;
     object-fit: cover;
   }
+
+  @media (max-width: 768px) {
+    width: 35px;
+    height: 35px;
+  }
 `;
 
 const DefaultAvatar = styled.div`
@@ -407,134 +493,92 @@ const DefaultAvatar = styled.div`
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
 const UserInfo = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
 const UserName = styled.div`
   font-weight: 600;
   color: #333;
   margin-bottom: 0.25rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const UserBio = styled.div`
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6c757d;
-  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
 const CidBadge = styled.span`
-  background: #e9ecef;
-  color: #495057;
+  background: #f8f9fa;
+  color: #6c757d;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
   font-family: monospace;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+  }
 `;
 
-const ActionButton = styled.button<{ danger?: boolean }>`
-  background: ${props => props.danger ? '#dc3545' : '#6c757d'};
-  color: white;
+const ActionButton = styled.button`
+  background: none;
   border: none;
   padding: 0.5rem;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  color: #6c757d;
 
   &:hover {
-    background: ${props => props.danger ? '#c82333' : '#5a6268'};
+    background: #f8f9fa;
+  }
+
+  &.view {
+    color: #28a745;
+  }
+
+  &.edit {
+    color: #007bff;
+  }
+
+  &.delete {
+    color: #dc3545;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.4rem;
+    font-size: 0.9rem;
   }
 `;
 
 const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-`;
-
-const EmptyMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`;
-
-const ModalContent = styled.div`
-  background: white;
-  border-radius: 12px;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-`;
-
-const ModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
-`;
-
-const ModalTitle = styled.h2`
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #6c757d;
-  
-  &:hover {
-    color: #333;
-  }
-`;
-
-const ModalBody = styled.div`
-  padding: 1.5rem;
-`;
-
-const DetailRow = styled.div`
-  display: flex;
-  margin-bottom: 1rem;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const DetailLabel = styled.div`
-  font-weight: 600;
-  color: #333;
-  width: 120px;
-  flex-shrink: 0;
-`;
-
-const DetailValue = styled.div`
-  color: #6c757d;
-  flex: 1;
-`; 
