@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Modal } from '@/components/Modal';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { LoadingMessage, EmptyMessage } from '@/components/Styled';
+import { GetServerSideProps } from 'next';
 
 interface User {
   id: number;
@@ -26,60 +27,6 @@ const Container = styled.div`
   @media (max-width: 768px) {
     padding: 0 0.5rem;
     overflow-x: hidden;
-  }
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-`;
-
-const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-
-  @media (max-width: 768px) {
-    font-size: 1.75rem;
-    text-align: center;
-  }
-`;
-
-const AddButton = styled.button`
-  background: #96885f;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background: #7a6f4d;
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    justify-content: center;
   }
 `;
 
@@ -451,6 +398,15 @@ const DetailValue = styled.span`
   }
 `;
 
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Users'
+    }
+  }
+};
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -495,7 +451,7 @@ export default function AdminUsers() {
           updated_at: '2024-01-25T09:15:00Z',
         },
       ];
-      
+
       setUsers(mockUsers);
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -539,27 +495,6 @@ export default function AdminUsers() {
   return (
     <AdminLayout currentPage="users">
       <Container>
-        <Header>
-          <Title>Users Management</Title>
-          <AddButton>
-            <FaPlus />
-            Add User
-          </AddButton>
-        </Header>
-
-        <SearchContainer>
-          <SearchWrapper>
-            <SearchIcon>
-              <FaSearch />
-            </SearchIcon>
-            <SearchInput
-              type="text"
-              placeholder="Search users by name, email, or CID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </SearchWrapper>
-        </SearchContainer>
 
         <StatsContainer>
           <StatCard>
@@ -575,6 +510,20 @@ export default function AdminUsers() {
             <StatLabel>With Bio</StatLabel>
           </StatCard>
         </StatsContainer>
+
+        <SearchContainer>
+          <SearchWrapper>
+            <SearchIcon>
+              <FaSearch />
+            </SearchIcon>
+            <SearchInput
+              type="text"
+              placeholder="Search users by name, email, or CID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchWrapper>
+        </SearchContainer>
 
         <TableContainer>
           <Table>
@@ -631,7 +580,7 @@ export default function AdminUsers() {
                         <ActionButton onClick={() => handleEditUser(user)}>
                           <FaEdit />
                         </ActionButton>
-                        <ActionButton 
+                        <ActionButton
                           onClick={() => handleDeleteUser(user.id)}
                           danger
                         >
@@ -647,7 +596,7 @@ export default function AdminUsers() {
         </TableContainer>
 
         {showUserModal && selectedUser && (
-          <Modal 
+          <Modal
             isOpen={showUserModal}
             onClose={() => setShowUserModal(false)}
             title="User Details"

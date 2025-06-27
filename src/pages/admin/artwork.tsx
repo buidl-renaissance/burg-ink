@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { ImportArtworkModal } from '@/components/ImportArtworkModal';
 import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
+import { GetServerSideProps } from 'next';
 // import { convertDefaultToResized } from '@/utils/image';
 
 const AdminContainer = styled.div`
@@ -202,9 +203,15 @@ const TitleCell = styled.div`
   }
 `;
 
-export async function getServerSideProps() {
+export const getServerSideProps: GetServerSideProps = async () => {
   const artist = await getArtist(process.env.NEXT_PUBLIC_ARTIST_ID || '');
-  return { props: { artist } };
+  return {
+    props: {
+      artist,
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Artwork'
+    }
+  }
 }
 
 export default function AdminArtworkPage({ artist }: { artist: Artist }) {

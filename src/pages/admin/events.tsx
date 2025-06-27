@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus, FaCalendar, FaMapMarkerAlt } from 'react-icons/fa';
+import { GetServerSideProps } from 'next';
 
 interface Event {
   id: number;
@@ -21,6 +22,15 @@ interface Event {
   created_at: string;
   updated_at: string;
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Events'
+    }
+  }
+};
 
 export default function AdminEvents() {
   const [events, setEvents] = useState<Event[]>([]);

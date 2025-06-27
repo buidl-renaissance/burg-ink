@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaPalette, FaUsers, FaCalendar, FaEnvelope, FaImages } from 'react-icons/fa';
 import Link from 'next/link';
+import { GetServerSideProps } from 'next';
 
 interface DashboardStats {
   totalArtworks: number;
@@ -14,6 +15,15 @@ interface DashboardStats {
   totalMedia: number;
   totalViews: number;
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Dashboard'
+    }
+  }
+};
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({

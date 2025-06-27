@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaSave, FaGlobe, FaEnvelope, FaUser, FaPalette, FaLock, FaDatabase } from 'react-icons/fa';
+import { GetServerSideProps } from 'next';
 
 interface SiteSettings {
   siteName: string;
@@ -328,6 +329,15 @@ const LoadingMessage = styled.div`
   padding: 2rem;
   color: #6c757d;
 `;
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Settings'
+    }
+  }
+};
 
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('site');

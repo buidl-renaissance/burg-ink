@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus, FaEnvelope, FaPaperPlane, FaClock } from 'react-icons/fa';
+import { GetServerSideProps } from 'next';
 
 interface Email {
   id: number;
@@ -17,6 +18,15 @@ interface Email {
   created_at: string;
   updated_at: string;
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Emails'
+    }
+  }
+};
 
 export default function AdminEmails() {
   const [emails, setEmails] = useState<Email[]>([]);
@@ -610,16 +620,6 @@ const Th = styled.th`
   @media (max-width: 768px) {
     padding: 0.75rem 0.5rem;
     font-size: 0.8rem;
-  }
-`;
-
-const Td = styled.td`
-  padding: 1rem;
-  border-bottom: 1px solid #e9ecef;
-  vertical-align: middle;
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 0.5rem;
   }
 `;
 

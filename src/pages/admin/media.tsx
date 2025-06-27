@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes } from 'react-icons/fa';
+import { GetServerSideProps } from 'next';
 
 // Styled Components
 const Container = styled.div<{ sidebarOpen?: boolean }>`
@@ -685,6 +686,15 @@ interface MediaResponse {
 
 type ViewFormat = 'tile' | 'card';
 type PageSize = 30 | 60 | 90;
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {
+      breadcrumbs: [{ label: 'Admin', href: '/admin' }],
+      currentPage: 'Media'
+    }
+  }
+};
 
 export default function AdminMedia() {
   const [media, setMedia] = useState<MediaItem[]>([]);
