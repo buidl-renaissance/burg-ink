@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Modal } from '@/components/Modal';
 import { FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
-import { LoadingMessage, EmptyMessage } from '@/components/Styled';
 import { GetServerSideProps } from 'next';
+import { TableContainer, Table, Th, Td, ActionButton, LoadingMessage, EmptyMessage, ActionButtons } from '@/components/AdminTableStyles';
 
 interface User {
   id: number;
@@ -125,92 +125,6 @@ const StatLabel = styled.div`
   }
 `;
 
-const TableContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    border-radius: 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: #c1c1c1 transparent;
-    margin: 0 -0.5rem;
-    padding: 0 0.5rem;
-    
-    &::-webkit-scrollbar {
-      height: 6px;
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 3px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 3px;
-    }
-    
-    &::-webkit-scrollbar-thumb:hover {
-      background: #a8a8a8;
-    }
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  @media (max-width: 768px) {
-    table-layout: fixed;
-  }
-`;
-
-const Th = styled.th`
-  background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  @media (max-width: 768px) {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    
-    &:nth-child(1) { width: 45%; } /* User */
-    &:nth-child(2) { width: 0; display: none; } /* Email - hidden on mobile */
-    &:nth-child(3) { width: 0; display: none; } /* CID - hidden on mobile */
-    &:nth-child(4) { width: 25%; } /* Joined */
-    &:nth-child(5) { width: 30%; } /* Actions */
-  }
-`;
-
-const TableCell = styled.td`
-  padding: 1rem;
-  border-bottom: 1px solid #e9ecef;
-  vertical-align: middle;
-
-  @media (max-width: 768px) {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    
-    &:nth-child(2), &:nth-child(3) {
-      display: none;
-    }
-  }
-`;
-
 const UserCell = styled.div`
   display: flex;
   align-items: center;
@@ -287,70 +201,6 @@ const UserBio = styled.div`
   @media (max-width: 768px) {
     font-size: 0.65rem;
     max-width: 80px;
-  }
-`;
-
-const CidBadge = styled.span`
-  background: #f8f9fa;
-  color: #6c757d;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-family: monospace;
-  white-space: nowrap;
-
-  @media (max-width: 768px) {
-    font-size: 0.6rem;
-    padding: 0.1rem 0.2rem;
-  }
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 0.5rem;
-
-  @media (max-width: 768px) {
-    gap: 0.15rem;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-  }
-`;
-
-const ActionButton = styled.button<{ danger?: boolean }>`
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  color: #6c757d;
-  ${({ danger }) => danger && css`
-    color: #dc3545;
-  `}
-  &:hover {
-    background: #f8f9fa;
-  }
-
-  &.view {
-    color: #28a745;
-  }
-
-  &.edit {
-    color: #007bff;
-  }
-
-  &.delete {
-    color: #dc3545;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.25rem;
-    font-size: 0.7rem;
-    min-width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 `;
 
@@ -531,7 +381,6 @@ export default function AdminUsers() {
               <tr>
                 <Th>User</Th>
                 <Th>Email</Th>
-                <Th>CID</Th>
                 <Th>Joined</Th>
                 <Th>Actions</Th>
               </tr>
@@ -539,20 +388,20 @@ export default function AdminUsers() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ display: 'table-cell' }}>
+                  <Td colSpan={5} style={{ display: 'table-cell' }}>
                     <LoadingMessage>Loading users...</LoadingMessage>
-                  </td>
+                  </Td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ display: 'table-cell' }}>
+                  <Td colSpan={5} style={{ display: 'table-cell' }}>
                     <EmptyMessage>No users found</EmptyMessage>
-                  </td>
+                  </Td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
                   <tr key={user.id}>
-                    <TableCell>
+                    <Td>
                       <UserCell>
                         <UserAvatar>
                           {user.profile_picture ? (
@@ -566,13 +415,10 @@ export default function AdminUsers() {
                           {user.bio && <UserBio>{user.bio}</UserBio>}
                         </UserInfo>
                       </UserCell>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <CidBadge>{user.cid}</CidBadge>
-                    </TableCell>
-                    <TableCell>{formatDate(user.created_at)}</TableCell>
-                    <TableCell>
+                    </Td>
+                    <Td>{user.email}</Td>
+                    <Td>{formatDate(user.created_at)}</Td>
+                    <Td>
                       <ActionButtons>
                         <ActionButton onClick={() => handleViewUser(user)}>
                           <FaEye />
@@ -587,7 +433,7 @@ export default function AdminUsers() {
                           <FaTrash />
                         </ActionButton>
                       </ActionButtons>
-                    </TableCell>
+                    </Td>
                   </tr>
                 ))
               )}
