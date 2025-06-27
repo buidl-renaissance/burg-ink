@@ -181,6 +181,12 @@ export const LoadingMessage = styled.div`
   margin: 3rem 0;
 `;
 
+export const EmptyMessage = styled.div`
+  text-align: center;
+  font-size: 1.2rem;
+  margin: 3rem 0;
+`;
+
 export const ErrorMessage = styled.div`
   color: #ff3366;
   background: rgba(255, 51, 102, 0.1);

@@ -20,6 +20,7 @@
     "@types/formidable": "^3.4.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@vercel/analytics": "^1.5.0",
+    "ag-grid-react": "^34.0.0",
     "buidl-ticketing": "^0.0.3",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",

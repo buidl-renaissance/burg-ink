@@ -79,6 +79,8 @@ const TableContainer = styled.div`
   @media (max-width: 768px) {
     border-radius: 8px;
     overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
   }
 `;
 
@@ -87,7 +89,8 @@ const Table = styled.table`
   border-collapse: collapse;
 
   @media (max-width: 768px) {
-    min-width: 600px;
+    min-width: 100%;
+    width: max-content;
   }
 `;
 
@@ -105,6 +108,8 @@ const Th = styled.th`
   @media (max-width: 768px) {
     padding: 0.75rem 0.5rem;
     font-size: 0.8rem;
+    white-space: nowrap;
+    min-width: 80px;
   }
 `;
 
@@ -115,6 +120,8 @@ const Td = styled.td`
 
   @media (max-width: 768px) {
     padding: 0.75rem 0.5rem;
+    white-space: nowrap;
+    min-width: 80px;
   }
 `;
 
@@ -183,6 +190,16 @@ const ErrorState = styled.div`
   background: #f8d7da;
   border-radius: 8px;
   margin: 1rem 0;
+`;
+
+const TitleCell = styled.div`
+  max-width: 200px;
+
+  @media (max-width: 768px) {
+    max-width: 150px;
+    white-space: normal;
+    word-break: break-word;
+  }
 `;
 
 export async function getServerSideProps() {
@@ -341,14 +358,14 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
                       </ImageCell>
                     </Td>
                     <Td>
-                      <div>
+                      <TitleCell>
                         <strong>{artwork.title}</strong>
                         {artwork.description && (
                           <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
                             {artwork.description.substring(0, 50)}...
                           </div>
                         )}
-                      </div>
+                      </TitleCell>
                     </Td>
                     <Td>{artwork.artist?.name || 'Unknown'}</Td>
                     <Td>{artwork.data?.category || 'Uncategorized'}</Td>
