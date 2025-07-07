@@ -231,6 +231,11 @@ export default function AdminDashboard() {
               <ActionTitle>Manage Emails</ActionTitle>
               <ActionDescription>Compose and manage email campaigns</ActionDescription>
             </ActionCard>
+            <ActionCard href="/admin/marketing-assistant">
+              <ActionIcon>💡</ActionIcon>
+              <ActionTitle>Marketing Assistant</ActionTitle>
+              <ActionDescription>AI-powered marketing guidance for artists</ActionDescription>
+            </ActionCard>
             <ActionCard href="/admin/settings">
               <ActionIcon>⚙️</ActionIcon>
               <ActionTitle>Site Settings</ActionTitle>
