@@ -208,9 +208,12 @@ export const media = sqliteTable("media", {
   size: integer("size"),
   width: integer("width"),
   height: integer("height"),
-  spaces_key: text("spaces_key"), // DigitalOcean Spaces object key
-  spaces_url: text("spaces_url"), // DigitalOcean Spaces public URL
-  thumbnail_url: text("thumbnail_url"),
+  spaces_key: text("spaces_key"), // DigitalOcean Spaces object key (original)
+  spaces_url: text("spaces_url"), // DigitalOcean Spaces public URL (original) - keeping for backward compatibility
+  original_url: text("original_url"), // URL for original image
+  medium_url: text("medium_url"), // URL for medium sized image (800px width)
+  thumbnail_url: text("thumbnail_url"), // URL for thumbnail image (200px width)
+  alt_text: text("alt_text"), // Accessibility text for the image
   processing_status: text("processing_status").default("pending"), // 'pending', 'processing', 'completed', 'failed'
   ai_analysis: text("ai_analysis"), // JSON string of AI analysis results
   metadata: text("metadata"), // JSON string of additional metadata

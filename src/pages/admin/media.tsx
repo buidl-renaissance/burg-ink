@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes } from 'react-icons/fa';
+import { UploadMedia } from '@/components/UploadMedia';
+import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes, FaPlus } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
 // Styled Components
@@ -44,6 +45,91 @@ const Subtitle = styled.p`
   @media (max-width: 768px) {
     font-size: 0.9rem;
   }
+`;
+
+const UploadSection = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px dashed #e9ecef;
+  transition: border-color 0.3s ease;
+
+  &:hover {
+    border-color: #96885f;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const UploadHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+`;
+
+const UploadIcon = styled.div`
+  background: #96885f;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+`;
+
+const UploadText = styled.div`
+  flex: 1;
+
+  h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+  }
+
+  p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+
+    @media (max-width: 768px) {
+      font-size: 0.85rem;
+    }
+  }
+`;
+
+const UploadSuccess = styled.div`
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;
 
 const Controls = styled.div`
@@ -711,6 +797,7 @@ export default function AdminMedia() {
   const [viewFormat, setViewFormat] = useState<ViewFormat>('tile');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMedia();
@@ -763,6 +850,15 @@ export default function AdminMedia() {
     setSelectedMedia(null);
   };
 
+  const handleUploadComplete = (urls: string[]) => {
+    const fileCount = urls.length;
+    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} uploaded successfully!`);
+    // Refresh the media list to show the new uploads
+    fetchMedia();
+    // Clear success message after 5 seconds
+    setTimeout(() => setUploadSuccess(null), 5000);
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -799,6 +895,29 @@ export default function AdminMedia() {
           <Title>Media Library</Title>
           <Subtitle>Manage your media assets and files</Subtitle>
         </Header>
+
+        <UploadSection>
+          <UploadHeader>
+            <UploadIcon>
+              <FaPlus />
+            </UploadIcon>
+            <UploadText>
+              <h3>Upload New Media</h3>
+              <p>Drag and drop multiple images or click to browse. Select multiple files to upload them all at once. Images will be automatically processed and analyzed.</p>
+            </UploadText>
+          </UploadHeader>
+          
+          <UploadMedia 
+            onUploadComplete={handleUploadComplete}
+            accept="image/*"
+          />
+          
+          {uploadSuccess && (
+            <UploadSuccess>
+              ✓ {uploadSuccess}
+            </UploadSuccess>
+          )}
+        </UploadSection>
 
         <Controls>
           <SearchSection>

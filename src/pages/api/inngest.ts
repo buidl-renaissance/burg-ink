@@ -10,6 +10,11 @@ import {
   processGoogleImagesParallel,
   analyzeMediaBatch
 } from "@/lib/functions/processGoogleImages";
+import { 
+  processMediaResize,
+  processNewUploadResize,
+  processBatchResize
+} from "@/lib/functions/processImageResizing";
 import { createArtworkEmbeddings } from "@/lib/functions/processArtworkEmbeddings";
 
 // Create the handler to serve your functions
@@ -24,6 +29,9 @@ const handler = serve({
     updateUserSyncSettings,
     processGoogleImagesParallel,
     analyzeMediaBatch,
+    processMediaResize,
+    processNewUploadResize,
+    processBatchResize,
     createArtworkEmbeddings
   ],
 });

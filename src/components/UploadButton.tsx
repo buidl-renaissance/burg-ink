@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 
 interface UploadButtonProps {
-  onUploadComplete?: (url: string) => void;
+  onUploadComplete?: (urls: string[]) => void;
   onUploadError?: (error: string) => void;
+  onUploadProgress?: (progress: { current: number; total: number }) => void;
   className?: string;
   accept?: string;
   multiple?: boolean;
@@ -57,10 +58,11 @@ const LoadingSpinner = styled.div`
 export const UploadButton: React.FC<UploadButtonProps> = ({
   onUploadComplete,
   onUploadError,
+  onUploadProgress,
   className,
   accept = 'image/*',
-  multiple = false,
-  children = 'Upload Image',
+  multiple = true,
+  children = 'Upload Images',
   disabled = false,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -79,23 +81,37 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('image', files[0]);
+      const filesArray = Array.from(files);
+      const uploadedUrls: string[] = [];
+      
+      // Upload files one by one
+      for (let i = 0; i < filesArray.length; i++) {
+        const file = filesArray[i];
+        
+        // Update progress
+        if (onUploadProgress) {
+          onUploadProgress({ current: i + 1, total: filesArray.length });
+        }
 
-      const response = await fetch('/api/upload-media', {
-        method: 'POST',
-        body: formData,
-      });
+        const formData = new FormData();
+        formData.append('image', file);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+        const response = await fetch('/api/upload-media', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to upload ${file.name}: ${errorData.error || 'Upload failed'}`);
+        }
+
+        const data = await response.json();
+        uploadedUrls.push(data.url);
       }
-
-      const data = await response.json();
       
       if (onUploadComplete) {
-        onUploadComplete(data.url);
+        onUploadComplete(uploadedUrls);
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -104,7 +120,7 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
       }
     } finally {
       setIsUploading(false);
-      // Reset the input value so the same file can be uploaded again if needed
+      // Reset the input value so the same files can be uploaded again if needed
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }

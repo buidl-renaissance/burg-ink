@@ -45,9 +45,12 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
     }
   }, [artwork]);
 
-  const handleUploadComplete = (url: string) => {
-    setImageUrl(url);
-    setStatus(null);
+  const handleUploadComplete = (urls: string[]) => {
+    // For artwork form, we only use the first uploaded image
+    if (urls.length > 0) {
+      setImageUrl(urls[0]);
+      setStatus(null);
+    }
   };
 
   const handleUploadError = (error: string) => {
@@ -129,6 +132,7 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
 
           <UploadButton
             accept="image/*"
+            multiple={false}
             onUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
           >

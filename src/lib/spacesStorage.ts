@@ -10,6 +10,18 @@ export interface StoredFile {
   mimeType: string;
 }
 
+export interface StoredImageSizes {
+  original: StoredFile;
+  medium: StoredFile;
+  thumbnail: StoredFile;
+}
+
+export interface ImageSizeBuffers {
+  original: Buffer;
+  medium: Buffer;
+  thumbnail: Buffer;
+}
+
 export interface SpacesConfig {
   endpoint: string;
   region: string;
@@ -47,6 +59,80 @@ export class SpacesStorageService {
     const hash = createHash('md5').update(fileId).digest('hex').substring(0, 8);
     const timestamp = Date.now();
     return `${nameWithoutExt}-${hash}-${timestamp}${ext}`;
+  }
+
+  /**
+   * Store multiple image sizes in organized directory structure
+   */
+  async storeImageSizes(
+    imageSizes: ImageSizeBuffers,
+    originalName: string,
+    fileId: string,
+    mimeType: string
+  ): Promise<StoredImageSizes> {
+    const baseFilename = this.generateFilename(originalName, fileId);
+    
+    // Store original image in /original/ directory
+    const originalFile = await this.storeFileInDirectory(
+      imageSizes.original,
+      baseFilename,
+      'original',
+      mimeType
+    );
+
+    // Store medium image in /medium/ directory
+    const mediumFile = await this.storeFileInDirectory(
+      imageSizes.medium,
+      baseFilename,
+      'medium',
+      mimeType
+    );
+
+    // Store thumbnail image in /thumb/ directory
+    const thumbnailFile = await this.storeFileInDirectory(
+      imageSizes.thumbnail,
+      baseFilename,
+      'thumb',
+      mimeType
+    );
+
+    return {
+      original: originalFile,
+      medium: mediumFile,
+      thumbnail: thumbnailFile,
+    };
+  }
+
+  /**
+   * Store a file in a specific directory
+   */
+  private async storeFileInDirectory(
+    buffer: Buffer,
+    filename: string,
+    directory: string,
+    mimeType: string
+  ): Promise<StoredFile> {
+    const key = `${directory}/${filename}`;
+    const url = `${this.baseUrl}/${key}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+      ACL: 'public-read',
+      CacheControl: 'public, max-age=31536000', // Cache for 1 year
+    });
+
+    await this.s3Client.send(command);
+
+    return {
+      filename,
+      key,
+      url,
+      size: buffer.length,
+      mimeType,
+    };
   }
 
   /**

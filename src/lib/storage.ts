@@ -1,7 +1,7 @@
 import { spacesStorageService } from './spacesStorage';
-import type { StoredFile } from './spacesStorage';
+import type { StoredFile, StoredImageSizes, ImageSizeBuffers } from './spacesStorage';
 
-export type { StoredFile } from './spacesStorage';
+export type { StoredFile, StoredImageSizes, ImageSizeBuffers };
 
 export class StorageService {
   async storeFile(
@@ -11,6 +11,15 @@ export class StorageService {
     mimeType: string
   ): Promise<StoredFile> {
     return spacesStorageService.storeFile(buffer, originalName, fileId, mimeType);
+  }
+
+  async storeImageSizes(
+    imageSizes: ImageSizeBuffers,
+    originalName: string,
+    fileId: string,
+    mimeType: string
+  ): Promise<StoredImageSizes> {
+    return spacesStorageService.storeImageSizes(imageSizes, originalName, fileId, mimeType);
   }
 
   async storeFileFromUrl(

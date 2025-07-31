@@ -18,11 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Check authentication
+    // Optional: Get user info if available (for tracking purposes)
     const user = await getAuthorizedUser(req);
-    if (!user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
 
     // Parse the form data
     const form = formidable({
@@ -46,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Generate a unique file ID for this upload
     const fileId = createHash('md5')
-      .update(`${user.id}-${Date.now()}-${uploadedFile.originalFilename}`)
+      .update(`${user?.id || 'anonymous'}-${Date.now()}-${uploadedFile.originalFilename}`)
       .digest('hex');
 
     // Store the file in DigitalOcean Spaces
