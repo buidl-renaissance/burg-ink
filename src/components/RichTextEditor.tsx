@@ -89,7 +89,7 @@ const EditorContainer = styled.div<{ height: string }>`
     }
     
     .ql-container {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Marcellus', serif;
       font-size: 1rem;
       height: calc(100% - 42px);
       border-bottom-left-radius: 4px;

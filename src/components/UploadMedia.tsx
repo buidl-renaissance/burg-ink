@@ -37,6 +37,14 @@ const PreviewImage = styled.img`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
+const PreviewVideo = styled.video`
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
 const ProgressContainer = styled.div`
   width: 100%;
   margin-top: 1rem;
@@ -51,7 +59,7 @@ const ProgressContainer = styled.div`
 export const UploadMedia: React.FC<UploadMediaProps> = ({
   onUploadComplete,
   mediaUrls,
-  accept = 'image/*'
+  accept = 'image/*,video/*'
 }) => {
   const [previews, setPreviews] = useState<string[]>(mediaUrls || []);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
@@ -64,6 +72,12 @@ export const UploadMedia: React.FC<UploadMediaProps> = ({
 
   const handleUploadProgress = (progress: { current: number; total: number }) => {
     setUploadProgress(progress);
+  };
+
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i) || 
+           url.includes('video/') || 
+           url.includes('blob:') && url.includes('video');
   };
 
   return (
@@ -84,7 +98,14 @@ export const UploadMedia: React.FC<UploadMediaProps> = ({
         <PreviewContainer>
           <PreviewGrid>
             {previews.map((url, index) => (
-              <PreviewImage key={index} src={url} alt={`Preview ${index + 1}`} />
+              isVideo(url) ? (
+                <PreviewVideo key={index} controls muted>
+                  <source src={url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </PreviewVideo>
+              ) : (
+                <PreviewImage key={index} src={url} alt={`Preview ${index + 1}`} />
+              )
             ))}
           </PreviewGrid>
         </PreviewContainer>

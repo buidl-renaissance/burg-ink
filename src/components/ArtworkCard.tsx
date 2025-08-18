@@ -37,7 +37,18 @@ const ArtworkContainer = styled.div`
     transition: transform 0.5s ease;
   }
 
-  &:hover .image {
+  .video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  &:hover .image,
+  &:hover .video {
     transform: scale(1.05);
   }
 
@@ -76,17 +87,35 @@ interface ArtworkCardProps {
 }
 
 export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i) || 
+           url.includes('video/') || 
+           url.includes('blob:') && url.includes('video');
+  };
+
   return (
     <ArtworkContainer>
       <div className="image-container">
         {artwork.image && (
-          <Image
-            alt={artwork.title}
-            className="image"
-            src={artwork.image}
-            fill
-            style={{ objectFit: "cover" }}
-          />
+          isVideo(artwork.image) ? (
+            <video
+              className="video"
+              src={artwork.image}
+              muted
+              loop
+              playsInline
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <Image
+              alt={artwork.title}
+              className="image"
+              src={artwork.image}
+              fill
+              style={{ objectFit: "cover" }}
+            />
+          )
         )}
       </div>
       <div className="content">

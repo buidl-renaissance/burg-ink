@@ -5,14 +5,23 @@ import styled from 'styled-components';
 
 const HeroContainer = styled.div`
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   position: relative;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   overflow: hidden;
+  padding-top: 4rem;
+  
+  @media (max-width: 768px) {
+    padding-top: 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 1.5rem;
+  }
 `;
 
 const HeroVideo = styled.video`
@@ -31,7 +40,7 @@ const HeroOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: -1;
 `;
 
@@ -41,30 +50,35 @@ const Title = styled.h1`
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 1;
   font-size: 5.625rem;
-  font-weight: 500;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
   font-style: normal;
   line-height: 1em;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.025em;
+  text-transform: uppercase;
   
   @media (max-width: 768px) {
     font-size: 3rem;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
   }
   
   @media (max-width: 480px) {
     font-size: 2.5rem;
+    margin-bottom: 0.4rem;
   }
 `;
 
 const Subtitle = styled.p`
   font-size: 1.4rem;
+  font-family: 'Marcellus', serif;
   color: #fff;
   max-width: 700px;
   margin: 0 auto 2rem;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
   z-index: 1;
+  text-transform: uppercase;
   
   @media (max-width: 768px) {
     font-size: 1.1rem;
@@ -79,6 +93,7 @@ const Subtitle = styled.p`
 
 const ArtistName = styled.div`
   font-size: 2rem;
+  font-family: 'Marcellus', serif;
   color: #fff;
   margin-bottom: 0.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
@@ -110,6 +125,7 @@ const ArtistName = styled.div`
   @media (max-width: 768px) {
     font-size: 1.5rem;
     padding: 0 50px;
+    margin-bottom: 0.8rem;
     
     &::before,
     &::after {
@@ -120,6 +136,7 @@ const ArtistName = styled.div`
   @media (max-width: 480px) {
     font-size: 1.2rem;
     padding: 0 40px;
+    margin-bottom: 0.6rem;
     
     &::before,
     &::after {
@@ -128,21 +145,43 @@ const ArtistName = styled.div`
   }
 `;
 
+const ExploreText = styled.div`
+  font-size: 1.2rem;
+  font-family: 'Marcellus', serif;
+  color: #fff;
+  margin-bottom: 1rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  opacity: 0.9;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-bottom: 0.6rem;
+  }
+`;
+
 const HeroButtons = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
   z-index: 1;
   
   @media (max-width: 768px) {
-    flex-direction: column;
     gap: 0.8rem;
-    margin-top: 1.5rem;
+    margin-top: 0.8rem;
+    width: 100%;
+    padding: 0 1rem;
   }
   
   @media (max-width: 480px) {
     gap: 0.6rem;
-    margin-top: 1.2rem;
+    margin-top: 0.6rem;
+    padding: 0 0.5rem;
   }
 `;
 
@@ -165,14 +204,45 @@ const HeroButton = styled.a`
     padding: 0.4rem 1.5rem;
     font-size: 1.2rem;
     border-width: 3px;
-    width: 200px;
+    flex: 1;
   }
   
   @media (max-width: 480px) {
-    padding: 0.3rem 1.2rem;
+    padding: 0.3rem 1rem;
     font-size: 1rem;
     border-width: 2px;
-    width: 180px;
+    flex: 1;
+  }
+`;
+
+const SacredPathLink = styled.a`
+  font-size: 1rem;
+  font-family: 'Marcellus', serif;
+  color: #96885f;
+  margin-top: 2.5rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1;
+  opacity: 0.8;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(150, 136, 95, 0.3);
+  
+  &:hover {
+    opacity: 1;
+    color: #fff;
+    transform: translateY(-1px);
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-top: 1.2rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
+    margin-top: 1rem;
   }
 `;
 
@@ -184,10 +254,10 @@ interface HeroProps {
 }
 
 const Hero: FC<HeroProps> = ({
-  artistName = 'Burg Ink',
+  artistName = 'Art that walks between worlds',
   title = 'Andrea Burg',
   subtitle = '',
-  videoSrc = 'https://andreaburg.com/wp-content/uploads/2025/02/tattoo-timelapse-adobe.mp4#t=55,115',
+  videoSrc = 'https://dpop.nyc3.digitaloceanspaces.com/uploads/jaguar-animation-219d55e6-1755474112949.mov',
 }) => {
   return (
     <HeroContainer>
@@ -198,11 +268,13 @@ const Hero: FC<HeroProps> = ({
       <Title>{title}</Title>
       <ArtistName>{artistName}</ArtistName>
       <Subtitle>{subtitle}</Subtitle>
+      {/* <ExploreText>explore the website</ExploreText> */}
       <HeroButtons>
         <HeroButton href="/artwork">Artwork</HeroButton>
         <HeroButton href="/tattoos">Tattoos</HeroButton>
         <HeroButton href="/inquire">Inquire</HeroButton>
       </HeroButtons>
+      <SacredPathLink href="/sacred-path">take the sacred path</SacredPathLink>
     </HeroContainer>
   );
 };

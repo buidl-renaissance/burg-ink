@@ -2,6 +2,7 @@
 
 import styled from 'styled-components';
 import Hero from '@/components/Hero';
+import SpiritWomenSection from '@/components/SpiritWomenSection';
 import Gallery from '@/components/Gallery';
 import { Artwork } from '@/utils/interfaces';
 import { getPublishedArtworkFromArtist } from '@/lib/db';
@@ -95,8 +96,9 @@ const AboutSection = styled.div`
 
 const AboutTitle = styled.h2`
   font-size: 3rem;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
+  text-transform: none;
   letter-spacing: 0.025em;
   margin-bottom: 1.5rem;
   color: #333;
@@ -137,6 +139,7 @@ const AboutTitle = styled.h2`
 
 const AboutText = styled.p`
   font-size: 1.2rem;
+  font-family: 'Marcellus', serif;
   line-height: 1.6;
   margin-bottom: 2rem;
   color: #555;
@@ -185,8 +188,9 @@ const ContactSection = styled.div`
 
 const ContactTitle = styled.h2`
   font-size: 3rem;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
+  text-transform: none;
   letter-spacing: 0.025em;
   margin-bottom: 1.5rem;
   color: #fff;
@@ -227,6 +231,7 @@ const ContactTitle = styled.h2`
 
 const ContactText = styled.p`
   font-size: 1.2rem;
+  font-family: 'Marcellus', serif;
   line-height: 1.6;
   margin-bottom: 2rem;
   
@@ -254,7 +259,8 @@ export default function Index({ artworks }: { artworks: Artwork[] }) {
   return (
     <StyledPage>
       <Hero />
-      <Gallery title="Artwork" artworks={artworks} />
+      {/* <SpiritWomenSection /> */}
+      {/* <Gallery title="Artwork" artworks={artworks} /> */}
 
       <AboutSection>
         <AboutTitle>About the Artist</AboutTitle>

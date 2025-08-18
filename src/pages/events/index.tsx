@@ -60,7 +60,7 @@ const PageTitle = styled.h1`
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 2rem;
-  font-family: 'Teko', sans-serif;
+  font-family: 'Marcellus', serif;
   letter-spacing: 0.02em;
 `;
 

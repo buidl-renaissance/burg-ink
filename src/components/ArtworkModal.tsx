@@ -64,6 +64,18 @@ const ModalImage = styled.img`
   }
 `;
 
+const ModalVideo = styled.video`
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  
+  @media (max-width: 800px) {
+    max-height: 60vh;
+  }
+`;
+
 const InfoPanel = styled.div`
   flex: 0 0 400px;
   padding: 30px;
@@ -179,6 +191,12 @@ const ArtworkModal: FC<ArtworkModalProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i) || 
+           url.includes('video/') || 
+           url.includes('blob:') && url.includes('video');
+  };
+  
   useEffect(() => {
     if (isOpen) {
       // Small delay to allow for animation
@@ -213,7 +231,18 @@ const ArtworkModal: FC<ArtworkModalProps> = ({
       <CloseButton onClick={onClose}>×</CloseButton>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <ImageContainer>
-          <ModalImage src={convertDefaultToResized(currentArtwork.image ?? '')} alt={currentArtwork.title} />
+          {isVideo(currentArtwork.image ?? '') ? (
+            <ModalVideo 
+              src={currentArtwork.image ?? ''} 
+              controls 
+              autoPlay 
+              muted
+            >
+              Your browser does not support the video tag.
+            </ModalVideo>
+          ) : (
+            <ModalImage src={convertDefaultToResized(currentArtwork.image ?? '')} alt={currentArtwork.title} />
+          )}
         </ImageContainer>
         
         <InfoPanel>
