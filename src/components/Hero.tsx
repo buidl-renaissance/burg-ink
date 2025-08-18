@@ -145,26 +145,6 @@ const ArtistName = styled.div`
   }
 `;
 
-const ExploreText = styled.div`
-  font-size: 1.2rem;
-  font-family: 'Marcellus', serif;
-  color: #fff;
-  margin-bottom: 1rem;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-  z-index: 1;
-  opacity: 0.9;
-  
-  @media (max-width: 768px) {
-    font-size: 1rem;
-    margin-bottom: 0.8rem;
-  }
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-    margin-bottom: 0.6rem;
-  }
-`;
-
 const HeroButtons = styled.div`
   display: flex;
   gap: 1rem;
@@ -267,8 +247,7 @@ const Hero: FC<HeroProps> = ({
       <HeroOverlay />
       <Title>{title}</Title>
       <ArtistName>{artistName}</ArtistName>
-      <Subtitle>{subtitle}</Subtitle>
-      {/* <ExploreText>explore the website</ExploreText> */}
+      {subtitle && <Subtitle>{subtitle}</Subtitle>}
       <HeroButtons>
         <HeroButton href="/artwork">Artwork</HeroButton>
         <HeroButton href="/tattoos">Tattoos</HeroButton>

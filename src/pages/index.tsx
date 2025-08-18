@@ -2,9 +2,6 @@
 
 import styled from 'styled-components';
 import Hero from '@/components/Hero';
-import SpiritWomenSection from '@/components/SpiritWomenSection';
-import Gallery from '@/components/Gallery';
-import { Artwork } from '@/utils/interfaces';
 import { getPublishedArtworkFromArtist } from '@/lib/db';
 import { Metadata } from 'next';
 
@@ -255,13 +252,10 @@ const ContactEmail = styled.span`
   }
 `;
 
-export default function Index({ artworks }: { artworks: Artwork[] }) {
+export default function Index() {
   return (
     <StyledPage>
       <Hero />
-      {/* <SpiritWomenSection /> */}
-      {/* <Gallery title="Artwork" artworks={artworks} /> */}
-
       <AboutSection>
         <AboutTitle>About the Artist</AboutTitle>
         <AboutText>
