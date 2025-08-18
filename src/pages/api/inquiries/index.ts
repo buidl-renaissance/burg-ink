@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../../lib/db';
-import { inquiries } from '../../../db/schema';
-import { desc } from 'drizzle-orm';
+import { inquiries } from '../../../../db/schema';
+import { desc, eq, and } from 'drizzle-orm';
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,15 +14,19 @@ export default async function handler(
   try {
     const { status, type, limit = '50', offset = '0' } = req.query;
 
-    let query = db.select().from(inquiries);
-
+    // Build the base query
+    const baseQuery = db.select().from(inquiries);
+    
     // Apply filters
-    if (status && typeof status === 'string') {
-      query = query.where({ status });
-    }
-
-    if (type && typeof type === 'string') {
-      query = query.where({ inquiry_type: type });
+    let query;
+    if (status && typeof status === 'string' && type && typeof type === 'string') {
+      query = baseQuery.where(and(eq(inquiries.status, status), eq(inquiries.inquiry_type, type)));
+    } else if (status && typeof status === 'string') {
+      query = baseQuery.where(eq(inquiries.status, status));
+    } else if (type && typeof type === 'string') {
+      query = baseQuery.where(eq(inquiries.inquiry_type, type));
+    } else {
+      query = baseQuery;
     }
 
     // Apply pagination and ordering
@@ -35,12 +39,17 @@ export default async function handler(
       .offset(offsetNum);
 
     // Get total count for pagination
-    const countQuery = db.select({ count: inquiries.id }).from(inquiries);
-    if (status && typeof status === 'string') {
-      countQuery.where({ status });
-    }
-    if (type && typeof type === 'string') {
-      countQuery.where({ inquiry_type: type });
+    const baseCountQuery = db.select({ count: inquiries.id }).from(inquiries);
+    
+    let countQuery;
+    if (status && typeof status === 'string' && type && typeof type === 'string') {
+      countQuery = baseCountQuery.where(and(eq(inquiries.status, status), eq(inquiries.inquiry_type, type)));
+    } else if (status && typeof status === 'string') {
+      countQuery = baseCountQuery.where(eq(inquiries.status, status));
+    } else if (type && typeof type === 'string') {
+      countQuery = baseCountQuery.where(eq(inquiries.inquiry_type, type));
+    } else {
+      countQuery = baseCountQuery;
     }
     
     const [{ count }] = await countQuery;

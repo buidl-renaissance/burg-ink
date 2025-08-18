@@ -2,7 +2,7 @@
 
 import { FC, useState, useEffect } from 'react';
 import styled from 'styled-components';
-import AdminLayout from '../../components/AdminLayout';
+import { AdminLayout } from '../../components/AdminLayout';
 
 const PageContainer = styled.div`
   padding: 2rem;

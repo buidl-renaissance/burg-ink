@@ -1,7 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../../lib/db';
-import { inquiries } from '../../../db/schema';
+import { inquiries } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
+
+type InquiryUpdateData = {
+  status?: string;
+  notes?: string;
+  updated_at: string;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -37,7 +43,7 @@ export default async function handler(
     try {
       const { status, notes } = req.body;
 
-      const updateData: any = {
+      const updateData: InquiryUpdateData = {
         updated_at: new Date().toISOString()
       };
 

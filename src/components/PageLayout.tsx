@@ -8,6 +8,10 @@ interface PageLayoutProps {
   children: ReactNode;
   title?: string;
   description?: string;
+  backLink?: {
+    href: string;
+    text: string;
+  };
 }
 
 const StyledPage = styled.div`
@@ -99,12 +103,25 @@ const PageDescription = styled.p`
   }
 `;
 
+const BackLink = styled.a`
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: #96885f;
+  text-decoration: none;
+  font-size: 0.95rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 
 
 const PageLayout: React.FC<PageLayoutProps> = ({
   children,
   title,
   description,
+  backLink,
 }) => {
   return (
     <StyledPage>
@@ -112,6 +129,11 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       {(title || description) && (
         <PageHeaderContainer>
           <PageHeader>
+            {backLink && (
+              <BackLink href={backLink.href}>
+                ← {backLink.text}
+              </BackLink>
+            )}
             {title && <PageTitle>{title}</PageTitle>}
             {description && <PageDescription>{description}</PageDescription>}
           </PageHeader>

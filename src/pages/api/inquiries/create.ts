@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../../lib/db';
-import { inquiries } from '../../../db/schema';
+import { inquiries } from '../../../../db/schema';
+import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { generateInquiryNotificationEmail } from '../../../lib/emailTemplates';
 
@@ -65,7 +66,7 @@ export default async function handler(
           email_sent: 1, 
           email_sent_at: new Date().toISOString() 
         })
-        .where({ id: newInquiry.id });
+        .where(eq(inquiries.id, newInquiry.id));
 
       console.log('Email sent successfully:', emailResult);
     } catch (emailError) {

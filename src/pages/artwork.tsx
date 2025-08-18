@@ -105,10 +105,6 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
   return (
     <PageLayout 
       title="Artwork"
-      backLink={{
-        href: "/",
-        text: "Back to Home"
-      }}
     >
       <ArtworkContainer>
         {/* <CategoryTabs>

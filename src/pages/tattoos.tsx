@@ -51,10 +51,6 @@ const TattoosPage: FC = () => {
   return (
     <PageLayout
       title="Tattoo Gallery"
-      backLink={{
-        href: '/',
-        text: 'Back to Home',
-      }}
     >
       <PageContainer>
         <CategoryTabs>
