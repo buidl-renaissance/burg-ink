@@ -85,6 +85,13 @@
       "when": 1752783305168,
       "tag": "0011_late_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1755545919803,
+      "tag": "0012_new_chamber",
+      "breakpoints": true
     }
   ]
 }

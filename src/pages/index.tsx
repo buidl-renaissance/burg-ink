@@ -1,10 +1,9 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import Hero from '@/components/Hero';
-import { getPublishedArtworkFromArtist } from '@/lib/db';
-import { Metadata } from 'next';
-
+import styled from "styled-components";
+import Hero from "@/components/Hero";
+import { getPublishedArtworkFromArtist } from "@/lib/db";
+import { Metadata } from "next";
 
 const StyledPage = styled.div`
   margin: 0 auto;
@@ -14,7 +13,7 @@ const StyledPage = styled.div`
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
     margin-bottom: 4rem;
-    
+
     @media (max-width: 768px) {
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 1rem;
@@ -31,10 +30,10 @@ const StyledPage = styled.div`
     &:hover {
       transform: translateY(-5px);
     }
-    
+
     @media (max-width: 768px) {
       border-radius: 6px;
-      
+
       &:hover {
         transform: translateY(-3px);
       }
@@ -45,7 +44,7 @@ const StyledPage = styled.div`
     width: 100%;
     height: 250px;
     object-fit: cover;
-    
+
     @media (max-width: 768px) {
       height: 180px;
     }
@@ -53,7 +52,7 @@ const StyledPage = styled.div`
 
   .artwork-info {
     padding: 1rem;
-    
+
     @media (max-width: 768px) {
       padding: 0.75rem;
     }
@@ -63,7 +62,7 @@ const StyledPage = styled.div`
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
     color: #333;
-    
+
     @media (max-width: 768px) {
       font-size: 1rem;
       margin-bottom: 0.3rem;
@@ -73,7 +72,7 @@ const StyledPage = styled.div`
   .artwork-description {
     font-size: 0.9rem;
     color: #666;
-    
+
     @media (max-width: 768px) {
       font-size: 0.8rem;
     }
@@ -85,15 +84,20 @@ const AboutSection = styled.div`
   padding: 4rem 2rem;
   position: relative;
   background-color: #f5f5f5;
-  
+
   @media (max-width: 768px) {
     padding: 2.5rem 1rem;
   }
 `;
 
+const AboutContainer = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+`;
+
 const AboutTitle = styled.h2`
   font-size: 3rem;
-  font-family: 'Marcellus', serif;
+  font-family: "Marcellus", serif;
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0.025em;
@@ -102,10 +106,10 @@ const AboutTitle = styled.h2`
   position: relative;
   display: inline-block;
   padding: 0 70px;
-  
+
   &::before,
   &::after {
-    content: '';
+    content: "";
     display: block;
     width: 50px;
     height: 2px;
@@ -121,12 +125,12 @@ const AboutTitle = styled.h2`
   &::after {
     right: 0;
   }
-  
+
   @media (max-width: 768px) {
     font-size: 2rem;
     padding: 0 40px;
     margin-bottom: 1rem;
-    
+
     &::before,
     &::after {
       width: 30px;
@@ -136,11 +140,11 @@ const AboutTitle = styled.h2`
 
 const AboutText = styled.p`
   font-size: 1.2rem;
-  font-family: 'Marcellus', serif;
+  font-family: "Marcellus", serif;
   line-height: 1.6;
   margin-bottom: 2rem;
   color: #555;
-  
+
   @media (max-width: 768px) {
     font-size: 1rem;
     line-height: 1.5;
@@ -164,7 +168,7 @@ const MoreLink = styled.a`
     background-color: rgba(150, 136, 95, 0.2);
     transform: translateY(-2px);
   }
-  
+
   @media (max-width: 768px) {
     padding: 0.4rem 1.5rem;
     font-size: 1rem;
@@ -177,7 +181,7 @@ const ContactSection = styled.div`
   padding: 4rem 2rem;
   background-color: #333;
   color: #fff;
-  
+
   @media (max-width: 768px) {
     padding: 2.5rem 1rem;
   }
@@ -185,7 +189,7 @@ const ContactSection = styled.div`
 
 const ContactTitle = styled.h2`
   font-size: 3rem;
-  font-family: 'Marcellus', serif;
+  font-family: "Marcellus", serif;
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0.025em;
@@ -194,10 +198,10 @@ const ContactTitle = styled.h2`
   position: relative;
   display: inline-block;
   padding: 0 70px;
-  
+
   &::before,
   &::after {
-    content: '';
+    content: "";
     display: block;
     width: 50px;
     height: 2px;
@@ -213,12 +217,12 @@ const ContactTitle = styled.h2`
   &::after {
     right: 0;
   }
-  
+
   @media (max-width: 768px) {
     font-size: 2rem;
     padding: 0 40px;
     margin-bottom: 1rem;
-    
+
     &::before,
     &::after {
       width: 30px;
@@ -228,10 +232,10 @@ const ContactTitle = styled.h2`
 
 const ContactText = styled.p`
   font-size: 1.2rem;
-  font-family: 'Marcellus', serif;
+  font-family: "Marcellus", serif;
   line-height: 1.6;
   margin-bottom: 2rem;
-  
+
   @media (max-width: 768px) {
     font-size: 1rem;
     line-height: 1.5;
@@ -239,13 +243,13 @@ const ContactText = styled.p`
   }
 `;
 
-const ContactEmail = styled.span`
+const ContactEmail = styled.a`
   color: #96885f;
   font-weight: 500;
   display: block;
   font-size: 1.4rem;
   margin-top: 1rem;
-  
+
   @media (max-width: 768px) {
     font-size: 1.2rem;
     margin-top: 0.75rem;
@@ -257,21 +261,25 @@ export default function Index() {
     <StyledPage>
       <Hero />
       <AboutSection>
-        <AboutTitle>About the Artist</AboutTitle>
-        <AboutText>
-          Andrea Burg, a lifelong creator, channels energy-healing and shamanic practices into her art, 
-          intending to serve her soul&apos;s journey and contribute to collective healing. Guided by inner wisdom, 
-          her diverse creations, spanning tattooing to mixed media, embody a commitment to transforming emotions, 
-          fostering love, and inspiring a more harmonious world.
-        </AboutText>
-        <MoreLink href="/about">More about the artist</MoreLink>
+        <AboutContainer>
+          <AboutTitle>About the Artist</AboutTitle>
+          <AboutText>
+            Andrea Burg, a lifelong creator, channels energy-healing and
+            shamanic practices into her art, intending to serve her soul&apos;s
+            journey and contribute to collective healing. Guided by inner
+            wisdom, her diverse creations, spanning tattooing to mixed media,
+            embody a commitment to transforming emotions, fostering love, and
+            inspiring a more harmonious world.
+          </AboutText>
+          <MoreLink href="/about">More about the artist</MoreLink>
+        </AboutContainer>
       </AboutSection>
 
       <ContactSection>
         <ContactTitle>Contact</ContactTitle>
         <ContactText>
           For inquiries about commissions or available works, please email:
-          <ContactEmail>andrea@burgink.com</ContactEmail>
+          <ContactEmail href="mailto:andrea@andreaburg.com">andrea@andreaburg.com</ContactEmail>
         </ContactText>
       </ContactSection>
     </StyledPage>
@@ -279,26 +287,29 @@ export default function Index() {
 }
 
 export const metadata: Metadata = {
-  title: 'Andrea Burg | Artist & Energy Healer',
-  description: 'Andrea Burg is a lifelong creator who channels energy-healing and shamanic practices into her art, intending to serve her soul\'s journey and contribute to collective healing.',
+  title: "Andrea Burg | Artist & Energy Healer",
+  description:
+    "Andrea Burg is a lifelong creator who channels energy-healing and shamanic practices into her art, intending to serve her soul's journey and contribute to collective healing.",
   openGraph: {
-    title: 'Andrea Burg | Artist & Energy Healer',
-    description: 'Explore the transformative art of Andrea Burg, combining shamanic practices with creative expression.',
+    title: "Andrea Burg | Artist & Energy Healer",
+    description:
+      "Explore the transformative art of Andrea Burg, combining shamanic practices with creative expression.",
     images: [
       {
-        url: '/images/andrea-burg-og.jpg',
+        url: "/images/andrea-burg-og.jpg",
         width: 1200,
         height: 630,
-        alt: 'Andrea Burg Artwork',
-      }
+        alt: "Andrea Burg Artwork",
+      },
     ],
-    type: 'website',
+    type: "website",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Andrea Burg | Artist & Energy Healer',
-    description: 'Explore the transformative art of Andrea Burg, combining shamanic practices with creative expression.',
-    images: ['/images/andrea-burg-og.jpg'],
+    card: "summary_large_image",
+    title: "Andrea Burg | Artist & Energy Healer",
+    description:
+      "Explore the transformative art of Andrea Burg, combining shamanic practices with creative expression.",
+    images: ["/images/andrea-burg-og.jpg"],
   },
 };
 
@@ -307,7 +318,7 @@ export const getServerSideProps = async () => {
     const artworks = await getPublishedArtworkFromArtist();
     return { props: { artworks } };
   } catch (error) {
-    console.error('Failed to fetch artworks:', error);
+    console.error("Failed to fetch artworks:", error);
     return { props: { artworks: [] } };
   }
 };

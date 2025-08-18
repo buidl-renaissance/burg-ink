@@ -2,65 +2,16 @@
 
 import { FC, useState, FormEvent } from 'react';
 import styled from 'styled-components';
-
-const StyledPage = styled.div`
-  background-color: #f5f5f5;
-  
-  @media (max-width: 768px) {
-    padding: 0 1rem;
-  }
-`;
+import PageLayout from '../components/PageLayout';
 
 const InquireContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
-  padding: 4rem 2rem;
+  padding: 2rem;
+  background-color: #f5f5f5;
   
   @media (max-width: 768px) {
-    padding: 2rem 1rem;
-  }
-`;
-
-const PageTitle = styled.h1`
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 3rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  position: relative;
-  display: inline-block;
-  padding: 0 70px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  &::before,
-  &::after {
-    content: '';
-    display: block;
-    width: 50px;
-    height: 2px;
-    background: #96885f;
-    position: absolute;
-    top: 50%;
-  }
-
-  &::before {
-    left: 0;
-  }
-
-  &::after {
-    right: 0;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: 2rem;
-    padding: 0 40px;
-    margin-bottom: 1.5rem;
-    
-    &::before,
-    &::after {
-      width: 30px;
-    }
+    padding: 1rem;
   }
 `;
 
@@ -282,8 +233,19 @@ const InquirePage: FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch('/api/inquiries/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit inquiry');
+      }
 
       // Success
       setIsSubmitted(true);
@@ -303,10 +265,8 @@ const InquirePage: FC = () => {
   };
 
   return (
-    <StyledPage>
+    <PageLayout title="Inquire">
       <InquireContainer>
-        <PageTitle>Inquire</PageTitle>
-
         <IntroText>
           Interested in commissioning artwork or scheduling a tattoo
           consultation? Fill out the form below, and I&apos;ll get back to you as
@@ -393,7 +353,7 @@ const InquirePage: FC = () => {
           </Form>
         )}
       </InquireContainer>
-    </StyledPage>
+    </PageLayout>
   );
 };
 

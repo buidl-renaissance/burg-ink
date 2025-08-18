@@ -227,4 +227,25 @@ export const media = sqliteTable("media", {
   userIdx: index("media_user_idx").on(table.user_id),
   statusIdx: index("media_status_idx").on(table.processing_status),
   sourceIdIdx: index("media_source_id_idx").on(table.source_id),
+}));
+
+// Inquiries table for storing customer inquiries
+export const inquiries = sqliteTable("inquiries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  inquiry_type: text("inquiry_type").notNull(), // 'tattoo', 'artwork', 'collaboration', 'other'
+  message: text("message").notNull(),
+  status: text("status").default("new"), // 'new', 'contacted', 'completed', 'archived'
+  email_sent: integer("email_sent").default(0), // boolean as integer
+  email_sent_at: text("email_sent_at"),
+  notes: text("notes"), // Internal notes
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  emailIdx: index("inquiry_email_idx").on(table.email),
+  statusIdx: index("inquiry_status_idx").on(table.status),
+  typeIdx: index("inquiry_type_idx").on(table.inquiry_type),
+  createdAtIdx: index("inquiry_created_at_idx").on(table.created_at),
 })); 

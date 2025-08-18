@@ -36,6 +36,16 @@ const VideoOverlay = styled.div`
   z-index: -1;
 `;
 
+const FallbackBackground = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  z-index: -2;
+`;
+
 const Title = styled.h2`
   margin-bottom: 0.5rem;
   color: #fff;
@@ -68,6 +78,7 @@ const Subtitle = styled.p`
   margin: 0 auto 2rem;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
   z-index: 1;
+  margin-top: 1rem;
   
   @media (max-width: 768px) {
     font-size: 1rem;
@@ -81,22 +92,30 @@ const Subtitle = styled.p`
 `;
 
 const DecorativeLine = styled.div`
-  width: 100px;
+  width: 600px;
   height: 2px;
-  background: #fff;
-  margin: 1rem auto;
+  background: linear-gradient(90deg, transparent, #96885f, #d4af37, #96885f, transparent);
+  margin: 0.3rem auto;
   z-index: 1;
+  border-radius: 2px;
   
   @media (max-width: 768px) {
-    width: 60px;
-    margin: 0.75rem auto;
+    width: 200px;
+    height: 2px;
+    margin: 0.2rem auto;
+  }
+  
+  @media (max-width: 480px) {
+    width: 250px;
+    height: 2px;
+    margin: 0.15rem auto;
   }
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 0.5rem;
   z-index: 1;
   
   @media (max-width: 768px) {
@@ -153,18 +172,15 @@ const SpiritWomenSection: FC<SpiritWomenSectionProps> = ({
   subtitle = 'Channeling ancestral wisdom through contemporary expression',
   videoSrc = 'https://dpop.nyc3.digitaloceanspaces.com/uploads/spirit-women-d9daaa52-1755475602118.mov',
 }) => {
+
   return (
     <SectionContainer>
+      <FallbackBackground />
       <BackgroundVideo 
         autoPlay 
         loop 
         muted 
         playsInline
-        ref={(video) => {
-          if (video) {
-            video.playbackRate = 0.5; // Slow down to 50% speed
-          }
-        }}
       >
         <source src={videoSrc} type="video/mp4" />
       </BackgroundVideo>

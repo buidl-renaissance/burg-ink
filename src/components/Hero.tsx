@@ -21,6 +21,7 @@ const HeroContainer = styled.div`
   
   @media (max-width: 480px) {
     padding-top: 1.5rem;
+    height: 60vh;
   }
 `;
 
@@ -45,6 +46,7 @@ const HeroOverlay = styled.div`
 `;
 
 const Title = styled.h1`
+  margin-top: 2rem;
   margin-bottom: 0.5rem;
   color: #fff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
