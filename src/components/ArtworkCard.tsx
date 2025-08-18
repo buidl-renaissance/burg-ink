@@ -120,12 +120,12 @@ export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
       </div>
       <div className="content">
         <div className="title">{artwork.title}</div>
-        {artwork.description && (
+        {/* {artwork.description && (
           <div className="description">{artwork.description}</div>
         )}
         {artwork.artist && (
           <div className="artist">by {artwork.artist.name}</div>
-        )}
+        )} */}
       </div>
     </ArtworkContainer>
   );
