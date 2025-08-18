@@ -124,7 +124,7 @@ const ArtistName = styled.div`
   }
   
   @media (max-width: 768px) {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     padding: 0 50px;
     margin-bottom: 0.8rem;
     
@@ -136,7 +136,7 @@ const ArtistName = styled.div`
   }
   
   @media (max-width: 480px) {
-    font-size: 1.2rem;
+    font-size: 1rem;
     padding: 0 40px;
     margin-bottom: 0.6rem;
     
@@ -163,7 +163,7 @@ const AccentLine = styled.div`
   }
   
   @media (max-width: 480px) {
-    width: 150px;
+    width: 250px;
     height: 2px;
     margin: 0.15rem auto;
   }
@@ -183,6 +183,7 @@ const HeroButtons = styled.div`
   }
   
   @media (max-width: 480px) {
+    width: auto;
     gap: 0.6rem;
     margin-top: 0.6rem;
     padding: 0 0.5rem;
@@ -206,14 +207,14 @@ const HeroButton = styled.a`
   
   @media (max-width: 768px) {
     padding: 0.4rem 1.5rem;
-    font-size: 1.2rem;
+    font-size: 1rem;
     border-width: 3px;
     flex: 1;
   }
   
   @media (max-width: 480px) {
     padding: 0.3rem 1rem;
-    font-size: 1rem;
+    font-size: 0.8rem;
     border-width: 2px;
     flex: 1;
   }
