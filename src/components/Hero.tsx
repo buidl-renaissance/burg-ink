@@ -96,6 +96,7 @@ const ArtistName = styled.div`
   font-family: 'Marcellus', serif;
   color: #fff;
   margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 1;
   text-transform: uppercase;
@@ -103,7 +104,7 @@ const ArtistName = styled.div`
   display: inline-block;
   padding: 0 70px;
   
-  &::before,
+  /* &::before,
   &::after {
     content: '';
     display: block;
@@ -111,12 +112,12 @@ const ArtistName = styled.div`
     height: 2px;
     background: #fff;
     position: absolute;
-    top: 43%;
-  }
+    bottom: -10px;
+  } */
 
-  &::before {
+  /* &::before {
     left: 0;
-  }
+  } */
 
   &::after {
     right: 0;
@@ -130,6 +131,7 @@ const ArtistName = styled.div`
     &::before,
     &::after {
       width: 35px;
+      bottom: -8px;
     }
   }
   
@@ -141,7 +143,29 @@ const ArtistName = styled.div`
     &::before,
     &::after {
       width: 25px;
+      bottom: -6px;
     }
+  }
+`;
+
+const AccentLine = styled.div`
+  width: 600px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #96885f, #d4af37, #96885f, transparent);
+  margin: 0.3rem auto;
+  z-index: 1;
+  border-radius: 2px;
+  
+  @media (max-width: 768px) {
+    width: 200px;
+    height: 2px;
+    margin: 0.2rem auto;
+  }
+  
+  @media (max-width: 480px) {
+    width: 150px;
+    height: 2px;
+    margin: 0.15rem auto;
   }
 `;
 
@@ -170,7 +194,7 @@ const HeroButton = styled.a`
   color: #e1e1e1;
   background-color: transparent;
   border: 4px solid #96885f;
-  font-size: 1.5rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
@@ -246,6 +270,7 @@ const Hero: FC<HeroProps> = ({
       </HeroVideo>
       <HeroOverlay />
       <Title>{title}</Title>
+      <AccentLine />
       <ArtistName>{artistName}</ArtistName>
       {subtitle && <Subtitle>{subtitle}</Subtitle>}
       <HeroButtons>
