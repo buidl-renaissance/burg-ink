@@ -248,4 +248,41 @@ export const inquiries = sqliteTable("inquiries", {
   statusIdx: index("inquiry_status_idx").on(table.status),
   typeIdx: index("inquiry_type_idx").on(table.inquiry_type),
   createdAtIdx: index("inquiry_created_at_idx").on(table.created_at),
-})); 
+}));
+
+// Emails table for tracking sent emails via Resend
+export const emails = sqliteTable("emails", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  resend_id: text("resend_id").unique(), // Resend email ID
+  subject: text("subject").notNull(),
+  from: text("from").notNull(),
+  to: text("to").notNull(), // JSON array of recipients
+  cc: text("cc"), // JSON array of CC recipients
+  bcc: text("bcc"), // JSON array of BCC recipients
+  html_content: text("html_content"),
+  text_content: text("text_content"),
+  status: text("status").default("pending"), // 'pending', 'sent', 'delivered', 'failed', 'bounced', 'complained', 'unsubscribed'
+  error_message: text("error_message"), // Error message if failed
+  sent_at: text("sent_at"),
+  delivered_at: text("delivered_at"),
+  opened_at: text("opened_at"),
+  clicked_at: text("clicked_at"),
+  bounced_at: text("bounced_at"),
+  complained_at: text("complained_at"),
+  unsubscribed_at: text("unsubscribed_at"),
+  metadata: text("metadata"), // JSON string for additional metadata
+  template_id: text("template_id"), // If using email templates
+  inquiry_id: integer("inquiry_id").references(() => inquiries.id), // Link to inquiry if applicable
+  user_id: integer("user_id").references(() => users.id), // Link to user if applicable
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  resendIdIdx: uniqueIndex("email_resend_id_idx").on(table.resend_id),
+  statusIdx: index("email_status_idx").on(table.status),
+  fromIdx: index("email_from_idx").on(table.from),
+  toIdx: index("email_to_idx").on(table.to),
+  sentAtIdx: index("email_sent_at_idx").on(table.sent_at),
+  createdAtIdx: index("email_created_at_idx").on(table.created_at),
+  inquiryIdx: index("email_inquiry_idx").on(table.inquiry_id),
+  userIdx: index("email_user_idx").on(table.user_id),
+}));

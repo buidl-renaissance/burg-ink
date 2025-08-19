@@ -8,12 +8,12 @@ import { GetServerSideProps } from 'next';
 import { TableContainer, Table, Th, Td, ActionButton, LoadingMessage, EmptyMessage, ActionButtons } from '@/components/AdminTableStyles';
 
 interface Email {
-  id: number;
+  id: string;
   subject: string;
   recipient: string;
   sender: string;
   content: string;
-  status: 'draft' | 'sent' | 'failed' | 'scheduled';
+  status: string;
   scheduled_at?: string;
   sent_at?: string;
   created_at: string;
@@ -39,60 +39,45 @@ export default function AdminEmails() {
 
   useEffect(() => {
     fetchEmails();
-  }, []);
+  }, [statusFilter]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchEmails();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const fetchEmails = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockEmails: Email[] = [
-        {
-          id: 1,
-          subject: 'Welcome to Burg Ink!',
-          recipient: 'john@example.com',
-          sender: 'noreply@burgink.com',
-          content: 'Welcome to our community! We\'re excited to have you join us.',
-          status: 'sent',
-          sent_at: '2024-01-15T10:30:00Z',
-          created_at: '2024-01-15T10:25:00Z',
-          updated_at: '2024-01-15T10:30:00Z',
-        },
-        {
-          id: 2,
-          subject: 'Event Reminder: Arts for the Earth',
-          recipient: 'jane@example.com',
-          sender: 'events@burgink.com',
-          content: 'Don\'t forget about our upcoming event this weekend!',
-          status: 'scheduled',
-          scheduled_at: '2024-04-10T09:00:00Z',
-          created_at: '2024-01-20T14:20:00Z',
-          updated_at: '2024-01-20T14:20:00Z',
-        },
-        {
-          id: 3,
-          subject: 'New Artwork Available',
-          recipient: 'mike@example.com',
-          sender: 'gallery@burgink.com',
-          content: 'Check out the latest artwork from our featured artists.',
-          status: 'draft',
-          created_at: '2024-01-25T09:15:00Z',
-          updated_at: '2024-01-25T09:15:00Z',
-        },
-        {
-          id: 4,
-          subject: 'Newsletter - January 2024',
-          recipient: 'newsletter@burgink.com',
-          sender: 'newsletter@burgink.com',
-          content: 'Monthly newsletter with updates and featured content.',
-          status: 'failed',
-          created_at: '2024-01-30T16:45:00Z',
-          updated_at: '2024-01-30T16:50:00Z',
-        },
-      ];
       
-      setEmails(mockEmails);
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('limit', '100');
+      
+      if (statusFilter && statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      
+      const response = await fetch(`/api/emails?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setEmails(data.emails || []);
     } catch (error) {
       console.error('Failed to fetch emails:', error);
+      // Fallback to empty array if API fails
+      setEmails([]);
     } finally {
       setLoading(false);
     }
@@ -116,10 +101,11 @@ export default function AdminEmails() {
     console.log('Edit email:', email);
   };
 
-  const handleDeleteEmail = async (emailId: number) => {
+  const handleDeleteEmail = async (emailId: string) => {
     if (confirm('Are you sure you want to delete this email?')) {
       try {
-        // Implement delete API call
+        // Note: Resend doesn't support deleting emails via API
+        // This would need to be implemented differently if needed
         console.log('Delete email:', emailId);
         setEmails(emails.filter(email => email.id !== emailId));
       } catch (error) {
@@ -128,9 +114,10 @@ export default function AdminEmails() {
     }
   };
 
-  const handleSendEmail = async (emailId: number) => {
+  const handleSendEmail = async (emailId: string) => {
     try {
-      // Implement send API call
+      // Note: Resend emails are sent immediately, not stored as drafts
+      // This function might be used for resending or other purposes
       console.log('Send email:', emailId);
       setEmails(emails.map(email => 
         email.id === emailId 
@@ -144,21 +131,29 @@ export default function AdminEmails() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'delivered': return '#28a745';
       case 'sent': return '#28a745';
       case 'scheduled': return '#007bff';
       case 'draft': return '#ffc107';
       case 'failed': return '#dc3545';
+      case 'bounced': return '#dc3545';
+      case 'complained': return '#dc3545';
+      case 'unsubscribed': return '#6c757d';
       default: return '#6c757d';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case 'delivered': return 'Delivered';
       case 'sent': return 'Sent';
       case 'scheduled': return 'Scheduled';
       case 'draft': return 'Draft';
       case 'failed': return 'Failed';
-      default: return status;
+      case 'bounced': return 'Bounced';
+      case 'complained': return 'Complained';
+      case 'unsubscribed': return 'Unsubscribed';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
 
@@ -200,10 +195,14 @@ export default function AdminEmails() {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">All Status</option>
-              <option value="draft">Draft</option>
-              <option value="scheduled">Scheduled</option>
+              <option value="delivered">Delivered</option>
               <option value="sent">Sent</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="draft">Draft</option>
               <option value="failed">Failed</option>
+              <option value="bounced">Bounced</option>
+              <option value="complained">Complained</option>
+              <option value="unsubscribed">Unsubscribed</option>
             </StatusSelect>
           </StatusFilter>
         </FiltersContainer>
@@ -214,16 +213,16 @@ export default function AdminEmails() {
             <StatLabel>Total Emails</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>{emails.filter(e => e.status === 'sent').length}</StatNumber>
-            <StatLabel>Sent</StatLabel>
+            <StatNumber>{emails.filter(e => e.status === 'delivered' || e.status === 'sent').length}</StatNumber>
+            <StatLabel>Delivered</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>{emails.filter(e => e.status === 'draft').length}</StatNumber>
-            <StatLabel>Drafts</StatLabel>
+            <StatNumber>{emails.filter(e => e.status === 'failed' || e.status === 'bounced').length}</StatNumber>
+            <StatLabel>Failed</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>{emails.filter(e => e.status === 'scheduled').length}</StatNumber>
-            <StatLabel>Scheduled</StatLabel>
+            <StatNumber>{emails.filter(e => e.status === 'complained' || e.status === 'unsubscribed').length}</StatNumber>
+            <StatLabel>Issues</StatLabel>
           </StatCard>
         </StatsContainer>
 
@@ -292,20 +291,16 @@ export default function AdminEmails() {
                         <ActionButton onClick={() => handleViewEmail(email)}>
                           <FaEye />
                         </ActionButton>
-                        <ActionButton onClick={() => handleEditEmail(email)}>
+                        {/* Note: Resend emails cannot be edited or deleted via API */}
+                        {/* <ActionButton onClick={() => handleEditEmail(email)}>
                           <FaEdit />
-                        </ActionButton>
-                        {email.status === 'draft' && (
-                          <ActionButton onClick={() => handleSendEmail(email.id)}>
-                            <FaPaperPlane />
-                          </ActionButton>
-                        )}
-                        <ActionButton 
+                        </ActionButton> */}
+                        {/* <ActionButton 
                           onClick={() => handleDeleteEmail(email.id)}
                           className="delete"
                         >
                           <FaTrash />
-                        </ActionButton>
+                        </ActionButton> */}
                       </ActionButtons>
                     </Td>
                   </tr>

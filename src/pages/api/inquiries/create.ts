@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../../lib/db';
-import { inquiries } from '../../../../db/schema';
+import { inquiries, emails } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { generateInquiryNotificationEmail } from '../../../lib/emailTemplates';
@@ -58,6 +58,23 @@ export default async function handler(
         to: ['andrea@burg-ink.com'], // Replace with Andrea's actual email
         subject: emailTemplate.subject,
         html: emailTemplate.html,
+      });
+
+      // Log the email in the database
+      await db.insert(emails).values({
+        resend_id: emailResult.data?.id || null,
+        subject: emailTemplate.subject,
+        from: 'Burg Ink <noreply@burg-ink.com>',
+        to: JSON.stringify(['andrea@burg-ink.com']),
+        html_content: emailTemplate.html,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+        inquiry_id: newInquiry.id,
+        metadata: JSON.stringify({
+          inquiry_name: name,
+          inquiry_email: email,
+          inquiry_type: inquiryType
+        })
       });
 
       // Update inquiry record to mark email as sent
