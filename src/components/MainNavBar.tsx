@@ -123,39 +123,39 @@ const NavLink = styled(Link)<{ $isActive?: boolean }>`
   }
 `;
 
-const SacredPathLink = styled(Link)<{ $isActive?: boolean }>`
-  color: ${props => props.$isActive ? '#fff' : '#96885f'};
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-family: 'Marcellus', serif;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  position: relative;
-  transition: all 0.3s ease;
+// const SacredPathLink = styled(Link)<{ $isActive?: boolean }>`
+//   color: ${props => props.$isActive ? '#fff' : '#96885f'};
+//   text-decoration: none;
+//   font-size: 0.9rem;
+//   font-family: 'Marcellus', serif;
+//   text-transform: uppercase;
+//   letter-spacing: 0.025em;
+//   position: relative;
+//   transition: all 0.3s ease;
   
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: ${props => props.$isActive ? '100%' : '0'};
-    height: 2px;
-    background: #96885f;
-    transition: width 0.3s ease;
-  }
+//   &::after {
+//     content: '';
+//     position: absolute;
+//     bottom: -4px;
+//     left: 0;
+//     width: ${props => props.$isActive ? '100%' : '0'};
+//     height: 2px;
+//     background: #96885f;
+//     transition: width 0.3s ease;
+//   }
   
-  &:hover {
-    color: #fff;
+//   &:hover {
+//     color: #fff;
     
-    &::after {
-      width: 100%;
-    }
-  }
+//     &::after {
+//       width: 100%;
+//     }
+//   }
   
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-  }
-`;
+//   @media (max-width: 768px) {
+//     font-size: 0.8rem;
+//   }
+// `;
 
 interface MainNavBarProps {
   showOnHome?: boolean;
@@ -188,9 +188,9 @@ const MainNavBar: React.FC<MainNavBarProps> = ({ showOnHome = false }) => {
           <NavLink href="/inquire" $isActive={currentPath === '/inquire'}>
             Inquire
           </NavLink>
-          <SacredPathLink href="/sacred-path" $isActive={currentPath === '/sacred-path'}>
+          {/* <SacredPathLink href="/sacred-path" $isActive={currentPath === '/sacred-path'}>
             Sacred Path
-          </SacredPathLink>
+          </SacredPathLink> */}
         </NavLinks>
       </NavContent>
     </NavContainer>

@@ -222,36 +222,36 @@ const HeroButton = styled.a`
   }
 `;
 
-const SacredPathLink = styled.a`
-  font-size: 1rem;
-  font-family: 'Marcellus', serif;
-  color: #96885f;
-  margin-top: 2.5rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 1;
-  opacity: 0.8;
-  text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(150, 136, 95, 0.3);
+// const SacredPathLink = styled.a`
+//   font-size: 1rem;
+//   font-family: 'Marcellus', serif;
+//   color: #96885f;
+//   margin-top: 2.5rem;
+//   text-decoration: none;
+//   cursor: pointer;
+//   transition: all 0.3s ease;
+//   z-index: 1;
+//   opacity: 0.8;
+//   text-transform: uppercase;
+//   text-shadow: 0 0 8px rgba(150, 136, 95, 0.3);
   
-  &:hover {
-    opacity: 1;
-    color: #fff;
-    transform: translateY(-1px);
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-  }
+//   &:hover {
+//     opacity: 1;
+//     color: #fff;
+//     transform: translateY(-1px);
+//     text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+//   }
   
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-top: 1.2rem;
-  }
+//   @media (max-width: 768px) {
+//     font-size: 0.9rem;
+//     margin-top: 1.2rem;
+//   }
   
-  @media (max-width: 480px) {
-    font-size: 0.8rem;
-    margin-top: 1rem;
-  }
-`;
+//   @media (max-width: 480px) {
+//     font-size: 0.8rem;
+//     margin-top: 1rem;
+//   }
+// `;
 
 interface HeroProps {
   artistName?: string;
@@ -281,7 +281,7 @@ const Hero: FC<HeroProps> = ({
         <HeroButton href="/tattoos">Tattoos</HeroButton>
         <HeroButton href="/inquire">Inquire</HeroButton>
       </HeroButtons>
-      <SacredPathLink href="/sacred-path">take the sacred path</SacredPathLink>
+      {/* <SacredPathLink href="/sacred-path">take the sacred path</SacredPathLink> */}
     </HeroContainer>
   );
 };
