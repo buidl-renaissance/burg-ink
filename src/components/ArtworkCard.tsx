@@ -23,7 +23,7 @@ const ArtworkContainer = styled.div`
     position: relative;
     width: 100%;
     height: 0;
-    padding-bottom: 75%;
+    padding-bottom: 100%; /* Changed from 75% to 100% for square aspect ratio */
     overflow: hidden;
   }
 
@@ -50,35 +50,6 @@ const ArtworkContainer = styled.div`
   &:hover .image,
   &:hover .video {
     transform: scale(1.05);
-  }
-
-  .content {
-    padding: 1.2rem;
-  }
-
-  .title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #333;
-    line-height: 1.3;
-  }
-
-  .description {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .artist {
-    font-size: 0.85rem;
-    color: #888;
-    font-style: italic;
   }
 `;
 
@@ -117,15 +88,6 @@ export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
             />
           )
         )}
-      </div>
-      <div className="content">
-        <div className="title">{artwork.title}</div>
-        {/* {artwork.description && (
-          <div className="description">{artwork.description}</div>
-        )}
-        {artwork.artist && (
-          <div className="artist">by {artwork.artist.name}</div>
-        )} */}
       </div>
     </ArtworkContainer>
   );

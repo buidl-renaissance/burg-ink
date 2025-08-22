@@ -14,7 +14,7 @@ const StyledPage = styled.div`
 const AboutContainer = styled.div`
   max-width: 1000px;
   margin: 0 auto;
-  padding: 4rem 2rem;
+  padding: 8rem 2rem;
   
   @media (max-width: 768px) {
     padding: 2rem 1rem;
@@ -383,19 +383,25 @@ const About: FC<AboutProps> = ({ showTitle = true }) => {
 
         <ArtistSection>
           <ArtistImage
-            src="https://i0.wp.com/andreaburg.com/wp-content/uploads/2025/02/artist-portrait.jpg?fit=800%2C1000&ssl=1"
+            src="/images/burg.ink-portrait.png"
             alt="Andrea Burg - Artist Portrait"
           />
           <ArtistBio>
             <BioHeading>Andrea Burg</BioHeading>
             <BioParagraph>
-              I am a multidisciplinary artist based in Portland, Oregon, with over 10 years of experience in various artistic mediums. My work explores the intersection of traditional craftsmanship and contemporary expression, often drawing inspiration from natural forms, cultural narratives, and the human experience.
+              Through tattooing, painting, and healing arts, Andrea Burg creates work as a living ceremony—an offering to nature, spirit, and the beauty that connects all beings. Her art is both a reflection of the Earth and an invitation to remember our own place within it.
             </BioParagraph>
             <BioParagraph>
-              After completing my BFA at the Pacific Northwest College of Art in 2013, I&apos;ve dedicated my practice to pushing boundaries between different art forms. My background in sculpture informs my approach to tattoo art, while my experience in performance art influences how I think about the body as a canvas and medium.
+              Andrea Burg is a multidisciplinary artist based in Metro Detroit and a tattooist with over a decade of experience. Having devoted tens of thousands of hours to the tattoo chair, Andrea has honed a practice rooted in precision, patience, and care. Her attention to detail reflects her love of creating images that embody the beauty of nature and capture the essence of its elements— earth, plants, animals, and universal spirit.
             </BioParagraph>
             <BioParagraph>
-              Whether creating sculptural installations, performance pieces, or permanent body art, I strive to create work that resonates on both aesthetic and emotional levels. I believe in art as a transformative experience and a powerful form of communication that transcends conventional language.
+              Her art extends beyond tattooing into painting, printmaking, and energy healing, each medium serving as a vessel to honor the sacred connection between all beings. With a Bachelor&apos;s degree in Illustration from the College for Creative Studies, Andrea creates works that are infused with intention, ceremony, and resonance, offering art that inspires healing and reflection.
+            </BioParagraph>
+            <BioParagraph>
+              Her journey is deeply shaped by her love of the Earth: guiding whitewater rafting trips, serving on a conservation crew restoring trails in Colorado, and organizing Arts for the Earth, a community fundraiser supporting nonprofits that protect land and water. She has also completed a 15-month training in Peruvian shamanic traditions, holds certifications in Reiki, and serves as a community member supporting and participating in Indigenous ceremonies across the Americas.
+            </BioParagraph>
+            <BioParagraph>
+              Through her art and healing work, Andrea embraces life as a sacred ceremony. Each creation becomes an offering and invitation to remember our connection to nature, spirit, and self. She welcomes collaborations that align with healing, transformation, and the path of creation.
             </BioParagraph>
           </ArtistBio>
         </ArtistSection>
@@ -406,27 +412,27 @@ const About: FC<AboutProps> = ({ showTitle = true }) => {
             <SkillItem>
               <SkillTitle>Tattoo Art</SkillTitle>
               <SkillDescription>
-                Specializing in fine line work, blackwork, and botanical designs with a focus on custom, personalized pieces that honor the individual&apos;s story and body.
+                Over a decade of experience creating custom tattoos with precision, patience, and care, specializing in nature-inspired designs that honor the individual&apos;s story and connection to the Earth.
               </SkillDescription>
             </SkillItem>
             <SkillItem>
-              <SkillTitle>Sculptural Performance</SkillTitle>
+              <SkillTitle>Painting & Printmaking</SkillTitle>
               <SkillDescription>
-                Creating immersive experiences that combine sculptural elements with movement, exploring themes of transformation and embodiment.
+                Creating works infused with intention, ceremony, and resonance that serve as vessels to honor the sacred connection between all beings.
               </SkillDescription>
             </SkillItem>
             <SkillItem>
-              <SkillTitle>Mixed Media Installation</SkillTitle>
+              <SkillTitle>Energy Healing</SkillTitle>
               <SkillDescription>
-                Developing site-specific installations that incorporate found objects, textiles, and organic materials to create contemplative environments.
+                Certified Reiki practitioner and trained in Peruvian shamanic traditions, offering healing work that supports transformation and spiritual connection.
               </SkillDescription>
             </SkillItem>
-            <SkillItem>
-              <SkillTitle>Traditional Illustration</SkillTitle>
+            {/* <SkillItem>
+              <SkillTitle>Community & Conservation</SkillTitle>
               <SkillDescription>
-                Working with ink, watercolor, and graphite to create detailed illustrations that blend technical precision with expressive mark-making.
+                Organizing Arts for the Earth fundraisers, guiding whitewater rafting trips, and participating in Indigenous ceremonies across the Americas.
               </SkillDescription>
-            </SkillItem>
+            </SkillItem> */}
           </SkillsList>
         </SkillsSection>
 
@@ -435,46 +441,46 @@ const About: FC<AboutProps> = ({ showTitle = true }) => {
           <Timeline>
             <TimelineItem>
               <TimelineContent>
-                <TimelineDate>2020 - Present</TimelineDate>
-                <TimelineTitle>Independent Studio Practice</TimelineTitle>
+                <TimelineDate>Present</TimelineDate>
+                <TimelineTitle>Multidisciplinary Artist & Tattooist</TimelineTitle>
                 <TimelineText>
-                  Operating a private tattoo and art studio, creating commissioned works and developing personal projects.
+                  Creating work as a living ceremony through tattooing, painting, printmaking, and energy healing in Metro Detroit.
                 </TimelineText>
               </TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineContent>
-                <TimelineDate>2017 - 2020</TimelineDate>
-                <TimelineTitle>Resident Artist - Ink Collective</TimelineTitle>
+                <TimelineDate>2023 - Present</TimelineDate>
+                <TimelineTitle>Arts for the Earth Organizer</TimelineTitle>
                 <TimelineText>
-                  Worked as a resident artist at a renowned tattoo studio, developing technical skills and building clientele.
+                  Organizing community fundraisers supporting nonprofits that protect land and water, connecting art with environmental conservation.
                 </TimelineText>
               </TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineContent>
-                <TimelineDate>2015 - 2017</TimelineDate>
-                <TimelineTitle>Tattoo Apprenticeship</TimelineTitle>
+                <TimelineDate>2022 - 2023</TimelineDate>
+                <TimelineTitle>Peruvian Shamanic Training</TimelineTitle>
                 <TimelineText>
-                  Completed a formal apprenticeship under master tattoo artist James Chen, learning traditional and contemporary techniques.
+                  Completed 15-month training in Peruvian shamanic traditions, deepening connection to spiritual practices and healing arts.
                 </TimelineText>
               </TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineContent>
-                <TimelineDate>2013 - 2015</TimelineDate>
-                <TimelineTitle>Gallery Assistant - Modern Art Space</TimelineTitle>
+                <TimelineDate>2018 - 2020</TimelineDate>
+                <TimelineTitle>Conservation Crew Member</TimelineTitle>
                 <TimelineText>
-                  Assisted with exhibition installations, artist coordination, and public programming while developing personal art practice.
+                  Served on conservation crews restoring trails in Colorado, contributing to land stewardship and environmental protection.
                 </TimelineText>
               </TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineContent>
-                <TimelineDate>2009 - 2013</TimelineDate>
-                <TimelineTitle>BFA, Pacific Northwest College of Art</TimelineTitle>
+                <TimelineDate>2013 - 2017</TimelineDate>
+                <TimelineTitle>BFA Illustration, College for Creative Studies</TimelineTitle>
                 <TimelineText>
-                  Graduated with honors, focusing on sculpture and interdisciplinary practices with a minor in art history.
+                  Graduated with a Bachelor&apos;s degree in Illustration, developing technical skills and artistic vision that inform all creative work.
                 </TimelineText>
               </TimelineContent>
             </TimelineItem>
@@ -484,7 +490,7 @@ const About: FC<AboutProps> = ({ showTitle = true }) => {
         <ContactSection>
           <ContactHeading>Work With Me</ContactHeading>
           <ContactText>
-            I&apos;m always open to new collaborations, commissions, and tattoo projects. Whether you have a specific vision or are looking for creative guidance, I&apos;d love to hear from you and discuss how we can bring your ideas to life.
+            I welcome collaborations that align with healing, transformation, and the path of creation. Whether you&apos;re seeking a custom tattoo, healing session, or artistic collaboration, I&apos;d love to discuss how we can work together to honor the sacred connection between nature, spirit, and self.
           </ContactText>
           <ContactButton href="/inquire">Get In Touch</ContactButton>
         </ContactSection>

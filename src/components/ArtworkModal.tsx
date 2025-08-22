@@ -118,8 +118,8 @@ const CloseButton = styled.button`
 
 const ImageTitle = styled.h2`
   margin: 0 0 15px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 400;
   color: #333;
 `;
 
