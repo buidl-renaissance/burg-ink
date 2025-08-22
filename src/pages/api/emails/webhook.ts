@@ -3,6 +3,21 @@ import { db } from '../../../lib/db';
 import { emails } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 
+// Define interfaces for Resend webhook data
+interface ResendWebhookData {
+  email_id: string;
+  created_at: string;
+  from: string;
+  to: string[];
+  subject: string;
+  reason?: string;
+}
+
+interface ResendWebhookBody {
+  type: string;
+  data: ResendWebhookData;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -12,7 +27,7 @@ export default async function handler(
   }
 
   try {
-    const { type, data } = req.body;
+    const { type, data } = req.body as ResendWebhookBody;
 
     console.log('Resend webhook received:', { type, data });
 
@@ -50,7 +65,7 @@ export default async function handler(
   }
 }
 
-async function handleEmailDelivered(data: any) {
+async function handleEmailDelivered(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       status: 'delivered',
@@ -60,7 +75,7 @@ async function handleEmailDelivered(data: any) {
     .where(eq(emails.resend_id, data.email_id));
 }
 
-async function handleEmailDeliveryDelayed(data: any) {
+async function handleEmailDeliveryDelayed(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       status: 'delayed',
@@ -70,7 +85,7 @@ async function handleEmailDeliveryDelayed(data: any) {
     .where(eq(emails.resend_id, data.email_id));
 }
 
-async function handleEmailBounced(data: any) {
+async function handleEmailBounced(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       status: 'bounced',
@@ -81,7 +96,7 @@ async function handleEmailBounced(data: any) {
     .where(eq(emails.resend_id, data.email_id));
 }
 
-async function handleEmailComplained(data: any) {
+async function handleEmailComplained(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       status: 'complained',
@@ -91,7 +106,7 @@ async function handleEmailComplained(data: any) {
     .where(eq(emails.resend_id, data.email_id));
 }
 
-async function handleEmailOpened(data: any) {
+async function handleEmailOpened(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       opened_at: new Date().toISOString(),
@@ -100,7 +115,7 @@ async function handleEmailOpened(data: any) {
     .where(eq(emails.resend_id, data.email_id));
 }
 
-async function handleEmailClicked(data: any) {
+async function handleEmailClicked(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       clicked_at: new Date().toISOString(),
@@ -109,7 +124,7 @@ async function handleEmailClicked(data: any) {
     .where(eq(emails.resend_id, data.email_id));
 }
 
-async function handleEmailUnsubscribed(data: any) {
+async function handleEmailUnsubscribed(data: ResendWebhookData) {
   await db.update(emails)
     .set({
       status: 'unsubscribed',

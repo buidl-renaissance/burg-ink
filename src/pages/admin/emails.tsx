@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus, FaEnvelope, FaPaperPlane, FaClock } from 'react-icons/fa';
+import { FaSearch, FaEye, FaPlus, FaEnvelope, FaClock } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 import { TableContainer, Table, Th, Td, ActionButton, LoadingMessage, EmptyMessage, ActionButtons } from '@/components/AdminTableStyles';
 
@@ -37,20 +37,7 @@ export default function AdminEmails() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
 
-  useEffect(() => {
-    fetchEmails();
-  }, [statusFilter]);
-
-  // Debounced search effect
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchEmails();
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  const fetchEmails = async () => {
+  const fetchEmails = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -81,7 +68,20 @@ export default function AdminEmails() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, searchTerm]);
+
+  useEffect(() => {
+    fetchEmails();
+  }, [fetchEmails]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchEmails();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, fetchEmails]);
 
   const filteredEmails = emails.filter(email => {
     const matchesSearch = email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,39 +94,6 @@ export default function AdminEmails() {
   const handleViewEmail = (email: Email) => {
     setSelectedEmail(email);
     setShowEmailModal(true);
-  };
-
-  const handleEditEmail = (email: Email) => {
-    // Implement edit functionality
-    console.log('Edit email:', email);
-  };
-
-  const handleDeleteEmail = async (emailId: string) => {
-    if (confirm('Are you sure you want to delete this email?')) {
-      try {
-        // Note: Resend doesn't support deleting emails via API
-        // This would need to be implemented differently if needed
-        console.log('Delete email:', emailId);
-        setEmails(emails.filter(email => email.id !== emailId));
-      } catch (error) {
-        console.error('Failed to delete email:', error);
-      }
-    }
-  };
-
-  const handleSendEmail = async (emailId: string) => {
-    try {
-      // Note: Resend emails are sent immediately, not stored as drafts
-      // This function might be used for resending or other purposes
-      console.log('Send email:', emailId);
-      setEmails(emails.map(email => 
-        email.id === emailId 
-          ? { ...email, status: 'sent', sent_at: new Date().toISOString() }
-          : email
-      ));
-    } catch (error) {
-      console.error('Failed to send email:', error);
-    }
   };
 
   const getStatusColor = (status: string) => {
