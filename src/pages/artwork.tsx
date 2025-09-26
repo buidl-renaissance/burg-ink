@@ -43,7 +43,7 @@ export default function ArtworkPage({ artworks }: { artworks: Artwork[] }) {
     <PageLayout 
       title="Artwork"
     >
-      <Gallery title="Artwork Gallery" artworks={visibleArtworks} />
+      <Gallery artworks={visibleArtworks} />
       
       {/* <AddArtworkButton onClick={() => setIsModalOpen(true)}>
         Add New Artwork

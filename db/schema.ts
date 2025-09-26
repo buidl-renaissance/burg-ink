@@ -232,11 +232,21 @@ export const media = sqliteTable("media", {
 // Inquiries table for storing customer inquiries
 export const inquiries = sqliteTable("inquiries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
+  first_name: text("first_name").notNull(),
+  last_name: text("last_name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
+  budget: text("budget"), // Budget for the project
+  tattoo_concept: text("tattoo_concept").notNull(), // Main tattoo description
+  animal_person_emotion: text("animal_person_emotion"), // Emotion for animal/person designs
+  abstract_energy: text("abstract_energy"), // Adjectives and energy for abstract designs
+  tattoo_size: text("tattoo_size"), // Size estimate
+  color_preference: text("color_preference"), // 'color' or 'black_gray'
+  photo_references: text("photo_references"), // JSON array of uploaded reference photo URLs
+  placement_photos: text("placement_photos"), // JSON array of uploaded placement photo URLs
+  newsletter_signup: integer("newsletter_signup").default(0), // boolean as integer
   inquiry_type: text("inquiry_type").notNull(), // 'tattoo', 'artwork', 'collaboration', 'other'
-  message: text("message").notNull(),
+  message: text("message").notNull(), // Legacy field for backward compatibility
   status: text("status").default("new"), // 'new', 'contacted', 'completed', 'archived'
   email_sent: integer("email_sent").default(0), // boolean as integer
   email_sent_at: text("email_sent_at"),

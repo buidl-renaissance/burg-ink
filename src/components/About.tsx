@@ -5,10 +5,6 @@ import styled from 'styled-components';
 
 const StyledPage = styled.div`
   background-color: #f5f5f5;
-  
-  @media (max-width: 768px) {
-    padding: 0 1rem;
-  }
 `;
 
 const AboutContainer = styled.div`
@@ -17,7 +13,13 @@ const AboutContainer = styled.div`
   padding: 8rem 2rem;
   
   @media (max-width: 768px) {
-    padding: 2rem 1rem;
+    padding: 2rem 1.5rem;
+    padding-top: 8rem; /* Increased top padding on mobile */
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1.5rem 1rem;
+    padding-top: 10rem; /* Increased top padding for very small screens */
   }
 `;
 
@@ -157,6 +159,11 @@ const SkillsList = styled.ul`
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
   }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
 `;
 
 const SkillItem = styled.li`
@@ -178,11 +185,16 @@ const SkillItem = styled.li`
       transform: translateY(-3px);
     }
   }
+  
+  @media (max-width: 480px) {
+    padding: 0.8rem;
+  }
 `;
 
 const SkillTitle = styled.h3`
   font-size: 1.3rem;
   margin-bottom: 0.5rem;
+  margin-top: 0;
   color: #96885f;
   
   @media (max-width: 768px) {
@@ -259,12 +271,17 @@ const TimelineItem = styled.div`
   @media (max-width: 767px) {
     width: 100%;
     padding-left: 70px;
-    padding-right: 25px;
+    padding-right: 15px;
 
     &:nth-child(odd),
     &:nth-child(even) {
       left: 0;
     }
+  }
+  
+  @media (max-width: 480px) {
+    padding-left: 60px;
+    padding-right: 10px;
   }
 `;
 
@@ -278,6 +295,10 @@ const TimelineContent = styled.div`
   @media (max-width: 768px) {
     padding: 15px;
     border-radius: 6px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px;
   }
 `;
 

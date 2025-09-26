@@ -12,7 +12,7 @@ interface GalleryProps {
   artworks: Artwork[];
 }
 
-const Gallery: FC<GalleryProps> = ({ title = 'Performance Art', artworks }) => {
+const Gallery: FC<GalleryProps> = ({ title = null, artworks }) => {
   const [activeCategory, ] = useState('All');
   const [modalOpen, setModalOpen] = useState(false);
   const [currentArtwork, setCurrentArtwork] = useState<Artwork | null>(null);
@@ -59,7 +59,7 @@ const Gallery: FC<GalleryProps> = ({ title = 'Performance Art', artworks }) => {
 
   return (
     <GalleryContainer>
-      <GalleryTitle>{title}</GalleryTitle>
+      {title && <GalleryTitle>{title}</GalleryTitle>}
       {/* <CategoryTabs>
         {categories.map((category, index) => (
           <CategoryTab
