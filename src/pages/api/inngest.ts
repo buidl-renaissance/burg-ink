@@ -16,6 +16,7 @@ import {
   processBatchResize
 } from "@/lib/functions/processImageResizing";
 import { createArtworkEmbeddings } from "@/lib/functions/processArtworkEmbeddings";
+import { processMediaUpload } from "@/lib/functions/processMediaUpload";
 
 // Create the handler to serve your functions
 const handler = serve({
@@ -32,7 +33,8 @@ const handler = serve({
     processMediaResize,
     processNewUploadResize,
     processBatchResize,
-    createArtworkEmbeddings
+    createArtworkEmbeddings,
+    processMediaUpload
   ],
 });
 
