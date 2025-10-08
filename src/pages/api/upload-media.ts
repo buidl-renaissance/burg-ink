@@ -21,21 +21,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Optional: Get user info if available (for tracking purposes)
     const user = await getAuthorizedUser(req);
 
-    // Parse the form data
+    // Parse the form data with increased file size limit for videos
     const form = formidable({
-      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+      maxFileSize: 100 * 1024 * 1024, // 100MB limit for videos
     });
 
     const [, files] = await form.parse(req);
     
     const uploadedFile = files.image?.[0];
     if (!uploadedFile) {
-      return res.status(400).json({ message: 'No image file provided' });
+      return res.status(400).json({ message: 'No media file provided' });
     }
 
-    // Validate file type
-    if (!uploadedFile.mimetype?.startsWith('image/')) {
-      return res.status(400).json({ message: 'Invalid file type. Only images are allowed.' });
+    // Validate file type - allow both images and videos
+    const isImage = uploadedFile.mimetype?.startsWith('image/');
+    const isVideo = uploadedFile.mimetype?.startsWith('video/');
+    
+    if (!isImage && !isVideo) {
+      return res.status(400).json({ message: 'Invalid file type. Only images and videos are allowed.' });
     }
 
     // Read the file
@@ -49,9 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Store the file in DigitalOcean Spaces
     const storedFile = await storageService.storeFile(
       fileBuffer,
-      uploadedFile.originalFilename || 'uploaded-image',
+      uploadedFile.originalFilename || 'uploaded-media',
       fileId,
-      uploadedFile.mimetype
+      uploadedFile.mimetype || 'application/octet-stream'
     );
 
     // Clean up the temporary file

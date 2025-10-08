@@ -1,7 +1,7 @@
 import { inngest } from '@/lib/inngest';
 import { db } from '../../../db';
 import { media } from '../../../db/schema';
-import { uploadFile, getFileKey } from '@/lib/storage';
+import { uploadFile, getFileKey } from '@/lib/storage/index';
 import { generateResizedVersions, getFileExtension } from '@/lib/storage/resize';
 import { eq } from 'drizzle-orm';
 
@@ -56,8 +56,8 @@ export const processMediaUpload = inngest.createFunction(
       await db
         .update(media)
         .set({
-          mediumUrl: result.mediumUrl,
-          thumbnailUrl: result.thumbnailUrl,
+          medium_url: result.mediumUrl,
+          thumbnail_url: result.thumbnailUrl,
           processing_status: 'completed',
         })
         .where(eq(media.id, mediaId));

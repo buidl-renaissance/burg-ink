@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:local": "DATABASE_URL=file:./db.sqlite next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:local": "DATABASE_URL=file:./db.sqlite drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "db:studio:local": "DATABASE_URL=file:./db.sqlite drizzle-kit studio",
     "inngest:dev": "npx inngest-cli@latest dev"
   },
   "dependencies": {
@@ -40,10 +43,12 @@
     "next": "15.3.4",
     "next-seo": "^6.8.0",
     "openai": "^5.7.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-quill": "^2.0.0",
+    "resend": "^6.0.1",
     "sharp": "^0.34.3",
     "sqlite3": "^5.1.7",
     "stripe": "^18.2.1",

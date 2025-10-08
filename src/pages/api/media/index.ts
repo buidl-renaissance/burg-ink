@@ -35,8 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else if (sort === 'processing_status') {
         orderBy = order === 'asc' ? [asc(media.processing_status)] : [desc(media.processing_status)];
       } else {
-        // Default to updated_at
-        orderBy = order === 'asc' ? [asc(media.updated_at)] : [desc(media.updated_at)];
+        // Default to created_at
+        orderBy = order === 'asc' ? [asc(media.created_at)] : [desc(media.created_at)];
       }
 
       // Get media records using select
@@ -76,18 +76,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         filename: record.filename,
         mime_type: record.mime_type,
         size: record.size,
-        width: record.width,
-        height: record.height,
-        spaces_url: record.spaces_url,
+        original_url: record.original_url,
+        medium_url: record.medium_url,
         thumbnail_url: record.thumbnail_url,
-        processing_status: record.processing_status,
+        title: record.title,
         description: record.description,
+        alt_text: record.alt_text,
+        processing_status: record.processing_status,
         tags: record.tags ? JSON.parse(record.tags) : [],
-        ai_analysis: record.ai_analysis ? JSON.parse(record.ai_analysis) : null,
-        metadata: record.metadata ? JSON.parse(record.metadata) : null,
         created_at: record.created_at,
-        updated_at: record.updated_at,
-        processed_at: record.processed_at,
+        user_id: record.user_id,
       }));
 
       res.status(200).json({

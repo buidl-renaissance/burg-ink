@@ -23,7 +23,7 @@ const ArtworkContainer = styled.div`
     position: relative;
     width: 100%;
     height: 0;
-    padding-bottom: 75%;
+    padding-bottom: 100%; /* Changed from 75% to 100% for square aspect ratio */
     overflow: hidden;
   }
 
@@ -37,37 +37,19 @@ const ArtworkContainer = styled.div`
     transition: transform 0.5s ease;
   }
 
-  &:hover .image {
+  .video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  &:hover .image,
+  &:hover .video {
     transform: scale(1.05);
-  }
-
-  .content {
-    padding: 1.2rem;
-  }
-
-  .title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #333;
-    line-height: 1.3;
-  }
-
-  .description {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .artist {
-    font-size: 0.85rem;
-    color: #888;
-    font-style: italic;
   }
 `;
 
@@ -76,26 +58,35 @@ interface ArtworkCardProps {
 }
 
 export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i) || 
+           url.includes('video/') || 
+           url.includes('blob:') && url.includes('video');
+  };
+
   return (
     <ArtworkContainer>
       <div className="image-container">
         {artwork.image && (
-          <Image
-            alt={artwork.title}
-            className="image"
-            src={artwork.image}
-            fill
-            style={{ objectFit: "cover" }}
-          />
-        )}
-      </div>
-      <div className="content">
-        <div className="title">{artwork.title}</div>
-        {artwork.description && (
-          <div className="description">{artwork.description}</div>
-        )}
-        {artwork.artist && (
-          <div className="artist">by {artwork.artist.name}</div>
+          isVideo(artwork.image) ? (
+            <video
+              className="video"
+              src={artwork.image}
+              muted
+              loop
+              playsInline
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <Image
+              alt={artwork.title}
+              className="image"
+              src={artwork.image}
+              fill
+              style={{ objectFit: "cover" }}
+            />
+          )
         )}
       </div>
     </ArtworkContainer>

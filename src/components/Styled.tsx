@@ -7,7 +7,7 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   color: white;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Marcellus', serif;
   background: #121212;
   padding: 1rem;
 `;
@@ -93,7 +93,7 @@ export const Input = styled.input`
   padding: 0.75rem;
   color: white;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Marcellus', serif;
 
   &:focus {
     outline: none;
@@ -106,7 +106,7 @@ export const TextArea = styled.textarea`
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Marcellus', serif;
   font-size: 1rem;
   min-height: 100px;
   padding: 0.75rem;

@@ -116,10 +116,12 @@ export const DropZone: React.FC<DropZoneProps> = ({
     if (disabled) return;
 
     const files = Array.from(e.dataTransfer.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const mediaFiles = files.filter(file => 
+      file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
     
-    if (imageFiles.length > 0) {
-      onFileSelect(imageFiles);
+    if (mediaFiles.length > 0) {
+      onFileSelect(mediaFiles);
     }
   }, [onFileSelect, disabled]);
 
@@ -153,13 +155,13 @@ export const DropZone: React.FC<DropZoneProps> = ({
       onClick={handleClick}
     >
       <DropZoneText>
-        {isDragOver ? 'Drop images here' : 'Drag and drop images here'}
+        {isDragOver ? 'Drop media files here' : 'Drag and drop images or videos here'}
       </DropZoneText>
       <DropZoneSubText>
         or click to select files
       </DropZoneSubText>
       <UploadButton disabled={disabled} type="button">
-        Select Images
+        Select Media
       </UploadButton>
       
       <HiddenFileInput

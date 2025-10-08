@@ -60,9 +60,9 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
   onUploadError,
   onUploadProgress,
   className,
-  accept = 'image/*',
+  accept = 'image/*,video/*',
   multiple = true,
-  children = 'Upload Images',
+  children = 'Upload Media',
   disabled = false,
 }) => {
   const [isUploading, setIsUploading] = useState(false);

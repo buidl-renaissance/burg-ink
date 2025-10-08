@@ -49,7 +49,7 @@ const Title = styled.h2`
   font-weight: 700;
   margin-bottom: 0.75rem;
   color: #1a202c;
-  font-family: 'Teko', sans-serif;
+  font-family: 'Marcellus', serif;
   letter-spacing: 0.02em;
 `;
 

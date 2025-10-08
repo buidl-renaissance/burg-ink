@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../../../db';
 import { media } from '../../../../db/schema';
 import { inngest } from '@/lib/inngest';
-import { uploadFile, getFileKey } from '@/lib/storage';
+import { uploadFile, getFileKey } from '@/lib/storage/index';
 
 export const config = {
   api: {
@@ -20,9 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const form = formidable({
-      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+      maxFileSize: 100 * 1024 * 1024, // 100MB limit for videos
       filter: (part: Part) => {
-        return part.mimetype?.startsWith('image/') || false;
+        return part.mimetype?.startsWith('image/') || part.mimetype?.startsWith('video/') || false;
       },
     });
 
@@ -48,14 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Save initial record to database with original URL
     const mediaRecord = {
       id: mediaId,
-      originalUrl: originalUpload.url,
-      mediumUrl: '', // Will be updated by background job  
-      thumbnailUrl: '', // Will be updated by background job
+      original_url: originalUpload.url,
+      medium_url: '', // Will be updated by background job  
+      thumbnail_url: '', // Will be updated by background job
       source: 'local' as const,
-      tags: ['processing'], // Temporary tag while processing
+      tags: JSON.stringify(['processing']), // Store as JSON string
       title: 'Processing...', // Temporary title
       description: 'Processing...', // Temporary description
-      altText: 'Image being processed', // Temporary alt text
+      alt_text: 'Image being processed', // Temporary alt text
       filename: uploadedFile.originalFilename || 'image.jpg',
       mime_type: uploadedFile.mimetype || 'image/jpeg',
       size: originalBuffer.length,
@@ -82,8 +82,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       media: {
-        ...mediaRecord,
+        id: mediaId,
+        originalUrl: originalUpload.url,
+        mediumUrl: '',
+        thumbnailUrl: '',
         processing: true,
+        filename: uploadedFile.originalFilename || 'image.jpg',
       },
       message: 'Upload received. Processing in background...',
     });

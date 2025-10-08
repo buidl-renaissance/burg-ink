@@ -173,7 +173,7 @@ const TicketsContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Teko', sans-serif;
+  font-family: 'Marcellus', serif;
 `;
 
 const EventInfo = styled.div`
@@ -283,9 +283,9 @@ const AddToCartButton = styled.button`
   border: none;
   border-radius: 4px;
   padding: 0.5rem 1rem;
-  font-family: 'Teko', sans-serif;
+  font-family: 'Marcellus', serif;
   font-size: 1.2rem;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -320,9 +320,9 @@ const CheckoutButton = styled.button`
   border: none;
   border-radius: 4px;
   padding: 0.75rem 2rem;
-  font-family: 'Teko', sans-serif;
+  font-family: 'Marcellus', serif;
   font-size: 1.4rem;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s ease;

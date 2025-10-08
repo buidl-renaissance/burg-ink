@@ -901,15 +901,15 @@ export default function AdminMedia() {
             <UploadIcon>
               <FaPlus />
             </UploadIcon>
-            <UploadText>
-              <h3>Upload New Media</h3>
-              <p>Drag and drop multiple images or click to browse. Select multiple files to upload them all at once. Images will be automatically processed and analyzed.</p>
-            </UploadText>
+                      <UploadText>
+            <h3>Upload New Media</h3>
+            <p>Drag and drop multiple images and videos or click to browse. Select multiple files to upload them all at once. Media will be automatically processed and analyzed.</p>
+          </UploadText>
           </UploadHeader>
           
           <UploadMedia 
             onUploadComplete={handleUploadComplete}
-            accept="image/*"
+            accept="image/*,video/*"
           />
           
           {uploadSuccess && (

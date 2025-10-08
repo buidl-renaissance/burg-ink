@@ -19,6 +19,7 @@ export function AdminLayout({ children, currentPage = 'dashboard' }: AdminLayout
     { id: 'media', label: 'Media', icon: FaImages, href: '/admin/media' },
     { id: 'users', label: 'Users', icon: FaUsers, href: '/admin/users' },
     { id: 'events', label: 'Events', icon: FaCalendar, href: '/admin/events' },
+    { id: 'inquiries', label: 'Inquiries', icon: FaEnvelope, href: '/admin/inquiries' },
     { id: 'emails', label: 'Emails', icon: FaEnvelope, href: '/admin/emails' },
     { id: 'marketing-assistant', label: 'Marketing Assistant', icon: FaLightbulb, href: '/admin/marketing-assistant' },
     { id: 'settings', label: 'Settings', icon: FaCog, href: '/admin/settings' },

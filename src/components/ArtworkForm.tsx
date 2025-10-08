@@ -55,9 +55,15 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
 
   const handleUploadError = (error: string) => {
     setStatus({
-      message: `Failed to upload image: ${error}`,
+      message: `Failed to upload media: ${error}`,
       isError: true,
     });
+  };
+
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i) || 
+           url.includes('video/') || 
+           url.includes('blob:') && url.includes('video');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,7 +71,7 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
 
     if (!imageUrl) {
       setStatus({
-        message: 'Please upload an image for your artwork',
+        message: 'Please upload an image or video for your artwork',
         isError: true,
       });
       return;
@@ -128,25 +134,35 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
 
       <form onSubmit={handleSubmit}>
         <UploadContainer>
-          <UploadText>Upload your artwork image</UploadText>
+          <UploadText>Upload your artwork image or video</UploadText>
 
           <UploadButton
-            accept="image/*"
+            accept="image/*,video/*"
             multiple={false}
             onUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
           >
-            {imageUrl ? 'Change Image' : 'Select Image'}
+            {imageUrl ? 'Change Media' : 'Select Media'}
           </UploadButton>
 
           {imageUrl && (
             <ImagePreview>
-              <Image
-                src={imageUrl}
-                alt="Artwork preview"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
+              {isVideo(imageUrl) ? (
+                <video
+                  src={imageUrl}
+                  controls
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <Image
+                  src={imageUrl}
+                  alt="Artwork preview"
+                  fill
+                  style={{ objectFit: 'contain' }}
+                />
+              )}
             </ImagePreview>
           )}
         </UploadContainer>

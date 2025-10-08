@@ -104,14 +104,14 @@ export default function TestUploadPage() {
         <Title>Media Upload Test</Title>
         <Description>
           This page tests the new media upload functionality with drag-and-drop interface,
-          background processing, and automatic image resizing. Try uploading some images
+          background processing, and automatic image resizing. Try uploading images or videos
           to see the media-manager-style upload experience in action.
         </Description>
 
         <EnhancedUpload
           onUploadComplete={handleUploadComplete}
           onUploadError={handleUploadError}
-          accept="image/*"
+          accept="image/*,video/*"
           multiple={true}
           showPreviews={true}
         />

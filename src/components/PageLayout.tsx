@@ -2,8 +2,7 @@
 
 import React, { ReactNode } from 'react';
 import styled from 'styled-components';
-import Link from 'next/link';
-import { FaArrowLeft } from 'react-icons/fa';
+import MainNavBar from './MainNavBar';
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -33,6 +32,18 @@ export const PageContainer = styled.div<{
   }
 `;
 
+const PageHeaderContainer = styled.div`
+  padding: 2rem;
+  padding-top: 8rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    padding-top: 8rem;
+  }
+`;
+
 const PageHeader = styled.div`
   text-align: center;
   margin-bottom: 1rem;
@@ -46,7 +57,7 @@ const PageTitle = styled.h1`
   font-size: 2.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
   position: relative;
   display: inline-block;
   padding: 0 70px;
@@ -71,7 +82,7 @@ const PageTitle = styled.h1`
   }
 
   @media (max-width: 768px) {
-    font-size: 2rem;
+    font-size: 1.8rem;
     padding: 0 40px;
 
     &::before,
@@ -92,19 +103,19 @@ const PageDescription = styled.p`
   }
 `;
 
-const BackButton = styled(Link)`
+const BackLink = styled.a`
   display: inline-block;
+  margin-bottom: 1rem;
   color: #96885f;
   text-decoration: none;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 0.95rem;
 
   &:hover {
     text-decoration: underline;
   }
 `;
+
+
 
 const PageLayout: React.FC<PageLayoutProps> = ({
   children,
@@ -114,19 +125,19 @@ const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   return (
     <StyledPage>
-      <PageContainer>
-        {backLink && (
-          <BackButton href={backLink.href}>
-            <FaArrowLeft /> {backLink.text}
-          </BackButton>
-        )}
-      </PageContainer>
-
+      <MainNavBar />
       {(title || description) && (
-        <PageHeader>
-          {title && <PageTitle>{title}</PageTitle>}
-          {description && <PageDescription>{description}</PageDescription>}
-        </PageHeader>
+        <PageHeaderContainer>
+          <PageHeader>
+            {backLink && (
+              <BackLink href={backLink.href}>
+                ← {backLink.text}
+              </BackLink>
+            )}
+            {title && <PageTitle>{title}</PageTitle>}
+            {description && <PageDescription>{description}</PageDescription>}
+          </PageHeader>
+        </PageHeaderContainer>
       )}
 
       {children}

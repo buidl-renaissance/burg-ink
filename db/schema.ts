@@ -197,19 +197,19 @@ export const googleDriveAssets = sqliteTable("google_drive_assets", {
   folderIdx: index("gdrive_folder_idx").on(table.folder_id),
 }));
 
-// Media table for storing media assets from various sources (updated to match media-manager)
+// Media table for storing media assets from various sources (matching actual database after migration 0016)
 export const media = sqliteTable("media", {
-  id: text("id").primaryKey(), // Changed to text UUID like media-manager
-  originalUrl: text("original_url").notNull(), // Renamed from original_url for consistency
-  mediumUrl: text("medium_url"), // Renamed from medium_url for consistency
-  thumbnailUrl: text("thumbnail_url"), // Renamed from thumbnail_url for consistency
-  source: text("source").notNull(), // 'local' | 'gdrive' (simplified like media-manager)
-  tags: text("tags", { mode: 'json' }).$type<string[]>().default([]), // JSON array like media-manager
+  id: text("id").primaryKey(), // Text UUID as per migration 0016
+  original_url: text("original_url").notNull(), // Snake case as in database
+  medium_url: text("medium_url"), // Snake case as in database
+  thumbnail_url: text("thumbnail_url"), // Snake case as in database
+  source: text("source").notNull(), // 'local' | 'gdrive'
+  source_id: text("source_id"), // Optional source ID for tracking
+  tags: text("tags").default("[]"), // JSON string as in database
   title: text("title"), // Added from media-manager
-  description: text("description"), // Kept for AI-generated description
-  altText: text("alt_text"), // Renamed from alt_text for consistency
-  createdAt: integer("created_at", { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull(), // Match media-manager format
-  // Keep additional fields that burg-ink might need
+  description: text("description"), // AI-generated description
+  alt_text: text("alt_text"), // Snake case as in database
+  created_at: integer("created_at").default(sql`(unixepoch())`).notNull(), // Unix timestamp
   user_id: integer("user_id").references(() => users.id), // Optional user reference
   filename: text("filename"), // Keep filename for compatibility
   mime_type: text("mime_type"), // Keep mime type
@@ -219,4 +219,74 @@ export const media = sqliteTable("media", {
   sourceIdx: index("media_source_idx").on(table.source),
   userIdx: index("media_user_idx").on(table.user_id),
   statusIdx: index("media_status_idx").on(table.processing_status),
-})); 
+  sourceIdIdx: index("media_source_id_idx").on(table.source_id),
+}));
+
+// Inquiries table for storing customer inquiries
+export const inquiries = sqliteTable("inquiries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  first_name: text("first_name").notNull(),
+  last_name: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  budget: text("budget"), // Budget for the project
+  tattoo_concept: text("tattoo_concept").notNull(), // Main tattoo description
+  animal_person_emotion: text("animal_person_emotion"), // Emotion for animal/person designs
+  abstract_energy: text("abstract_energy"), // Adjectives and energy for abstract designs
+  tattoo_size: text("tattoo_size"), // Size estimate
+  color_preference: text("color_preference"), // 'color' or 'black_gray'
+  photo_references: text("photo_references"), // JSON array of uploaded reference photo URLs
+  placement_photos: text("placement_photos"), // JSON array of uploaded placement photo URLs
+  newsletter_signup: integer("newsletter_signup").default(0), // boolean as integer
+  inquiry_type: text("inquiry_type").notNull(), // 'tattoo', 'artwork', 'collaboration', 'other'
+  message: text("message").notNull(), // Legacy field for backward compatibility
+  status: text("status").default("new"), // 'new', 'contacted', 'completed', 'archived'
+  email_sent: integer("email_sent").default(0), // boolean as integer
+  email_sent_at: text("email_sent_at"),
+  notes: text("notes"), // Internal notes
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  emailIdx: index("inquiry_email_idx").on(table.email),
+  statusIdx: index("inquiry_status_idx").on(table.status),
+  typeIdx: index("inquiry_type_idx").on(table.inquiry_type),
+  createdAtIdx: index("inquiry_created_at_idx").on(table.created_at),
+}));
+
+// Emails table for tracking sent emails via Resend
+export const emails = sqliteTable("emails", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  resend_id: text("resend_id").unique(), // Resend email ID
+  subject: text("subject").notNull(),
+  from: text("from").notNull(),
+  to: text("to").notNull(), // JSON array of recipients
+  cc: text("cc"), // JSON array of CC recipients
+  bcc: text("bcc"), // JSON array of BCC recipients
+  html_content: text("html_content"),
+  text_content: text("text_content"),
+  status: text("status").default("pending"), // 'pending', 'sent', 'delivered', 'failed', 'bounced', 'complained', 'unsubscribed'
+  error_message: text("error_message"), // Error message if failed
+  sent_at: text("sent_at"),
+  delivered_at: text("delivered_at"),
+  opened_at: text("opened_at"),
+  clicked_at: text("clicked_at"),
+  bounced_at: text("bounced_at"),
+  complained_at: text("complained_at"),
+  unsubscribed_at: text("unsubscribed_at"),
+  metadata: text("metadata"), // JSON string for additional metadata
+  template_id: text("template_id"), // If using email templates
+  inquiry_id: integer("inquiry_id").references(() => inquiries.id), // Link to inquiry if applicable
+  user_id: integer("user_id").references(() => users.id), // Link to user if applicable
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  resendIdIdx: uniqueIndex("email_resend_id_idx").on(table.resend_id),
+  statusIdx: index("email_status_idx").on(table.status),
+  fromIdx: index("email_from_idx").on(table.from),
+  toIdx: index("email_to_idx").on(table.to),
+  sentAtIdx: index("email_sent_at_idx").on(table.sent_at),
+  createdAtIdx: index("email_created_at_idx").on(table.created_at),
+  inquiryIdx: index("email_inquiry_idx").on(table.inquiry_id),
+  userIdx: index("email_user_idx").on(table.user_id),
+}));
