@@ -49,8 +49,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const mediaRecord = {
       id: mediaId,
       original_url: originalUpload.url,
-      medium_url: '', // Will be updated by background job  
-      thumbnail_url: '', // Will be updated by background job
+      medium_url: null, // Will be updated by background job  
+      thumbnail_url: null, // Will be updated by background job
       source: 'local' as const,
       tags: JSON.stringify(['processing']), // Store as JSON string
       title: 'Processing...', // Temporary title
@@ -84,8 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       media: {
         id: mediaId,
         originalUrl: originalUpload.url,
-        mediumUrl: '',
-        thumbnailUrl: '',
+        mediumUrl: null,
+        thumbnailUrl: null,
         processing: true,
         filename: uploadedFile.originalFilename || 'image.jpg',
       },
