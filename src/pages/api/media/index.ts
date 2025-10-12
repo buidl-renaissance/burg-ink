@@ -76,6 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         filename: record.filename,
         mime_type: record.mime_type,
         size: record.size,
+        width: record.width,
+        height: record.height,
         original_url: record.original_url,
         medium_url: record.medium_url,
         thumbnail_url: record.thumbnail_url,

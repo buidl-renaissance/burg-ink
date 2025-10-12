@@ -5,6 +5,7 @@ import { uploadFile, getFileKey } from '@/lib/storage/index';
 import { generateResizedVersions, getFileExtension } from '@/lib/storage/resize';
 import { eq } from 'drizzle-orm';
 import { analyzeMediaImage } from '@/lib/ai';
+import sharp from 'sharp';
 
 export const processMediaUpload = inngest.createFunction(
   { id: 'process-media-upload' },
@@ -12,9 +13,20 @@ export const processMediaUpload = inngest.createFunction(
   async ({ event, step }) => {
     const { mediaId, originalUrl, filename, mimetype } = event.data;
     const fileExtension = getFileExtension(filename);
+    
+    try {
+      // Update status to processing at the start
+      await step.run('update-status-processing', async () => {
+        await db.update(media)
+          .set({
+            processing_status: 'processing',
+          })
+          .where(eq(media.id, mediaId));
+        console.log(`Started processing media ${mediaId}`);
+      });
 
-    // Process everything in a single step to avoid large data serialization
-    const result = await step.run('process-media', async () => {
+      // Process everything in a single step to avoid large data serialization
+      const result = await step.run('process-media', async () => {
       console.log(`Processing media ${mediaId}`);
       
       // Download the original file
@@ -25,6 +37,15 @@ export const processMediaUpload = inngest.createFunction(
       }
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+
+      // Extract dimensions from the original image
+      console.log(`Extracting dimensions for ${mediaId}`);
+      const metadata = await sharp(buffer).metadata();
+      const dimensions = {
+        width: metadata.width || null,
+        height: metadata.height || null,
+      };
+      console.log(`Original dimensions: ${dimensions.width}x${dimensions.height}`);
 
       // Generate resized versions
       console.log(`Generating resized versions for ${mediaId}`);
@@ -48,6 +69,8 @@ export const processMediaUpload = inngest.createFunction(
       return {
         mediumUrl: mediumUpload.url,
         thumbnailUrl: thumbUpload.url,
+        width: dimensions.width,
+        height: dimensions.height,
       };
     });
 
@@ -95,12 +118,14 @@ export const processMediaUpload = inngest.createFunction(
           thumbnail_url: existingRecord.thumbnail_url
         });
         
-        // Update the record with resized versions and AI analysis
+        // Update the record with resized versions, dimensions, and AI analysis
         await db
           .update(media)
           .set({
             medium_url: result.mediumUrl,
             thumbnail_url: result.thumbnailUrl,
+            width: result.width,
+            height: result.height,
             processing_status: 'completed',
             tags: JSON.stringify(aiAnalysis.tags),
             title: aiAnalysis.title,
@@ -130,14 +155,28 @@ export const processMediaUpload = inngest.createFunction(
       }
     });
 
-    return {
-      success: true,
-      mediaId,
-      urls: {
-        mediumUrl: result.mediumUrl,
-        thumbnailUrl: result.thumbnailUrl,
-      },
-      aiAnalysis,
-    };
+      return {
+        success: true,
+        mediaId,
+        urls: {
+          mediumUrl: result.mediumUrl,
+          thumbnailUrl: result.thumbnailUrl,
+        },
+        aiAnalysis,
+      };
+    } catch (error) {
+      // Handle any errors and update status to failed
+      console.error(`Media processing failed for ${mediaId}:`, error);
+      
+      await step.run('update-status-failed', async () => {
+        await db.update(media)
+          .set({
+            processing_status: 'failed',
+          })
+          .where(eq(media.id, mediaId));
+      });
+      
+      throw error; // Re-throw to mark the function as failed
+    }
   }
 );

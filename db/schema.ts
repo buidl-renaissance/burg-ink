@@ -214,6 +214,8 @@ export const media = sqliteTable("media", {
   filename: text("filename"), // Keep filename for compatibility
   mime_type: text("mime_type"), // Keep mime type
   size: integer("size"), // Keep size
+  width: integer("width"), // Original image width
+  height: integer("height"), // Original image height
   processing_status: text("processing_status").default("pending"), // Keep processing status
 }, (table) => ({
   sourceIdx: index("media_source_idx").on(table.source),

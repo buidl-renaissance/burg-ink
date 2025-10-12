@@ -37,8 +37,8 @@ const PreviewCard = styled.div`
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
 `;
 
 const PreviewImage = styled.img`
@@ -53,18 +53,18 @@ const PreviewOverlay = styled.div<{ processing: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.9);
   display: ${props => props.processing ? 'flex' : 'none'};
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #333;
   font-size: 12px;
 `;
 
 const ProcessingSpinner = styled.div`
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(150, 136, 95, 0.3);
   border-radius: 50%;
-  border-top: 2px solid white;
+  border-top: 2px solid #96885f;
   width: 20px;
   height: 20px;
   animation: spin 1s linear infinite;
@@ -77,11 +77,11 @@ const ProcessingSpinner = styled.div`
 `;
 
 const ProgressContainer = styled.div`
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
   padding: 1rem;
-  color: #fff;
+  color: #333;
 `;
 
 const ProgressText = styled.div`
@@ -90,11 +90,11 @@ const ProgressText = styled.div`
 `;
 
 const ErrorContainer = styled.div`
-  background: #2d1b1b;
-  border: 1px solid #d73a49;
+  background: #fff5f5;
+  border: 1px solid #fc8181;
   border-radius: 8px;
   padding: 1rem;
-  color: #f85149;
+  color: #c53030;
   font-size: 14px;
 `;
 

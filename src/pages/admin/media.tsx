@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { UploadMedia } from '@/components/UploadMedia';
+import { MediaProcessingIndicator } from '@/components/MediaProcessingIndicator';
+import { useMediaProcessing } from '@/hooks/useMediaProcessing';
 import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes, FaPlus } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
@@ -418,18 +420,6 @@ const PlaceholderThumbnail = styled.div`
   font-size: 1.2rem;
 `;
 
-const StatusBadge = styled.div<{ color: string }>`
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: ${props => props.color};
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-`;
-
 const MediaInfo = styled.div`
   padding: 1rem;
 `;
@@ -607,14 +597,19 @@ const SidebarOverlay = styled.div`
 
 const Sidebar = styled.div`
   background: white;
-  border-radius: 12px;
   overflow: hidden;
-  width: 80%;
-  max-width: 800px;
-  height: 80%;
-  max-height: 800px;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
+
+  @media (min-width: 768px) and (max-width: 1399px) {
+    max-width: 800px;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
 
   @media (min-width: 1400px) {
     position: fixed;
@@ -655,22 +650,47 @@ const SidebarContent = styled.div`
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) and (max-width: 1399px) {
+    flex-direction: row;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
 `;
 
 const SidebarImage = styled.div`
   position: relative;
-  height: 300px;
   background: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
   margin-bottom: 1rem;
+  width: 100%;
   
   img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    display: block;
+  }
+
+  @media (min-width: 768px) and (max-width: 1399px) {
+    flex-shrink: 0;
+    width: 300px;
+    max-width: 300px;
+    margin-bottom: 0;
+    align-self: flex-start;
+    position: sticky;
+    top: 0;
+  }
+`;
+
+const SidebarDetailsWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  @media (min-width: 768px) and (max-width: 1399px) {
+    overflow-y: auto;
   }
 `;
 
@@ -740,23 +760,27 @@ const StatusValue = styled.span<{ color: string }>`
 
 // Interfaces and Types
 interface MediaItem {
-  id: number;
+  id: string | number; // Support both for UUID and legacy integer IDs
   source: string;
-  source_id: string;
+  source_id?: string;
   filename: string;
   mime_type: string;
   size: number;
   width?: number;
   height?: number;
+  original_url?: string;
+  medium_url?: string;
   spaces_url?: string;
   thumbnail_url?: string;
-  processing_status: string;
+  processing_status?: string | null;
+  title?: string;
   description?: string;
-  tags: string[];
+  alt_text?: string;
+  tags?: string[];
   ai_analysis?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   processed_at?: string;
 }
 
@@ -801,6 +825,7 @@ export default function AdminMedia() {
 
   useEffect(() => {
     fetchMedia();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, statusFilter, sourceFilter, sortBy, sortOrder, itemsPerPage]);
 
   const fetchMedia = async () => {
@@ -852,11 +877,13 @@ export default function AdminMedia() {
 
   const handleUploadComplete = (urls: string[]) => {
     const fileCount = urls.length;
-    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} uploaded successfully!`);
-    // Refresh the media list to show the new uploads
+    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} uploaded successfully! Processing...`);
+    
+    // Immediately refresh to show new items with processing status
     fetchMedia();
-    // Clear success message after 5 seconds
-    setTimeout(() => setUploadSuccess(null), 5000);
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => setUploadSuccess(null), 3000);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -867,23 +894,48 @@ export default function AdminMedia() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string | null) => {
     switch (status) {
-      case 'completed': return '#28a745';
       case 'processing': return '#ffc107';
       case 'failed': return '#dc3545';
+      case 'pending': return '#6c757d';
       default: return '#6c757d';
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status?: string | null) => {
     switch (status) {
-      case 'completed': return 'Completed';
       case 'processing': return 'Processing';
       case 'failed': return 'Failed';
       case 'pending': return 'Pending';
-      default: return status;
+      default: return status || '';
     }
+  };
+
+  const isProcessing = (item: MediaItem) => {
+    return item.processing_status === 'pending' || item.processing_status === 'processing';
+  };
+
+  // Component to handle real-time updates for a single media item
+  const MediaItemWithProcessing: React.FC<{ item: MediaItem; children: React.ReactNode }> = ({ item, children }) => {
+    const shouldTrack = isProcessing(item);
+    const mediaId = String(item.id);
+    
+    useMediaProcessing({
+      mediaId,
+      enabled: shouldTrack,
+      pollInterval: 2000,
+      onComplete: () => {
+        // Refresh the media list when processing completes
+        fetchMedia();
+      },
+      onError: () => {
+        // Refresh on error too
+        fetchMedia();
+      },
+    });
+
+    return <>{children}</>;
   };
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -1043,52 +1095,62 @@ export default function AdminMedia() {
             {viewFormat === 'tile' ? (
               <TileGrid>
                 {media.map((item) => (
-                  <TileItem key={item.id} onClick={() => handleMediaClick(item)}>
-                    <TileImage>
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.filename} />
-                      ) : (
-                        <PlaceholderImage>
-                          <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
-                        </PlaceholderImage>
-                      )}
-                      <StatusBadge color={getStatusColor(item.processing_status)}>
-                        {getStatusLabel(item.processing_status)}
-                      </StatusBadge>
-                    </TileImage>
-                  </TileItem>
+                  <MediaItemWithProcessing key={item.id} item={item}>
+                    <TileItem onClick={() => handleMediaClick(item)}>
+                      <TileImage>
+                        {item.thumbnail_url || item.medium_url ? (
+                          <img src={item.thumbnail_url || item.medium_url} alt={item.filename} />
+                        ) : (
+                          <PlaceholderImage>
+                            <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
+                          </PlaceholderImage>
+                        )}
+                        {isProcessing(item) ? (
+                          <MediaProcessingIndicator processing overlay />
+                        ) : item.processing_status === 'failed' ? (
+                          <MediaProcessingIndicator failed overlay />
+                        ) : null}
+                      </TileImage>
+                    </TileItem>
+                  </MediaItemWithProcessing>
                 ))}
               </TileGrid>
             ) : (
               <MediaGrid>
                 {media.map((item) => (
-                  <MediaCard key={item.id}>
-                    <MediaThumbnail>
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.filename} />
-                      ) : (
-                        <PlaceholderThumbnail>
-                          <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
-                        </PlaceholderThumbnail>
-                      )}
-                      <StatusBadge color={getStatusColor(item.processing_status)}>
-                        {getStatusLabel(item.processing_status)}
-                      </StatusBadge>
-                    </MediaThumbnail>
-                    
-                    <MediaInfo>
-                      <MediaTitle>{item.filename}</MediaTitle>
+                  <MediaItemWithProcessing key={item.id} item={item}>
+                    <MediaCard>
+                      <MediaThumbnail>
+                        {item.thumbnail_url || item.medium_url ? (
+                          <img src={item.thumbnail_url || item.medium_url} alt={item.alt_text || item.filename} />
+                        ) : (
+                          <PlaceholderThumbnail>
+                            <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
+                          </PlaceholderThumbnail>
+                        )}
+                        {isProcessing(item) && (
+                          <MediaProcessingIndicator processing overlay />
+                        )}
+                        {item.processing_status === 'failed' && (
+                          <MediaProcessingIndicator failed overlay />
+                        )}
+                      </MediaThumbnail>
+                      
+                      <MediaInfo>
+                        <MediaTitle>{item.title || item.filename}</MediaTitle>
                       <MediaDetails>
                         <DetailItem>
                           <DetailLabel>Size:</DetailLabel>
                           <DetailValue>{formatFileSize(item.size)}</DetailValue>
                         </DetailItem>
-                        {item.width && item.height && (
-                          <DetailItem>
-                            <DetailLabel>Dimensions:</DetailLabel>
-                            <DetailValue>{item.width} × {item.height}</DetailValue>
-                          </DetailItem>
-                        )}
+                        <DetailItem>
+                          <DetailLabel>Dimensions:</DetailLabel>
+                          <DetailValue>
+                            {item.width && item.height 
+                              ? `${item.width} × ${item.height}` 
+                              : 'Processing...'}
+                          </DetailValue>
+                        </DetailItem>
                         <DetailItem>
                           <DetailLabel>Source:</DetailLabel>
                           <DetailValue>{item.source}</DetailValue>
@@ -1128,7 +1190,8 @@ export default function AdminMedia() {
                         <FaTrash />
                       </ActionButton>
                     </MediaActions>
-                  </MediaCard>
+                    </MediaCard>
+                  </MediaItemWithProcessing>
                 ))}
               </MediaGrid>
             )}
@@ -1172,8 +1235,11 @@ export default function AdminMedia() {
                 
                 <SidebarContent>
                   <SidebarImage>
-                    {selectedMedia.thumbnail_url ? (
-                      <img src={selectedMedia.thumbnail_url} alt={selectedMedia.filename} />
+                    {(selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url) ? (
+                      <img 
+                        src={selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url} 
+                        alt={selectedMedia.alt_text || selectedMedia.filename} 
+                      />
                     ) : (
                       <PlaceholderImage>
                         <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
@@ -1181,8 +1247,9 @@ export default function AdminMedia() {
                     )}
                   </SidebarImage>
                   
-                  <SidebarSection>
-                    <SectionTitle>File Information</SectionTitle>
+                  <SidebarDetailsWrapper>
+                    <SidebarSection>
+                      <SectionTitle>File Information</SectionTitle>
                     <DetailRow>
                       <DetailLabel>Filename:</DetailLabel>
                       <DetailValue>{selectedMedia.filename}</DetailValue>
@@ -1191,12 +1258,14 @@ export default function AdminMedia() {
                       <DetailLabel>Size:</DetailLabel>
                       <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
                     </DetailRow>
-                    {selectedMedia.width && selectedMedia.height && (
-                      <DetailRow>
-                        <DetailLabel>Dimensions:</DetailLabel>
-                        <DetailValue>{selectedMedia.width} × {selectedMedia.height}</DetailValue>
-                      </DetailRow>
-                    )}
+                    <DetailRow>
+                      <DetailLabel>Dimensions:</DetailLabel>
+                      <DetailValue>
+                        {selectedMedia.width && selectedMedia.height 
+                          ? `${selectedMedia.width} × ${selectedMedia.height}` 
+                          : 'Processing...'}
+                      </DetailValue>
+                    </DetailRow>
                     <DetailRow>
                       <DetailLabel>Type:</DetailLabel>
                       <DetailValue>{selectedMedia.mime_type}</DetailValue>
@@ -1205,12 +1274,14 @@ export default function AdminMedia() {
                       <DetailLabel>Source:</DetailLabel>
                       <DetailValue>{selectedMedia.source}</DetailValue>
                     </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Status:</DetailLabel>
-                      <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                        {getStatusLabel(selectedMedia.processing_status)}
-                      </StatusValue>
-                    </DetailRow>
+                    {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
+                      <DetailRow>
+                        <DetailLabel>Status:</DetailLabel>
+                        <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
+                          {getStatusLabel(selectedMedia.processing_status)}
+                        </StatusValue>
+                      </DetailRow>
+                    )}
                   </SidebarSection>
 
                   {selectedMedia.description && (
@@ -1246,7 +1317,8 @@ export default function AdminMedia() {
                         <FaTrash /> Delete
                       </SidebarActionButton>
                     </SidebarActions>
-                  </SidebarSection>
+                    </SidebarSection>
+                  </SidebarDetailsWrapper>
                 </SidebarContent>
               </Sidebar>
             </SidebarOverlay>
@@ -1262,8 +1334,11 @@ export default function AdminMedia() {
               
               <SidebarContent>
                 <SidebarImage>
-                  {selectedMedia.thumbnail_url ? (
-                    <img src={selectedMedia.thumbnail_url} alt={selectedMedia.filename} />
+                  {(selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url) ? (
+                    <img 
+                      src={selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url} 
+                      alt={selectedMedia.alt_text || selectedMedia.filename} 
+                    />
                   ) : (
                     <PlaceholderImage>
                       <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
@@ -1271,8 +1346,9 @@ export default function AdminMedia() {
                   )}
                 </SidebarImage>
                 
-                <SidebarSection>
-                  <SectionTitle>File Information</SectionTitle>
+                <SidebarDetailsWrapper>
+                  <SidebarSection>
+                    <SectionTitle>File Information</SectionTitle>
                   <DetailRow>
                     <DetailLabel>Filename:</DetailLabel>
                     <DetailValue>{selectedMedia.filename}</DetailValue>
@@ -1281,12 +1357,14 @@ export default function AdminMedia() {
                     <DetailLabel>Size:</DetailLabel>
                     <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
                   </DetailRow>
-                  {selectedMedia.width && selectedMedia.height && (
-                    <DetailRow>
-                      <DetailLabel>Dimensions:</DetailLabel>
-                      <DetailValue>{selectedMedia.width} × {selectedMedia.height}</DetailValue>
-                    </DetailRow>
-                  )}
+                  <DetailRow>
+                    <DetailLabel>Dimensions:</DetailLabel>
+                    <DetailValue>
+                      {selectedMedia.width && selectedMedia.height 
+                        ? `${selectedMedia.width} × ${selectedMedia.height}` 
+                        : 'Processing...'}
+                    </DetailValue>
+                  </DetailRow>
                   <DetailRow>
                     <DetailLabel>Type:</DetailLabel>
                     <DetailValue>{selectedMedia.mime_type}</DetailValue>
@@ -1295,12 +1373,14 @@ export default function AdminMedia() {
                     <DetailLabel>Source:</DetailLabel>
                     <DetailValue>{selectedMedia.source}</DetailValue>
                   </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Status:</DetailLabel>
-                    <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                      {getStatusLabel(selectedMedia.processing_status)}
-                    </StatusValue>
-                  </DetailRow>
+                  {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
+                    <DetailRow>
+                      <DetailLabel>Status:</DetailLabel>
+                      <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
+                        {getStatusLabel(selectedMedia.processing_status)}
+                      </StatusValue>
+                    </DetailRow>
+                  )}
                 </SidebarSection>
 
                 {selectedMedia.description && (
@@ -1336,7 +1416,8 @@ export default function AdminMedia() {
                       <FaTrash /> Delete
                     </SidebarActionButton>
                   </SidebarActions>
-                </SidebarSection>
+                  </SidebarSection>
+                </SidebarDetailsWrapper>
               </SidebarContent>
             </Sidebar>
           </>
