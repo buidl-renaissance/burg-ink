@@ -57,6 +57,30 @@ export const artwork = sqliteTable("artwork", {
   typeIdx: index("artwork_type_idx").on(table.type),
 }));
 
+// Tattoos table
+export const tattoos = sqliteTable("tattoos", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  artist_id: integer("artist_id").references(() => artists.id),
+  image: text("image"), // Main tattoo image
+  category: text("category"), // Traditional, Japanese, Geometric, Floral, Blackwork, Watercolor, etc.
+  placement: text("placement"), // Body placement (arm, leg, back, etc.)
+  size: text("size"), // small, medium, large
+  style: text("style"), // Style description
+  meta: text("meta"), // JSON string for additional metadata
+  data: text("data"), // JSON string for additional data
+  embedding: blob("embedding"), // Float32Array vector as binary
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: text("deleted_at"),
+}, (table) => ({
+  slugIdx: uniqueIndex("tattoos_slug_idx").on(table.slug),
+  artistIdx: index("tattoos_artist_idx").on(table.artist_id),
+  categoryIdx: index("tattoos_category_idx").on(table.category),
+}));
+
 // Content table for artwork media
 export const content = sqliteTable("content", {
   id: integer("id").primaryKey({ autoIncrement: true }),

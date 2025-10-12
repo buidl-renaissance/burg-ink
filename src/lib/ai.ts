@@ -21,6 +21,15 @@ export interface MediaAnalysis {
   altText: string;
 }
 
+export interface TattooAnalysis {
+  title: string;
+  description: string;
+  category: string;
+  placement: string;
+  size: string;
+  style: string;
+}
+
 export interface MarketingMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -185,6 +194,89 @@ export async function analyzeMediaImage(imageUrl: string): Promise<MediaAnalysis
       title: 'Uploaded Image',
       description: 'Image uploaded to media manager',
       altText: 'Uploaded image',
+    };
+  }
+}
+
+const TATTOO_ANALYSIS_PROMPT = `You are an expert tattoo artist and analyst. Analyze tattoo images and provide detailed metadata for a tattoo portfolio management system.
+
+For each tattoo image, provide:
+1. Title: A descriptive, artistic title (3-8 words) that captures the essence of the tattoo
+2. Description: A detailed description (2-3 sentences) highlighting the artistic elements, technique, and visual impact
+3. Category: Choose the most appropriate style from: Traditional, Japanese, Geometric, Floral, Blackwork, Watercolor, Realism, Neo-traditional, Tribal, or Other
+4. Placement: Identify the likely body placement (e.g., Arm, Forearm, Upper Arm, Leg, Calf, Thigh, Back, Upper Back, Lower Back, Chest, Shoulder, Neck, Hand, Foot, Ribcage, etc.)
+5. Size: Estimate the size category: Small (less than 3 inches), Medium (3-6 inches), Large (6-12 inches), or Extra Large (over 12 inches)
+6. Style: Describe the artistic style and technique in detail (e.g., "Bold black linework with dotwork shading", "Vibrant color with smooth gradients", "Fine line minimalist design")
+
+Return your response as a JSON object with the following structure:
+{
+  "title": "Descriptive Tattoo Title",
+  "description": "Detailed artistic description of the tattoo",
+  "category": "Category Name",
+  "placement": "Body Placement",
+  "size": "Size Category",
+  "style": "Detailed style and technique description"
+}
+
+Focus on being accurate and professional, highlighting the artistic merit and technical execution.`;
+
+export async function analyzeTattooImage(imageUrl: string): Promise<TattooAnalysis> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: TATTOO_ANALYSIS_PROMPT,
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this tattoo image and provide title, description, category, placement, size, and style details.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+                detail: "high",
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1000,
+      temperature: 0.3,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
+
+    // Clean and parse the JSON response (remove markdown code blocks if present)
+    const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+    const analysis = JSON.parse(cleanContent) as TattooAnalysis;
+    
+    // Validate the response structure
+    if (!analysis.title || !analysis.description || !analysis.category || 
+        !analysis.placement || !analysis.size || !analysis.style) {
+      throw new Error('Invalid response structure from OpenAI');
+    }
+
+    return analysis;
+  } catch (error) {
+    console.error('Error analyzing tattoo image with OpenAI:', error);
+    
+    // Return fallback values if analysis fails
+    return {
+      title: 'Custom Tattoo',
+      description: 'A unique tattoo design',
+      category: 'Other',
+      placement: '',
+      size: 'Medium',
+      style: 'Custom tattoo artwork',
     };
   }
 }

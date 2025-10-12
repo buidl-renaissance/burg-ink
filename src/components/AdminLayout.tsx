@@ -3,7 +3,7 @@
 import styled from 'styled-components';
 import Link from 'next/link';
 import { useState } from 'react';
-import { FaHome, FaPalette, FaUsers, FaCalendar, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb } from 'react-icons/fa';
+import { FaHome, FaPalette, FaUsers, FaCalendar, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark } from 'react-icons/fa';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -27,6 +27,7 @@ export function AdminLayout({
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FaHome, href: '/admin' },
     { id: 'artwork', label: 'Artwork', icon: FaPalette, href: '/admin/artwork' },
+    { id: 'tattoos', label: 'Tattoos', icon: FaBookmark, href: '/admin/tattoos' },
     { id: 'media', label: 'Media', icon: FaImages, href: '/admin/media' },
     { id: 'users', label: 'Users', icon: FaUsers, href: '/admin/users' },
     { id: 'events', label: 'Events', icon: FaCalendar, href: '/admin/events' },
