@@ -8,9 +8,20 @@ import { FaHome, FaPalette, FaUsers, FaCalendar, FaEnvelope, FaCog, FaImages, Fa
 interface AdminLayoutProps {
   children: React.ReactNode;
   currentPage?: string;
+  rightSidebar?: React.ReactNode;
+  rightSidebarOpen?: boolean;
+  rightSidebarWidth?: number;
+  statusBar?: React.ReactNode;
 }
 
-export function AdminLayout({ children, currentPage = 'dashboard' }: AdminLayoutProps) {
+export function AdminLayout({ 
+  children, 
+  currentPage = 'dashboard',
+  rightSidebar,
+  rightSidebarOpen = false,
+  rightSidebarWidth = 400,
+  statusBar,
+}: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -65,7 +76,7 @@ export function AdminLayout({ children, currentPage = 'dashboard' }: AdminLayout
         </Nav>
       </Sidebar>
       
-      <MainContent>
+      <ContentWrapper>
         <Header>
           <HeaderLeft>
             <MobileMenuButton onClick={() => setIsMobileMenuOpen(true)}>
@@ -82,10 +93,24 @@ export function AdminLayout({ children, currentPage = 'dashboard' }: AdminLayout
           </UserMenu>
         </Header>
         
-        <Content>
-          {children}
-        </Content>
-      </MainContent>
+        <MainContent rightSidebarOpen={rightSidebarOpen} rightSidebarWidth={rightSidebarWidth}>
+          <Content>
+            {children}
+          </Content>
+
+          {statusBar && (
+            <StatusBarContainer rightSidebarOpen={rightSidebarOpen} rightSidebarWidth={rightSidebarWidth}>
+              {statusBar}
+            </StatusBarContainer>
+          )}
+        </MainContent>
+
+        {rightSidebar && rightSidebarOpen && (
+          <RightSidebarContainer sidebarWidth={rightSidebarWidth}>
+            {rightSidebar}
+          </RightSidebarContainer>
+        )}
+      </ContentWrapper>
     </LayoutContainer>
   );
 }
@@ -202,14 +227,27 @@ const NavLink = styled.div`
   }
 `;
 
-const MainContent = styled.main`
+const ContentWrapper = styled.div`
   flex: 1;
   margin-left: 250px;
   display: flex;
   flex-direction: column;
+  position: relative;
 
   @media (max-width: 768px) {
     margin-left: 0;
+  }
+`;
+
+const MainContent = styled.main<{ rightSidebarOpen?: boolean; rightSidebarWidth?: number }>`
+  width: calc(100% - ${props => props.rightSidebarOpen ? `${props.rightSidebarWidth}px` : '0px'});
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  position: relative;
+
+  @media (max-width: 768px) {
+    width: 100%;
   }
 `;
 
@@ -223,6 +261,7 @@ const Header = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
 
   @media (max-width: 768px) {
     padding: 1rem;
@@ -295,5 +334,38 @@ const Content = styled.div`
 
   @media (max-width: 768px) {
     padding: 1rem;
+  }
+`;
+
+const StatusBarContainer = styled.div<{ rightSidebarOpen?: boolean; rightSidebarWidth?: number }>`
+  position: fixed;
+  bottom: 0;
+  left: 250px;
+  right: ${props => props.rightSidebarOpen ? `${props.rightSidebarWidth}px` : '0'};
+  transition: right 0.3s ease, width 0.3s ease;
+  z-index: 90;
+
+  @media (max-width: 768px) {
+    left: 0;
+    right: 0;
+  }
+`;
+
+const RightSidebarContainer = styled.div<{ sidebarWidth?: number }>`
+  position: fixed;
+  top: 68px; /* Height of admin header */
+  right: 0;
+  bottom: 0;
+  width: ${props => props.sidebarWidth}px;
+  background: white;
+  border-left: 1px solid #e9ecef;
+  z-index: 95;
+  overflow-y: auto;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    top: 0;
+    width: 100%;
+    z-index: 1001;
   }
 `; 

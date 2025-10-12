@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { Artwork } from '@/utils/interfaces';
-import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { AdminLayout } from '@/components/AdminLayout';
 import { StatusDropdown } from '@/components/StatusDropdown';
 import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload, FaSearch } from 'react-icons/fa';
@@ -119,11 +119,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
 }
 
 export default function AdminArtworkPage({ artist }: { artist: Artist }) {
+  const router = useRouter();
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isVectorSearchOpen, setIsVectorSearchOpen] = useState(false);
 
@@ -168,26 +167,15 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
   };
 
   const handleEdit = (artwork: Artwork) => {
-    setEditingArtwork(artwork);
-    setIsModalOpen(true);
+    router.push(`/admin/artwork/edit/${artwork.id}`);
   };
 
   const handleView = (artwork: Artwork) => {
     window.open(`/artwork/${artwork.slug}`, '_blank');
   };
 
-  const handleArtworkCreated = (artwork: Artwork) => {
-    if (editingArtwork) {
-      setArtworks(artworks.map(a => a.id === artwork.id ? artwork : a));
-      setEditingArtwork(null);
-    } else {
-      setArtworks([artwork, ...artworks]);
-    }
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingArtwork(null);
+  const handleCreateNew = () => {
+    router.push('/admin/artwork/create');
   };
 
   const handleImportArtwork = (imported: Artwork[]) => {
@@ -230,7 +218,7 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
             <SearchButton onClick={() => setIsVectorSearchOpen(true)}>
               <FaSearch /> AI Search
             </SearchButton>
-            <AddButton onClick={() => setIsModalOpen(true)}>
+            <AddButton onClick={handleCreateNew}>
               <FaPlus /> Add Artwork
             </AddButton>
             <AddButton onClick={() => setIsImportModalOpen(true)}>
@@ -328,14 +316,6 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
             </Table>
           )}
         </TableContainer>
-
-        <ArtworkFormModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          onSuccess={handleArtworkCreated}
-          title={editingArtwork ? 'Edit Artwork' : 'Create New Artwork'}
-          artwork={editingArtwork}
-        />
 
         <ImportArtworkModal
           artist={artist}

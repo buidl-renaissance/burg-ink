@@ -32,7 +32,7 @@ export function ArtworkFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      maxWidth="600px"
+      maxWidth="800px"
     >
       <ModalContentWrapper>
         <ArtworkForm onSuccess={handleSuccess} artwork={artwork} />

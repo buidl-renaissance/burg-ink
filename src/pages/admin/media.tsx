@@ -6,27 +6,36 @@ import { AdminLayout } from '@/components/AdminLayout';
 import { UploadMedia } from '@/components/UploadMedia';
 import { MediaProcessingIndicator } from '@/components/MediaProcessingIndicator';
 import { useMediaProcessing } from '@/hooks/useMediaProcessing';
-import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes, FaPlus } from 'react-icons/fa';
+import { FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaList, FaTimes, FaPlus } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
 // Styled Components
-const Container = styled.div<{ sidebarOpen?: boolean }>`
+const Container = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
-
-  @media (min-width: 1400px) {
-    margin-right: ${props => props.sidebarOpen ? '400px' : '0'};
-    transition: margin-right 0.3s ease;
-  }
+  padding-bottom: 5rem;
 `;
 
 const Header = styled.div`
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 
   @media (max-width: 768px) {
     margin-bottom: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 `;
 
 const Title = styled.h1`
@@ -134,162 +143,153 @@ const UploadSuccess = styled.div`
   gap: 0.5rem;
 `;
 
-const Controls = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
+const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 0;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e9ecef;
 
   @media (max-width: 768px) {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 0;
   }
 `;
 
-const SearchSection = styled.div`
+const ToolbarLeft = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  max-width: 1000px;
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    width: 100%;
+    flex-wrap: wrap;
   }
 `;
 
 const SearchInput = styled.input`
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  
+  min-width: 200px;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #f9fafb;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0.75rem center;
+  background-size: 1.25rem;
+  transition: all 0.2s ease;
+
   &:focus {
     outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+    background: white;
+  }
+
+  &::placeholder {
+    color: #9ca3af;
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
-    font-size: 0.9rem;
+    width: 100%;
+    min-width: auto;
   }
 `;
 
-const SearchButton = styled.button`
-  background: #96885f;
-  color: white;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+const FilterDropdown = styled.select`
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #f9fafb;
+  color: #333;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem;
+  transition: all 0.2s ease;
+
   &:hover {
-    background: #7a6f4d;
+    border-color: #96885f;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    background: white;
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
+    padding: 0.65rem 2rem 0.65rem 0.85rem;
     font-size: 0.9rem;
   }
 `;
 
-const FiltersSection = styled.div`
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-  flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-`;
-
-const FilterGroup = styled.div`
+const ToolbarRight = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 
   @media (max-width: 768px) {
+    width: 100%;
     justify-content: space-between;
   }
 `;
 
-const FilterLabel = styled.label`
-  font-weight: 500;
-  color: #333;
-  font-size: 0.9rem;
-
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-  }
-`;
-
-const FilterSelect = styled.select`
-  padding: 0.5rem;
-  border: 1px solid #e9ecef;
+const UploadButton = styled.button`
+  background: #1a1a1a;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
   border-radius: 6px;
-  background: white;
-  font-size: 0.9rem;
-  
-  &:focus {
-    outline: none;
-    border-color: #96885f;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-    min-width: 120px;
-  }
-`;
-
-const SortButton = styled.button`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: #e9ecef;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-  }
-`;
-
-const ViewToggle = styled.div`
+  font-size: 0.95rem;
+  font-weight: 600;
   display: flex;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #333;
+  }
 
   @media (max-width: 768px) {
-    justify-content: center;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
   }
 `;
 
-const ViewButton = styled.button<{ active: boolean }>`
-  background: ${props => props.active ? '#96885f' : '#f8f9fa'};
-  color: ${props => props.active ? 'white' : '#333'};
-  border: 1px solid ${props => props.active ? '#96885f' : '#e9ecef'};
-  padding: 0.5rem;
+const ViewToggleButton = styled.button<{ active?: boolean }>`
+  padding: 0.75rem;
+  border: 1px solid ${props => props.active ? '#1a1a1a' : '#d1d5db'};
   border-radius: 6px;
+  background: ${props => props.active ? '#1a1a1a' : 'white'};
+  color: ${props => props.active ? 'white' : '#6c757d'};
   cursor: pointer;
-  transition: all 0.3s ease;
-  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+
   &:hover {
-    background: ${props => props.active ? '#7a6f4d' : '#e9ecef'};
+    background: ${props => props.active ? '#1a1a1a' : '#f9fafb'};
+    border-color: #1a1a1a;
   }
 
   @media (max-width: 768px) {
-    padding: 0.5rem;
+    padding: 0.65rem;
+    font-size: 1rem;
   }
 `;
 
@@ -336,40 +336,88 @@ const RetryButton = styled.button`
   }
 `;
 
-const StatsBar = styled.div`
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
+const BottomBarInner = styled.div<{ hasActions?: boolean }>`
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e9ecef;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: ${props => props.hasActions ? 'space-between' : 'flex-start'};
+  gap: 2rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+
+  ${props => props.hasActions && `
+    animation: highlightBar 0.5s ease;
+    background: linear-gradient(to right, #f0f9ff 0%, white 100%);
+  `}
+
+  @keyframes highlightBar {
+    0% {
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+    50% {
+      background: linear-gradient(to right, #dbeafe 0%, #f0f9ff 100%);
+      box-shadow: 0 -4px 20px rgba(59, 130, 246, 0.2);
+    }
+    100% {
+      background: linear-gradient(to right, #f0f9ff 0%, white 100%);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+  }
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
+    gap: 1rem;
+    font-size: 0.9rem;
+    flex-direction: ${props => props.hasActions ? 'row' : 'column'};
   }
 `;
 
-const StatItem = styled.div`
+const BottomBarText = styled.div`
+  color: #6c757d;
+  
+  strong {
+    color: #333;
+    font-weight: 600;
+  }
+`;
+
+const BottomBarActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-left: auto;
+  
+  @media (max-width: 768px) {
+    margin-left: 0;
+  }
+`;
+
+const BottomBarButton = styled.button<{ danger?: boolean }>`
+  background: ${props => props.danger ? '#dc3545' : '#96885f'};
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.danger ? '#c82333' : '#7a6f4d'};
+  }
 
   @media (max-width: 768px) {
-    justify-content: space-between;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
   }
-`;
-
-const StatLabel = styled.span`
-  font-weight: 500;
-  color: #6c757d;
-`;
-
-const StatValue = styled.span`
-  font-weight: 700;
-  color: #333;
 `;
 
 const MediaGrid = styled.div`
@@ -566,6 +614,21 @@ const TileImage = styled.div`
   }
 `;
 
+const TileCheckbox = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+    border-radius: 4px;
+  }
+`;
+
 const PlaceholderImage = styled.div`
   display: flex;
   align-items: center;
@@ -578,50 +641,149 @@ const PlaceholderImage = styled.div`
   font-size: 1.2rem;
 `;
 
-const SidebarOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+// List View Styles
+const MediaTable = styled.div`
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+`;
+
+const TableHeader = styled.div`
+  display: grid;
+  grid-template-columns: 30px 60px 1fr 120px 140px;
+  gap: 1rem;
+  padding: 1rem 1.5rem 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 35px 50px 1fr 100px;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+`;
+
+const TableHeaderCell = styled.div<{ align?: string }>`
+  text-align: ${props => props.align || 'left'};
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  
+  @media (max-width: 768px) {
+    &.hide-mobile {
+      display: none;
+    }
+  }
+`;
+
+const TableRow = styled.div<{ selected?: boolean }>`
+  display: grid;
+  grid-template-columns: 30px 60px 1fr 120px 140px;
+  gap: 1rem;
+  padding: 1rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background: ${props => props.selected ? '#f8f7f4' : 'white'};
+
+  &:hover {
+    background: #f8f9fa;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 35px 50px 1fr 100px;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+`;
+
+const TableCell = styled.div<{ align?: string }>`
+  display: flex;
+  align-items: center;
+  text-align: ${props => props.align || 'left'};
+  color: #333;
+  font-size: 0.9rem;
+  min-width: 0;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    &.hide-mobile {
+      display: none;
+    }
+  }
+`;
+
+const TableCheckbox = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-
-  @media (min-width: 1400px) {
-    display: none;
+  
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+    border-radius: 4px;
   }
 `;
 
-const Sidebar = styled.div`
-  background: white;
+const ListThumbnail = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
   overflow: hidden;
-  width: 100%;
-  height: 100%;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 768px) {
+    width: 50px;
+    height: 50px;
+  }
+`;
+
+const FileInfo = styled.div`
   display: flex;
   flex-direction: column;
-
-  @media (min-width: 768px) and (max-width: 1399px) {
-    max-width: 800px;
-    height: auto;
-    max-height: 90vh;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  @media (min-width: 1400px) {
-    position: fixed;
-    top: 80px;
-    right: 0;
-    width: 400px;
-    height: calc(100vh - 80px);
-    border-radius: 0;
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-  }
+  gap: 0.25rem;
+  min-width: 0;
 `;
+
+const FileName = styled.div`
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const FileSubtext = styled.div`
+  color: #6c757d;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 
 const SidebarHeader = styled.div`
   background: #96885f;
@@ -653,9 +815,7 @@ const SidebarContent = styled.div`
   display: flex;
   flex-direction: column;
 
-  @media (min-width: 768px) and (max-width: 1399px) {
-    flex-direction: row;
-    gap: 1.5rem;
+  @media (min-width: 768px) {
     padding: 1.5rem;
   }
 `;
@@ -671,16 +831,6 @@ const SidebarImage = styled.div`
     height: auto;
     display: block;
   }
-
-  @media (min-width: 768px) and (max-width: 1399px) {
-    flex-shrink: 0;
-    width: 300px;
-    max-width: 300px;
-    margin-bottom: 0;
-    align-self: flex-start;
-    position: sticky;
-    top: 0;
-  }
 `;
 
 const SidebarDetailsWrapper = styled.div`
@@ -688,10 +838,6 @@ const SidebarDetailsWrapper = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 0;
-
-  @media (min-width: 768px) and (max-width: 1399px) {
-    overflow-y: auto;
-  }
 `;
 
 const SidebarSection = styled.div`
@@ -779,9 +925,9 @@ interface MediaItem {
   tags?: string[];
   ai_analysis?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
-  created_at: string;
-  updated_at?: string;
-  processed_at?: string;
+  created_at: number; // Unix timestamp in seconds
+  updated_at?: number;
+  processed_at?: number;
 }
 
 interface MediaResponse {
@@ -794,8 +940,7 @@ interface MediaResponse {
   };
 }
 
-type ViewFormat = 'tile' | 'card';
-type PageSize = 30 | 60 | 90;
+type ViewFormat = 'tile' | 'card' | 'list';
 
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
@@ -811,35 +956,31 @@ export default function AdminMedia() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('updated_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [dateFilter, setDateFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState<PageSize>(30);
   const [viewFormat, setViewFormat] = useState<ViewFormat>('tile');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string | number>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     fetchMedia();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, statusFilter, sourceFilter, sortBy, sortOrder, itemsPerPage]);
+  }, [currentPage, sourceFilter, dateFilter]);
 
   const fetchMedia = async () => {
     try {
       setLoading(true);
       setError(null);
-      const offset = (currentPage - 1) * itemsPerPage;
+      const offset = (currentPage - 1) * 30;
       
       const params = new URLSearchParams({
-        limit: itemsPerPage.toString(),
+        limit: '30',
         offset: offset.toString(),
-        sort: sortBy,
-        order: sortOrder,
-        status: statusFilter,
         source: sourceFilter,
       });
 
@@ -858,11 +999,6 @@ export default function AdminMedia() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchMedia();
   };
 
   const handleMediaClick = (item: MediaItem) => {
@@ -916,6 +1052,34 @@ export default function AdminMedia() {
     return item.processing_status === 'pending' || item.processing_status === 'processing';
   };
 
+  const handleSelectAll = () => {
+    if (selectedItems.size === media.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(media.map(item => item.id)));
+    }
+  };
+
+  const handleSelectItem = (itemId: string | number) => {
+    const newSelectedItems = new Set(selectedItems);
+    if (newSelectedItems.has(itemId)) {
+      newSelectedItems.delete(itemId);
+    } else {
+      newSelectedItems.add(itemId);
+    }
+    setSelectedItems(newSelectedItems);
+  };
+
+  const handleEdit = () => {
+    // TODO: Implement edit functionality
+    console.log('Edit items:', Array.from(selectedItems));
+  };
+
+  const handleDelete = () => {
+    // TODO: Implement delete functionality
+    console.log('Delete items:', Array.from(selectedItems));
+  };
+
   // Component to handle real-time updates for a single media item
   const MediaItemWithProcessing: React.FC<{ item: MediaItem; children: React.ReactNode }> = ({ item, children }) => {
     const shouldTrack = isProcessing(item);
@@ -938,132 +1102,231 @@ export default function AdminMedia() {
     return <>{children}</>;
   };
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.ceil(totalItems / 30);
+
+  // Sidebar content
+  const sidebarContent = selectedMedia && (
+    <>
+      <SidebarHeader>
+        <SidebarTitle>Media Details</SidebarTitle>
+        <CloseButton onClick={closeSidebar}>
+          <FaTimes />
+        </CloseButton>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarImage>
+          {(selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url) ? (
+            <img 
+              src={selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url} 
+              alt={selectedMedia.alt_text || selectedMedia.filename} 
+            />
+          ) : (
+            <PlaceholderImage>
+              <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
+            </PlaceholderImage>
+          )}
+        </SidebarImage>
+        
+        <SidebarDetailsWrapper>
+          <SidebarSection>
+            <SectionTitle>File Information</SectionTitle>
+          <DetailRow>
+            <DetailLabel>Filename:</DetailLabel>
+            <DetailValue>{selectedMedia.filename}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Size:</DetailLabel>
+            <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Dimensions:</DetailLabel>
+            <DetailValue>
+              {selectedMedia.width && selectedMedia.height 
+                ? `${selectedMedia.width} × ${selectedMedia.height}` 
+                : 'Processing...'}
+            </DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Type:</DetailLabel>
+            <DetailValue>{selectedMedia.mime_type}</DetailValue>
+          </DetailRow>
+          <DetailRow>
+            <DetailLabel>Source:</DetailLabel>
+            <DetailValue>{selectedMedia.source}</DetailValue>
+          </DetailRow>
+          {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
+            <DetailRow>
+              <DetailLabel>Status:</DetailLabel>
+              <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
+                {getStatusLabel(selectedMedia.processing_status)}
+              </StatusValue>
+            </DetailRow>
+          )}
+        </SidebarSection>
+
+        {selectedMedia.description && (
+          <SidebarSection>
+            <SectionTitle>Description</SectionTitle>
+            <DescriptionText>{selectedMedia.description}</DescriptionText>
+          </SidebarSection>
+        )}
+
+        {selectedMedia.tags && selectedMedia.tags.length > 0 && (
+          <SidebarSection>
+            <SectionTitle>Tags</SectionTitle>
+            <SidebarTags>
+              {selectedMedia.tags.map((tag, index) => (
+                <SidebarTag key={index}>{tag}</SidebarTag>
+              ))}
+            </SidebarTags>
+          </SidebarSection>
+        )}
+
+        <SidebarSection>
+          <SectionTitle>Actions</SectionTitle>
+          <SidebarActions>
+            {selectedMedia.spaces_url && (
+              <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
+                <FaEye /> View Original
+              </SidebarActionButton>
+            )}
+            <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
+              <FaDownload /> Download
+            </SidebarActionButton>
+            <SidebarActionButton danger>
+              <FaTrash /> Delete
+            </SidebarActionButton>
+          </SidebarActions>
+          </SidebarSection>
+        </SidebarDetailsWrapper>
+      </SidebarContent>
+    </>
+  );
+
+  // Status bar content
+  const statusBarContent = (
+    <BottomBarInner hasActions={selectedItems.size > 0}>
+      {selectedItems.size > 0 ? (
+        <>
+          <BottomBarText>
+            <strong>{selectedItems.size}</strong> {selectedItems.size === 1 ? 'item' : 'items'} selected
+          </BottomBarText>
+          <BottomBarActions>
+            <BottomBarButton onClick={handleEdit}>
+              <FaEye /> Edit
+            </BottomBarButton>
+            <BottomBarButton danger onClick={handleDelete}>
+              <FaTrash /> Delete
+            </BottomBarButton>
+          </BottomBarActions>
+        </>
+      ) : (
+        <BottomBarText>
+          <strong>{media.length}</strong> of <strong>{totalItems}</strong>
+        </BottomBarText>
+      )}
+    </BottomBarInner>
+  );
 
   return (
-    <AdminLayout currentPage="media">
-      <Container sidebarOpen={sidebarOpen}>
+    <AdminLayout 
+      currentPage="media"
+      rightSidebar={sidebarContent}
+      rightSidebarOpen={sidebarOpen}
+      rightSidebarWidth={400}
+      statusBar={statusBarContent}
+    >
+      <Container>
         <Header>
-          <Title>Media Library</Title>
-          <Subtitle>Manage your media assets and files</Subtitle>
+          <HeaderLeft>
+            <Title>Media Library</Title>
+            <Subtitle>Upload and manage your media files</Subtitle>
+          </HeaderLeft>
+          <UploadButton onClick={() => setShowUploadModal(true)}>
+            <FaPlus /> Upload Files
+          </UploadButton>
         </Header>
 
-        <UploadSection>
-          <UploadHeader>
-            <UploadIcon>
-              <FaPlus />
-            </UploadIcon>
-                      <UploadText>
-            <h3>Upload New Media</h3>
-            <p>Drag and drop multiple images and videos or click to browse. Select multiple files to upload them all at once. Media will be automatically processed and analyzed.</p>
-          </UploadText>
-          </UploadHeader>
-          
-          <UploadMedia 
-            onUploadComplete={handleUploadComplete}
-            accept="image/*,video/*"
-          />
-          
-          {uploadSuccess && (
-            <UploadSuccess>
-              ✓ {uploadSuccess}
-            </UploadSuccess>
-          )}
-        </UploadSection>
-
-        <Controls>
-          <SearchSection>
+        <Toolbar>
+          <ToolbarLeft>
             <SearchInput
               type="text"
-              placeholder="Search by filename..."
+              placeholder="Search media..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <SearchButton onClick={handleSearch}>
-              <FaSearch />
-            </SearchButton>
-          </SearchSection>
+            <FilterDropdown
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+            >
+              <option value="all">All media types</option>
+              <option value="local">Images</option>
+              <option value="gdrive">Videos</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            >
+              <option value="all">All dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </FilterDropdown>
+          </ToolbarLeft>
 
-          <FiltersSection>
-            <FilterGroup>
-              <FilterLabel>Status:</FilterLabel>
-              <FilterSelect
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-              </FilterSelect>
-            </FilterGroup>
+          <ToolbarRight>
+            <ViewToggleButton
+              active={viewFormat === 'tile'}
+              onClick={() => setViewFormat('tile')}
+              title="Grid View"
+            >
+              <FaTh />
+            </ViewToggleButton>
+            <ViewToggleButton
+              active={viewFormat === 'list'}
+              onClick={() => setViewFormat('list')}
+              title="List View"
+            >
+              <FaList />
+            </ViewToggleButton>
+          </ToolbarRight>
+        </Toolbar>
 
-            <FilterGroup>
-              <FilterLabel>Source:</FilterLabel>
-              <FilterSelect
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
+        {showUploadModal && (
+          <UploadSection>
+            <UploadHeader>
+              <UploadIcon>
+                <FaPlus />
+              </UploadIcon>
+              <UploadText>
+                <h3>Upload New Media</h3>
+                <p>Drag and drop multiple images and videos or click to browse.</p>
+              </UploadText>
+              <button 
+                onClick={() => setShowUploadModal(false)}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#6c757d' }}
               >
-                <option value="all">All Sources</option>
-                <option value="google_drive">Google Drive</option>
-                <option value="upload">Upload</option>
-                <option value="url">URL</option>
-              </FilterSelect>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>Sort:</FilterLabel>
-              <FilterSelect
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="updated_at">Updated</option>
-                <option value="created_at">Created</option>
-                <option value="filename">Filename</option>
-                <option value="processing_status">Status</option>
-              </FilterSelect>
-              <SortButton
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                <FaSort />
-              </SortButton>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>View:</FilterLabel>
-              <ViewToggle>
-                <ViewButton
-                  active={viewFormat === 'tile'}
-                  onClick={() => setViewFormat('tile')}
-                  title="Tile View"
-                >
-                  <FaTh />
-                </ViewButton>
-                <ViewButton
-                  active={viewFormat === 'card'}
-                  onClick={() => setViewFormat('card')}
-                  title="Card View"
-                >
-                  <FaThLarge />
-                </ViewButton>
-              </ViewToggle>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>Per Page:</FilterLabel>
-              <FilterSelect
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(parseInt(e.target.value) as PageSize)}
-              >
-                <option value={30}>30</option>
-                <option value={60}>60</option>
-                <option value={90}>90</option>
-              </FilterSelect>
-            </FilterGroup>
-          </FiltersSection>
-        </Controls>
+                <FaTimes />
+              </button>
+            </UploadHeader>
+            
+            <UploadMedia 
+              onUploadComplete={(urls) => {
+                handleUploadComplete(urls);
+                setShowUploadModal(false);
+              }}
+              accept="image/*,video/*"
+            />
+            
+            {uploadSuccess && (
+              <UploadSuccess>
+                ✓ {uploadSuccess}
+              </UploadSuccess>
+            )}
+          </UploadSection>
+        )}
 
         {loading ? (
           <LoadingContainer>
@@ -1077,27 +1340,20 @@ export default function AdminMedia() {
           </ErrorContainer>
         ) : (
           <>
-            <StatsBar>
-              <StatItem>
-                <StatLabel>Total Files:</StatLabel>
-                <StatValue>{totalItems}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>Showing:</StatLabel>
-                <StatValue>{media.length} of {totalItems}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>View:</StatLabel>
-                <StatValue>{viewFormat === 'tile' ? 'Tile' : 'Card'}</StatValue>
-              </StatItem>
-            </StatsBar>
-
             {viewFormat === 'tile' ? (
               <TileGrid>
                 {media.map((item) => (
                   <MediaItemWithProcessing key={item.id} item={item}>
                     <TileItem onClick={() => handleMediaClick(item)}>
                       <TileImage>
+                        <TileCheckbox>
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </TileCheckbox>
                         {item.thumbnail_url || item.medium_url ? (
                           <img src={item.thumbnail_url || item.medium_url} alt={item.filename} />
                         ) : (
@@ -1115,6 +1371,76 @@ export default function AdminMedia() {
                   </MediaItemWithProcessing>
                 ))}
               </TileGrid>
+            ) : viewFormat === 'list' ? (
+              <MediaTable>
+                <TableHeader>
+                  <TableHeaderCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.size === media.length && media.length > 0}
+                      onChange={handleSelectAll}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3b82f6', borderRadius: '4px' }}
+                    />
+                  </TableHeaderCell>
+                  <TableHeaderCell></TableHeaderCell>
+                  <TableHeaderCell>File</TableHeaderCell>
+                  <TableHeaderCell className="hide-mobile">Type</TableHeaderCell>
+                  <TableHeaderCell>Uploaded</TableHeaderCell>
+                </TableHeader>
+                {media.map((item) => (
+                  <MediaItemWithProcessing key={item.id} item={item}>
+                    <TableRow 
+                      onClick={() => handleMediaClick(item)}
+                      selected={selectedItems.has(item.id)}
+                    >
+                      <TableCell>
+                        <TableCheckbox>
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </TableCheckbox>
+                      </TableCell>
+                      <TableCell>
+                        <ListThumbnail>
+                          {item.thumbnail_url || item.medium_url ? (
+                            <img src={item.thumbnail_url || item.medium_url} alt={item.filename} />
+                          ) : (
+                            <PlaceholderImage>
+                              <span style={{ fontSize: '0.8rem' }}>
+                                {item.mime_type.split('/')[0].toUpperCase()}
+                              </span>
+                            </PlaceholderImage>
+                          )}
+                          {isProcessing(item) && (
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <FaSpinner style={{ animation: 'spin 1s linear infinite', color: '#96885f' }} />
+                            </div>
+                          )}
+                        </ListThumbnail>
+                      </TableCell>
+                      <TableCell>
+                        <FileInfo>
+                          <FileName>{item.title || item.filename}</FileName>
+                          <FileSubtext>{item.filename}</FileSubtext>
+                        </FileInfo>
+                      </TableCell>
+                      <TableCell className="hide-mobile">
+                        {item.mime_type.split('/')[0].charAt(0).toUpperCase() + item.mime_type.split('/')[0].slice(1)}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(item.created_at * 1000).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  </MediaItemWithProcessing>
+                ))}
+              </MediaTable>
             ) : (
               <MediaGrid>
                 {media.map((item) => (
@@ -1220,208 +1546,6 @@ export default function AdminMedia() {
           </>
         )}
 
-        {/* Right Sidebar */}
-        {sidebarOpen && selectedMedia && (
-          <>
-            {/* Modal overlay for smaller screens */}
-            <SidebarOverlay onClick={closeSidebar}>
-              <Sidebar onClick={(e) => e.stopPropagation()}>
-                <SidebarHeader>
-                  <SidebarTitle>Media Details</SidebarTitle>
-                  <CloseButton onClick={closeSidebar}>
-                    <FaTimes />
-                  </CloseButton>
-                </SidebarHeader>
-                
-                <SidebarContent>
-                  <SidebarImage>
-                    {(selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url) ? (
-                      <img 
-                        src={selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url} 
-                        alt={selectedMedia.alt_text || selectedMedia.filename} 
-                      />
-                    ) : (
-                      <PlaceholderImage>
-                        <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
-                      </PlaceholderImage>
-                    )}
-                  </SidebarImage>
-                  
-                  <SidebarDetailsWrapper>
-                    <SidebarSection>
-                      <SectionTitle>File Information</SectionTitle>
-                    <DetailRow>
-                      <DetailLabel>Filename:</DetailLabel>
-                      <DetailValue>{selectedMedia.filename}</DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Size:</DetailLabel>
-                      <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Dimensions:</DetailLabel>
-                      <DetailValue>
-                        {selectedMedia.width && selectedMedia.height 
-                          ? `${selectedMedia.width} × ${selectedMedia.height}` 
-                          : 'Processing...'}
-                      </DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Type:</DetailLabel>
-                      <DetailValue>{selectedMedia.mime_type}</DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Source:</DetailLabel>
-                      <DetailValue>{selectedMedia.source}</DetailValue>
-                    </DetailRow>
-                    {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
-                      <DetailRow>
-                        <DetailLabel>Status:</DetailLabel>
-                        <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                          {getStatusLabel(selectedMedia.processing_status)}
-                        </StatusValue>
-                      </DetailRow>
-                    )}
-                  </SidebarSection>
-
-                  {selectedMedia.description && (
-                    <SidebarSection>
-                      <SectionTitle>Description</SectionTitle>
-                      <DescriptionText>{selectedMedia.description}</DescriptionText>
-                    </SidebarSection>
-                  )}
-
-                  {selectedMedia.tags && selectedMedia.tags.length > 0 && (
-                    <SidebarSection>
-                      <SectionTitle>Tags</SectionTitle>
-                      <SidebarTags>
-                        {selectedMedia.tags.map((tag, index) => (
-                          <SidebarTag key={index}>{tag}</SidebarTag>
-                        ))}
-                      </SidebarTags>
-                    </SidebarSection>
-                  )}
-
-                  <SidebarSection>
-                    <SectionTitle>Actions</SectionTitle>
-                    <SidebarActions>
-                      {selectedMedia.spaces_url && (
-                        <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                          <FaEye /> View Original
-                        </SidebarActionButton>
-                      )}
-                      <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                        <FaDownload /> Download
-                      </SidebarActionButton>
-                      <SidebarActionButton danger>
-                        <FaTrash /> Delete
-                      </SidebarActionButton>
-                    </SidebarActions>
-                    </SidebarSection>
-                  </SidebarDetailsWrapper>
-                </SidebarContent>
-              </Sidebar>
-            </SidebarOverlay>
-
-            {/* Fixed sidebar for larger screens */}
-            <Sidebar>
-              <SidebarHeader>
-                <SidebarTitle>Media Details</SidebarTitle>
-                <CloseButton onClick={closeSidebar}>
-                  <FaTimes />
-                </CloseButton>
-              </SidebarHeader>
-              
-              <SidebarContent>
-                <SidebarImage>
-                  {(selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url) ? (
-                    <img 
-                      src={selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url} 
-                      alt={selectedMedia.alt_text || selectedMedia.filename} 
-                    />
-                  ) : (
-                    <PlaceholderImage>
-                      <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
-                    </PlaceholderImage>
-                  )}
-                </SidebarImage>
-                
-                <SidebarDetailsWrapper>
-                  <SidebarSection>
-                    <SectionTitle>File Information</SectionTitle>
-                  <DetailRow>
-                    <DetailLabel>Filename:</DetailLabel>
-                    <DetailValue>{selectedMedia.filename}</DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Size:</DetailLabel>
-                    <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Dimensions:</DetailLabel>
-                    <DetailValue>
-                      {selectedMedia.width && selectedMedia.height 
-                        ? `${selectedMedia.width} × ${selectedMedia.height}` 
-                        : 'Processing...'}
-                    </DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Type:</DetailLabel>
-                    <DetailValue>{selectedMedia.mime_type}</DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Source:</DetailLabel>
-                    <DetailValue>{selectedMedia.source}</DetailValue>
-                  </DetailRow>
-                  {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
-                    <DetailRow>
-                      <DetailLabel>Status:</DetailLabel>
-                      <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                        {getStatusLabel(selectedMedia.processing_status)}
-                      </StatusValue>
-                    </DetailRow>
-                  )}
-                </SidebarSection>
-
-                {selectedMedia.description && (
-                  <SidebarSection>
-                    <SectionTitle>Description</SectionTitle>
-                    <DescriptionText>{selectedMedia.description}</DescriptionText>
-                  </SidebarSection>
-                )}
-
-                {selectedMedia.tags && selectedMedia.tags.length > 0 && (
-                  <SidebarSection>
-                    <SectionTitle>Tags</SectionTitle>
-                    <SidebarTags>
-                      {selectedMedia.tags.map((tag, index) => (
-                        <SidebarTag key={index}>{tag}</SidebarTag>
-                      ))}
-                    </SidebarTags>
-                  </SidebarSection>
-                )}
-
-                <SidebarSection>
-                  <SectionTitle>Actions</SectionTitle>
-                  <SidebarActions>
-                    {selectedMedia.spaces_url && (
-                      <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                        <FaEye /> View Original
-                      </SidebarActionButton>
-                    )}
-                    <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                      <FaDownload /> Download
-                    </SidebarActionButton>
-                    <SidebarActionButton danger>
-                      <FaTrash /> Delete
-                    </SidebarActionButton>
-                  </SidebarActions>
-                  </SidebarSection>
-                </SidebarDetailsWrapper>
-              </SidebarContent>
-            </Sidebar>
-          </>
-        )}
       </Container>
     </AdminLayout>
   );
