@@ -5,8 +5,6 @@ import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { generateInquiryNotificationEmail } from '../../../lib/emailTemplates';
 import formidable from 'formidable';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

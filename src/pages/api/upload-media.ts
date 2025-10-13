@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { storageService } from '@/lib/storage';
+import { db } from '@/lib/db';
+import { media } from '../../../db/schema';
+import { inngest } from '@/lib/inngest';
 import formidable from 'formidable';
 import { createHash } from 'crypto';
 import fs from 'fs/promises';
@@ -57,8 +60,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       uploadedFile.mimetype || 'application/octet-stream'
     );
 
+    // Create media record in database
+    const newMedia = await db.insert(media).values({
+      user_id: user?.id || 1, // Default to user 1 if no auth
+      source: 'upload',
+      source_id: fileId,
+      filename: uploadedFile.originalFilename || 'uploaded-media',
+      mime_type: uploadedFile.mimetype || 'application/octet-stream',
+      size: uploadedFile.size || 0,
+      spaces_key: storedFile.key,
+      spaces_url: storedFile.url,
+      processing_status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).returning();
+
     // Clean up the temporary file
     await fs.unlink(uploadedFile.filepath);
+
+    // Trigger background processing for images
+    if (uploadedFile.mimetype?.startsWith('image/')) {
+      try {
+        await inngest.send({
+          name: 'media.process-new-upload',
+          data: {
+            mediaId: newMedia[0].id,
+            originalUrl: storedFile.url,
+            originalName: uploadedFile.originalFilename || 'uploaded-media',
+            fileId: fileId,
+            mimeType: uploadedFile.mimetype || 'application/octet-stream',
+          },
+        });
+      } catch (error) {
+        console.error('Failed to trigger background processing:', error);
+        // Don't fail the upload if background processing fails to start
+      }
+    }
 
     res.status(200).json({
       url: storedFile.url,
@@ -68,6 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       mimeType: storedFile.mimeType,
       spaces_key: storedFile.key,
       spaces_url: storedFile.url,
+      mediaId: newMedia[0].id,
     });
 
   } catch (error) {

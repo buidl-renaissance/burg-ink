@@ -222,7 +222,7 @@ const InquiriesPage: FC = () => {
 
   useEffect(() => {
     fetchInquiries();
-  }, [statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter, fetchInquiries]);
 
   const handleStatusUpdate = async (inquiryId: number, newStatus: string) => {
     setUpdating(true);

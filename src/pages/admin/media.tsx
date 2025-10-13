@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { UploadMedia } from '@/components/UploadMedia';
+import { MediaUploader } from '@/components/MediaUploader';
+import { GoogleDrivePicker } from '@/components/GoogleDrivePicker';
 import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes, FaPlus } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
@@ -798,10 +799,11 @@ export default function AdminMedia() {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [showGoogleDrivePicker, setShowGoogleDrivePicker] = useState(false);
 
   useEffect(() => {
     fetchMedia();
-  }, [currentPage, statusFilter, sourceFilter, sortBy, sortOrder, itemsPerPage]);
+  }, [currentPage, statusFilter, sourceFilter, sortBy, sortOrder, itemsPerPage, fetchMedia]);
 
   const fetchMedia = async () => {
     try {
@@ -859,6 +861,21 @@ export default function AdminMedia() {
     setTimeout(() => setUploadSuccess(null), 5000);
   };
 
+  const handleGoogleDriveFiles = (files: Record<string, unknown>[]) => {
+    const fileCount = files.length;
+    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} imported from Google Drive!`);
+    setShowGoogleDrivePicker(false);
+    // Refresh the media list to show the new uploads
+    fetchMedia();
+    // Clear success message after 5 seconds
+    setTimeout(() => setUploadSuccess(null), 5000);
+  };
+
+  const handleGoogleDriveError = (error: string) => {
+    console.error('Google Drive error:', error);
+    // You could show an error message to the user here
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -907,9 +924,12 @@ export default function AdminMedia() {
           </UploadText>
           </UploadHeader>
           
-          <UploadMedia 
+          <MediaUploader 
             onUploadComplete={handleUploadComplete}
             accept="image/*,video/*"
+            multiple={true}
+            maxFiles={20}
+            maxFileSize={100}
           />
           
           {uploadSuccess && (
@@ -1155,6 +1175,19 @@ export default function AdminMedia() {
               </Pagination>
             )}
           </>
+        )}
+
+        {/* Google Drive Picker Modal */}
+        {showGoogleDrivePicker && (
+          <SidebarOverlay onClick={() => setShowGoogleDrivePicker(false)}>
+            <GoogleDrivePicker
+              onFilesSelected={handleGoogleDriveFiles}
+              onError={handleGoogleDriveError}
+              onClose={() => setShowGoogleDrivePicker(false)}
+              accept="image/*,video/*"
+              multiple={true}
+            />
+          </SidebarOverlay>
         )}
 
         {/* Right Sidebar */}

@@ -168,7 +168,7 @@ export const processMediaResize = inngest.createFunction(
     if (mediaRecord.processing_status === 'pending') {
       await step.run("trigger-ai-analysis", async () => {
         console.log(`Triggering AI analysis for resized media: ${mediaRecord.filename} (${mediaId})`);
-        await triggerAIAnalysis(mediaId, storedImages.medium.url);
+        await triggerAIAnalysis(mediaId, storedImages.medium.url, originalName, mimeType);
       });
     }
 
@@ -261,7 +261,7 @@ export const processNewUploadResize = inngest.createFunction(
     // Trigger AI analysis
     await step.run("trigger-ai-analysis", async () => {
       console.log(`Triggering AI analysis for new upload: ${originalName} (${mediaId})`);
-      await triggerAIAnalysis(mediaId, storedImages.medium.url);
+      await triggerAIAnalysis(mediaId, storedImages.medium.url, originalName, mimeType);
     });
 
     return {
@@ -352,12 +352,14 @@ export const triggerNewUploadResize = async (
 /**
  * Utility function to trigger AI analysis
  */
-export const triggerAIAnalysis = async (mediaId: number, imageUrl: string) => {
+export const triggerAIAnalysis = async (mediaId: number, imageUrl: string, filename?: string, mimeType?: string) => {
   return await inngest.send({
     name: "media.analyze",
     data: {
       mediaId,
-      imageUrl
+      imageUrl,
+      filename: filename || 'unknown',
+      mimeType: mimeType || 'image/jpeg'
     }
   });
 }; 
