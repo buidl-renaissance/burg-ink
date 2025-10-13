@@ -472,7 +472,7 @@ const MediaInfo = styled.div`
   padding: 1rem;
 `;
 
-const MediaTitle = styled.h3`
+const CardTitle = styled.h3`
   font-size: 1rem;
   font-weight: 600;
   color: #333;
@@ -582,18 +582,23 @@ const TileGrid = styled.div`
   margin-bottom: 2rem;
 `;
 
-const TileItem = styled.div`
+const TileItem = styled.div<{ selected?: boolean }>`
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: ${props => props.selected 
+    ? '0 8px 32px rgba(59, 130, 246, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.2)' 
+    : '0 2px 8px rgba(0, 0, 0, 0.1)'};
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   aspect-ratio: 1;
+  border: 3px solid ${props => props.selected ? '#3b82f6' : 'transparent'};
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: ${props => props.selected 
+      ? '0 12px 40px rgba(59, 130, 246, 0.7), 0 0 0 1px rgba(59, 130, 246, 0.3)' 
+      : '0 4px 12px rgba(0, 0, 0, 0.15)'};
   }
 `;
 
@@ -690,7 +695,7 @@ const TableRow = styled.div<{ selected?: boolean }>`
   align-items: center;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  background: ${props => props.selected ? '#f8f7f4' : 'white'};
+  background: ${props => props.selected ? 'rgba(59, 130, 246, 0.08)' : 'white'};
 
   &:hover {
     background: #f8f9fa;
@@ -792,6 +797,17 @@ const SidebarHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: fixed;
+  top: 68px;
+  right: 0;
+  width: 400px;
+  z-index: 20;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: 768px) {
+    top: 0;
+    width: 100%;
+  }
 `;
 
 const SidebarTitle = styled.h2`
@@ -810,21 +826,26 @@ const CloseButton = styled.button`
 
 const SidebarContent = styled.div`
   flex: 1;
-  padding: 1rem;
+  padding: 0;
+  padding-top: 68px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 
-  @media (min-width: 768px) {
-    padding: 1.5rem;
+  @media (max-width: 768px) {
+    padding-top: 60px;
   }
 `;
 
 const SidebarImage = styled.div`
   position: relative;
   background: #f8f9fa;
-  margin-bottom: 1rem;
   width: 100%;
+  padding: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
   
   img {
     width: 100%;
@@ -838,8 +859,23 @@ const SidebarDetailsWrapper = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 0;
+  padding: 1.5rem;
+  padding-top: 0;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+    padding-top: 0;
+  }
 `;
 
+const MediaTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+  word-break: break-word;
+`;
+  
 const SidebarSection = styled.div`
   margin-bottom: 1.5rem;
 `;
@@ -859,40 +895,48 @@ const DetailRow = styled.div`
 
 const DescriptionText = styled.p`
   color: #6c757d;
-  margin: 0;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
 `;
 
 const SidebarTags = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 `;
 
 const SidebarTag = styled.span`
   background: #e9ecef;
   color: #495057;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   font-weight: 500;
 `;
 
 const SidebarActions = styled.div`
   display: flex;
   gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 `;
 
 const SidebarActionButton = styled.button<{ danger?: boolean }>`
   background: ${props => props.danger ? '#dc3545' : '#96885f'};
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  flex: 1;
+  font-weight: 500;
+  min-width: fit-content;
   
   &:hover {
     background: ${props => props.danger ? '#c82333' : '#7a6f4d'};
@@ -1129,66 +1173,24 @@ export default function AdminMedia() {
         </SidebarImage>
         
         <SidebarDetailsWrapper>
-          <SidebarSection>
-            <SectionTitle>File Information</SectionTitle>
-          <DetailRow>
-            <DetailLabel>Filename:</DetailLabel>
-            <DetailValue>{selectedMedia.filename}</DetailValue>
-          </DetailRow>
-          <DetailRow>
-            <DetailLabel>Size:</DetailLabel>
-            <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
-          </DetailRow>
-          <DetailRow>
-            <DetailLabel>Dimensions:</DetailLabel>
-            <DetailValue>
-              {selectedMedia.width && selectedMedia.height 
-                ? `${selectedMedia.width} × ${selectedMedia.height}` 
-                : 'Processing...'}
-            </DetailValue>
-          </DetailRow>
-          <DetailRow>
-            <DetailLabel>Type:</DetailLabel>
-            <DetailValue>{selectedMedia.mime_type}</DetailValue>
-          </DetailRow>
-          <DetailRow>
-            <DetailLabel>Source:</DetailLabel>
-            <DetailValue>{selectedMedia.source}</DetailValue>
-          </DetailRow>
-          {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
-            <DetailRow>
-              <DetailLabel>Status:</DetailLabel>
-              <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                {getStatusLabel(selectedMedia.processing_status)}
-              </StatusValue>
-            </DetailRow>
-          )}
-        </SidebarSection>
-
-        {selectedMedia.description && (
-          <SidebarSection>
-            <SectionTitle>Description</SectionTitle>
+          <MediaTitle>{selectedMedia.title || selectedMedia.filename}</MediaTitle>
+          
+          {selectedMedia.description && (
             <DescriptionText>{selectedMedia.description}</DescriptionText>
-          </SidebarSection>
-        )}
+          )}
 
-        {selectedMedia.tags && selectedMedia.tags.length > 0 && (
-          <SidebarSection>
-            <SectionTitle>Tags</SectionTitle>
+          {selectedMedia.tags && selectedMedia.tags.length > 0 && (
             <SidebarTags>
               {selectedMedia.tags.map((tag, index) => (
                 <SidebarTag key={index}>{tag}</SidebarTag>
               ))}
             </SidebarTags>
-          </SidebarSection>
-        )}
+          )}
 
-        <SidebarSection>
-          <SectionTitle>Actions</SectionTitle>
           <SidebarActions>
             {selectedMedia.spaces_url && (
               <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                <FaEye /> View Original
+                <FaEye /> View
               </SidebarActionButton>
             )}
             <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
@@ -1198,6 +1200,41 @@ export default function AdminMedia() {
               <FaTrash /> Delete
             </SidebarActionButton>
           </SidebarActions>
+
+          <SidebarSection>
+            <SectionTitle>File Information</SectionTitle>
+            <DetailRow>
+              <DetailLabel>Filename:</DetailLabel>
+              <DetailValue>{selectedMedia.filename}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Size:</DetailLabel>
+              <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Dimensions:</DetailLabel>
+              <DetailValue>
+                {selectedMedia.width && selectedMedia.height 
+                  ? `${selectedMedia.width} × ${selectedMedia.height}` 
+                  : 'Processing...'}
+              </DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Type:</DetailLabel>
+              <DetailValue>{selectedMedia.mime_type}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Source:</DetailLabel>
+              <DetailValue>{selectedMedia.source}</DetailValue>
+            </DetailRow>
+            {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
+              <DetailRow>
+                <DetailLabel>Status:</DetailLabel>
+                <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
+                  {getStatusLabel(selectedMedia.processing_status)}
+                </StatusValue>
+              </DetailRow>
+            )}
           </SidebarSection>
         </SidebarDetailsWrapper>
       </SidebarContent>
@@ -1344,7 +1381,10 @@ export default function AdminMedia() {
               <TileGrid>
                 {media.map((item) => (
                   <MediaItemWithProcessing key={item.id} item={item}>
-                    <TileItem onClick={() => handleMediaClick(item)}>
+                    <TileItem 
+                      onClick={() => handleMediaClick(item)}
+                      selected={selectedMedia?.id === item.id}
+                    >
                       <TileImage>
                         <TileCheckbox>
                           <input
@@ -1391,7 +1431,7 @@ export default function AdminMedia() {
                   <MediaItemWithProcessing key={item.id} item={item}>
                     <TableRow 
                       onClick={() => handleMediaClick(item)}
-                      selected={selectedItems.has(item.id)}
+                      selected={selectedMedia?.id === item.id}
                     >
                       <TableCell>
                         <TableCheckbox>
@@ -1463,7 +1503,7 @@ export default function AdminMedia() {
                       </MediaThumbnail>
                       
                       <MediaInfo>
-                        <MediaTitle>{item.title || item.filename}</MediaTitle>
+                        <CardTitle>{item.title || item.filename}</CardTitle>
                       <MediaDetails>
                         <DetailItem>
                           <DetailLabel>Size:</DetailLabel>
