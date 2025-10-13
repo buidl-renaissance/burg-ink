@@ -841,10 +841,10 @@ const SidebarImage = styled.div`
   position: relative;
   background: #f8f9fa;
   width: 100%;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 0;
   
   @media (max-width: 768px) {
-    padding: 1rem;
+    padding: 1rem 1rem 0;
   }
   
   img {
@@ -859,12 +859,10 @@ const SidebarDetailsWrapper = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 1.5rem;
-  padding-top: 0;
+  padding: 1rem 1.5rem 1.5rem;
   
   @media (max-width: 768px) {
-    padding: 1rem;
-    padding-top: 0;
+    padding: 0.75rem 1rem 1rem;
   }
 `;
 

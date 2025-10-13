@@ -53,10 +53,10 @@ export const EmptyMessage = styled.div`
 
 export const ActionButtons = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 
   @media (max-width: 768px) {
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
 `;
 

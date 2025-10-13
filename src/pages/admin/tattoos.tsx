@@ -6,10 +6,9 @@ import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
 import Image from 'next/image';
-import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
 import { GetServerSideProps } from 'next';
-import { TableContainer, Table, Th, Td, ActionButton, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
+import { TableContainer, Table, Th, Td, ActionButton, ActionButtons, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
 import { Tattoo } from '@/components/TattooForm';
 
 const AdminContainer = styled.div`
@@ -80,7 +79,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   }
 }
 
-export default function AdminTattoosPage({ artist }: { artist: Artist }) {
+export default function AdminTattoosPage() {
   const router = useRouter();
   const [tattoos, setTattoos] = useState<Tattoo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,7 +188,7 @@ export default function AdminTattoosPage({ artist }: { artist: Artist }) {
               <tbody>
                 {tattoos.map((tattoo) => (
                   <tr key={tattoo.id}>
-                    <Td>
+                    <Td width="80px">
                       <ImageCell>
                         {tattoo.image && (
                           <Image
@@ -216,27 +215,29 @@ export default function AdminTattoosPage({ artist }: { artist: Artist }) {
                     <Td>{tattoo.placement || '-'}</Td>
                     <Td>{tattoo.size || '-'}</Td>
                     <Td>
-                      <ActionButton
-                        className="view"
-                        onClick={() => handleView(tattoo)}
-                        title="View"
-                      >
-                        <FaEye />
-                      </ActionButton>
-                      <ActionButton
-                        className="edit"
-                        onClick={() => handleEdit(tattoo)}
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </ActionButton>
-                      <ActionButton
-                        className="delete"
-                        onClick={() => handleDelete(tattoo.id!)}
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </ActionButton>
+                      <ActionButtons>
+                        <ActionButton
+                          className="view"
+                          onClick={() => handleView(tattoo)}
+                          title="View"
+                        >
+                          <FaEye />
+                        </ActionButton>
+                        <ActionButton
+                          className="edit"
+                          onClick={() => handleEdit(tattoo)}
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </ActionButton>
+                        <ActionButton
+                          className="delete"
+                          onClick={() => handleDelete(tattoo.id!)}
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </ActionButton>
+                      </ActionButtons>
                     </Td>
                   </tr>
                 ))}

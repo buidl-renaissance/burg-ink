@@ -13,7 +13,7 @@ import VectorSearchModal from '@/components/VectorSearchModal';
 import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
 import { GetServerSideProps } from 'next';
-import { TableContainer, Table, Th, Td, ActionButton, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
+import { TableContainer, Table, Th, Td, ActionButton, ActionButtons, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
 
 const AdminContainer = styled.div`
   max-width: 1400px;
@@ -257,7 +257,7 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
               <tbody>
                 {artworks.map((artwork) => (
                   <tr key={artwork.id}>
-                    <Td>
+                    <Td width="80px">
                       <ImageCell>
                         {artwork.image && (
                           <Image
@@ -288,27 +288,29 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
                       />
                     </Td>
                     <Td>
-                      <ActionButton
-                        className="view"
-                        onClick={() => handleView(artwork)}
-                        title="View"
-                      >
-                        <FaEye />
-                      </ActionButton>
-                      <ActionButton
-                        className="edit"
-                        onClick={() => handleEdit(artwork)}
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </ActionButton>
-                      <ActionButton
-                        className="delete"
-                        onClick={() => handleDelete(artwork.id)}
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </ActionButton>
+                      <ActionButtons>
+                        <ActionButton
+                          className="view"
+                          onClick={() => handleView(artwork)}
+                          title="View"
+                        >
+                          <FaEye />
+                        </ActionButton>
+                        <ActionButton
+                          className="edit"
+                          onClick={() => handleEdit(artwork)}
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </ActionButton>
+                        <ActionButton
+                          className="delete"
+                          onClick={() => handleDelete(artwork.id)}
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </ActionButton>
+                      </ActionButtons>
                     </Td>
                   </tr>
                 ))}
