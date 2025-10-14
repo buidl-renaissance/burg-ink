@@ -135,47 +135,59 @@ const Tab = styled.button<{ active: boolean }>`
 `;
 
 const SettingsContainer = styled.div`
-  flex: 1;
   background: white;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-`;
-
-const SettingsSection = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
 
   @media (max-width: 768px) {
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
+  }
+`;
+
+const SettingsSection = styled.div`
+  margin-bottom: 3rem;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #333;
   margin: 0 0 1.5rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f8f9fa;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: #96885f;
+    border-radius: 2px;
+  }
 
   @media (max-width: 768px) {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     margin: 0 0 1rem 0;
   }
 `;
 
 const SettingsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
   margin-bottom: 2rem;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
     margin-bottom: 1.5rem;
   }
 `;
@@ -183,33 +195,51 @@ const SettingsGrid = styled.div`
 const SettingField = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #96885f;
+    background: #f8f7f4;
+  }
 
   @media (max-width: 768px) {
-    gap: 0.25rem;
+    padding: 1rem;
+    gap: 0.5rem;
   }
 `;
 
 const Label = styled.label`
   font-weight: 600;
   color: #333;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
 
   @media (max-width: 768px) {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 `;
 
 const Input = styled.input`
-  padding: 0.75rem;
+  padding: 0.875rem 1rem;
   border: 1px solid #e9ecef;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
   
   &:focus {
     outline: none;
     border-color: #96885f;
     box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  &::placeholder {
+    color: #adb5bd;
   }
 
   @media (max-width: 768px) {
@@ -219,12 +249,41 @@ const Input = styled.input`
 `;
 
 const Textarea = styled.textarea`
-  padding: 0.75rem;
+  padding: 0.875rem 1rem;
   border: 1px solid #e9ecef;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
+  min-height: 100px;
+  background: white;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+
+  &::placeholder {
+    color: #adb5bd;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    min-height: 80px;
+  }
+`;
+
+const Select = styled.select`
+  padding: 0.875rem 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
   
   &:focus {
     outline: none;
@@ -238,33 +297,31 @@ const Textarea = styled.textarea`
   }
 `;
 
-const Select = styled.select`
-  padding: 0.75rem;
+const ToggleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
   border: 1px solid #e9ecef;
-  border-radius: 6px;
-  font-size: 1rem;
-  background: white;
-  
-  &:focus {
-    outline: none;
-    border-color: #96885f;
-  }
+  transition: all 0.2s ease;
 
-  @media (max-width: 768px) {
-    padding: 0.75rem;
-    font-size: 0.9rem;
+  &:hover {
+    border-color: #96885f;
+    background: #f8f7f4;
   }
 `;
 
 const Toggle = styled.input`
-  width: 40px;
-  height: 20px;
+  width: 44px;
+  height: 24px;
   appearance: none;
   background: #e9ecef;
-  border-radius: 10px;
+  border-radius: 12px;
   position: relative;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 
   &:checked {
     background: #96885f;
@@ -277,36 +334,38 @@ const Toggle = styled.input`
   &::before {
     content: '';
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: white;
-    top: 2px;
-    left: 2px;
+    top: 3px;
+    left: 3px;
     transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   @media (max-width: 768px) {
-    width: 36px;
-    height: 18px;
+    width: 40px;
+    height: 22px;
 
     &:checked::before {
       transform: translateX(18px);
     }
 
     &::before {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
     }
   }
 `;
 
 const ToggleLabel = styled.span`
-  font-size: 0.9rem;
-  color: #6c757d;
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
 
   @media (max-width: 768px) {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 `;
 
@@ -476,29 +535,35 @@ export default function AdminSettings() {
         
         <SettingField>
           <Label>Maintenance Mode</Label>
-          <Toggle
-            checked={siteSettings.maintenanceMode}
-            onChange={(e) => setSiteSettings({ ...siteSettings, maintenanceMode: e.target.checked })}
-          />
-          <ToggleLabel>Enable maintenance mode</ToggleLabel>
+          <ToggleContainer>
+            <Toggle
+              checked={siteSettings.maintenanceMode}
+              onChange={(e) => setSiteSettings({ ...siteSettings, maintenanceMode: e.target.checked })}
+            />
+            <ToggleLabel>Enable maintenance mode</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
           <Label>User Registration</Label>
-          <Toggle
-            checked={siteSettings.allowRegistration}
-            onChange={(e) => setSiteSettings({ ...siteSettings, allowRegistration: e.target.checked })}
-          />
-          <ToggleLabel>Allow new user registrations</ToggleLabel>
+          <ToggleContainer>
+            <Toggle
+              checked={siteSettings.allowRegistration}
+              onChange={(e) => setSiteSettings({ ...siteSettings, allowRegistration: e.target.checked })}
+            />
+            <ToggleLabel>Allow new user registrations</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
           <Label>Email Verification</Label>
-          <Toggle
-            checked={siteSettings.requireEmailVerification}
-            onChange={(e) => setSiteSettings({ ...siteSettings, requireEmailVerification: e.target.checked })}
-          />
-          <ToggleLabel>Require email verification</ToggleLabel>
+          <ToggleContainer>
+            <Toggle
+              checked={siteSettings.requireEmailVerification}
+              onChange={(e) => setSiteSettings({ ...siteSettings, requireEmailVerification: e.target.checked })}
+            />
+            <ToggleLabel>Require email verification</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
       </SettingsGrid>
     </SettingsSection>
@@ -573,11 +638,13 @@ export default function AdminSettings() {
       <SettingsGrid>
         <SettingField>
           <Label>Email Notifications</Label>
-          <Toggle
-            checked={emailSettings.enableEmailNotifications}
-            onChange={(e) => setEmailSettings({ ...emailSettings, enableEmailNotifications: e.target.checked })}
-          />
-          <ToggleLabel>Enable email notifications</ToggleLabel>
+          <ToggleContainer>
+            <Toggle
+              checked={emailSettings.enableEmailNotifications}
+              onChange={(e) => setEmailSettings({ ...emailSettings, enableEmailNotifications: e.target.checked })}
+            />
+            <ToggleLabel>Enable email notifications</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
       </SettingsGrid>
     </SettingsSection>
@@ -638,11 +705,13 @@ export default function AdminSettings() {
       <SettingsGrid>
         <SettingField>
           <Label>Strong Password Requirement</Label>
-          <Toggle
-            checked={userSettings.requireStrongPassword}
-            onChange={(e) => setUserSettings({ ...userSettings, requireStrongPassword: e.target.checked })}
-          />
-          <ToggleLabel>Require strong passwords (uppercase, lowercase, numbers, symbols)</ToggleLabel>
+          <ToggleContainer>
+            <Toggle
+              checked={userSettings.requireStrongPassword}
+              onChange={(e) => setUserSettings({ ...userSettings, requireStrongPassword: e.target.checked })}
+            />
+            <ToggleLabel>Require strong passwords (uppercase, lowercase, numbers, symbols)</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
       </SettingsGrid>
     </SettingsSection>
@@ -708,26 +777,34 @@ export default function AdminSettings() {
       <SettingsGrid>
         <SettingField>
           <Label>Two-Factor Authentication</Label>
-          <Toggle defaultChecked={false} />
-          <ToggleLabel>Require 2FA for admin accounts</ToggleLabel>
+          <ToggleContainer>
+            <Toggle defaultChecked={false} />
+            <ToggleLabel>Require 2FA for admin accounts</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
           <Label>Rate Limiting</Label>
-          <Toggle defaultChecked={true} />
-          <ToggleLabel>Enable rate limiting for API requests</ToggleLabel>
+          <ToggleContainer>
+            <Toggle defaultChecked={true} />
+            <ToggleLabel>Enable rate limiting for API requests</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
           <Label>CSRF Protection</Label>
-          <Toggle defaultChecked={true} />
-          <ToggleLabel>Enable CSRF protection</ToggleLabel>
+          <ToggleContainer>
+            <Toggle defaultChecked={true} />
+            <ToggleLabel>Enable CSRF protection</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
           <Label>Content Security Policy</Label>
-          <Toggle defaultChecked={true} />
-          <ToggleLabel>Enable strict CSP headers</ToggleLabel>
+          <ToggleContainer>
+            <Toggle defaultChecked={true} />
+            <ToggleLabel>Enable strict CSP headers</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
       </SettingsGrid>
 
@@ -735,8 +812,10 @@ export default function AdminSettings() {
       <SettingsGrid>
         <SettingField>
           <Label>Auto Backup</Label>
-          <Toggle defaultChecked={true} />
-          <ToggleLabel>Automatically backup data daily</ToggleLabel>
+          <ToggleContainer>
+            <Toggle defaultChecked={true} />
+            <ToggleLabel>Automatically backup data daily</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
@@ -780,8 +859,10 @@ export default function AdminSettings() {
       <SettingsGrid>
         <SettingField>
           <Label>Enable Caching</Label>
-          <Toggle defaultChecked={true} />
-          <ToggleLabel>Enable Redis caching</ToggleLabel>
+          <ToggleContainer>
+            <Toggle defaultChecked={true} />
+            <ToggleLabel>Enable Redis caching</ToggleLabel>
+          </ToggleContainer>
         </SettingField>
         
         <SettingField>
@@ -911,9 +992,6 @@ const ErrorMessage = styled.div`
 
 const Content = styled.div`
   display: flex;
-  gap: 2rem;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
+  flex-direction: column;
+  gap: 0;
 `; 

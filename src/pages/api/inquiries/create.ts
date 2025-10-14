@@ -5,8 +5,6 @@ import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { generateInquiryNotificationEmail } from '../../../lib/emailTemplates';
 import formidable from 'formidable';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -34,21 +32,19 @@ export default async function handler(
 
     const [fields, files] = await form.parse(req);
 
-    // Extract form fields
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      budget,
-      tattooConcept,
-      animalPersonEmotion,
-      abstractEnergy,
-      tattooSize,
-      colorPreference,
-      newsletterSignup,
-      inquiryType = 'tattoo',
-    } = fields;
+    // Extract form fields (form.parse returns arrays, so we take the first element)
+    const firstName = fields.firstName?.[0];
+    const lastName = fields.lastName?.[0];
+    const email = fields.email?.[0];
+    const phone = fields.phone?.[0];
+    const budget = fields.budget?.[0];
+    const tattooConcept = fields.tattooConcept?.[0];
+    const animalPersonEmotion = fields.animalPersonEmotion?.[0];
+    const abstractEnergy = fields.abstractEnergy?.[0];
+    const tattooSize = fields.tattooSize?.[0];
+    const colorPreference = fields.colorPreference?.[0];
+    const newsletterSignup = fields.newsletterSignup?.[0];
+    const inquiryType = fields.inquiryType?.[0] || 'tattoo';
 
     // Validate required fields
     if (!firstName || !lastName || !email || !tattooConcept) {
@@ -59,7 +55,7 @@ export default async function handler(
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email as string)) {
+    if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
@@ -70,9 +66,15 @@ export default async function handler(
     // Handle photo reference files
     Object.keys(files).forEach((key) => {
       if (key.startsWith('photoReference_')) {
-        const file = files[key] as formidable.File;
-        if (file) {
-          photoReferences.push(file.filepath);
+        const fileArray = files[key] as formidable.File | formidable.File[];
+        if (Array.isArray(fileArray)) {
+          fileArray.forEach((file) => {
+            if (file && file.filepath) {
+              photoReferences.push(file.filepath);
+            }
+          });
+        } else if (fileArray && fileArray.filepath) {
+          photoReferences.push(fileArray.filepath);
         }
       }
     });
@@ -80,9 +82,15 @@ export default async function handler(
     // Handle placement photo files
     Object.keys(files).forEach((key) => {
       if (key.startsWith('placementPhoto_')) {
-        const file = files[key] as formidable.File;
-        if (file) {
-          placementPhotos.push(file.filepath);
+        const fileArray = files[key] as formidable.File | formidable.File[];
+        if (Array.isArray(fileArray)) {
+          fileArray.forEach((file) => {
+            if (file && file.filepath) {
+              placementPhotos.push(file.filepath);
+            }
+          });
+        } else if (fileArray && fileArray.filepath) {
+          placementPhotos.push(fileArray.filepath);
         }
       }
     });
@@ -99,25 +107,46 @@ Phone: ${phone}
 Newsletter Signup: ${newsletterSignup === 'true' ? 'Yes' : 'No'}
     `.trim();
 
+    // Debug: Log the values being inserted
+    console.log('Inquiry data being inserted:', {
+      name: `${firstName} ${lastName}`,
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      phone: phone,
+      budget: budget,
+      tattoo_concept: tattooConcept,
+      animal_person_emotion: animalPersonEmotion,
+      abstract_energy: abstractEnergy,
+      tattoo_size: tattooSize,
+      color_preference: colorPreference,
+      photo_references: photoReferences,
+      placement_photos: placementPhotos,
+      newsletter_signup: newsletterSignup,
+      inquiry_type: inquiryType,
+      message: message,
+    });
+
     // Insert inquiry into database
     const [newInquiry] = await db.insert(inquiries).values({
-      first_name: firstName as string,
-      last_name: lastName as string,
-      email: email as string,
-      phone: phone as string || null,
-      budget: budget as string || null,
-      tattoo_concept: tattooConcept as string,
-      animal_person_emotion: animalPersonEmotion as string || null,
-      abstract_energy: abstractEnergy as string || null,
-      tattoo_size: tattooSize as string || null,
-      color_preference: colorPreference as string || null,
-      photo_references: photoReferences.length > 0 ? JSON.stringify(photoReferences) : null,
-      placement_photos: placementPhotos.length > 0 ? JSON.stringify(placementPhotos) : null,
-      newsletter_signup: newsletterSignup === 'true' ? 1 : 0,
-      inquiry_type: inquiryType as string,
-      message, // Legacy field
+      name: `${firstName} ${lastName}`, // Required field
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      phone: phone || null,
+      budget: budget || null,
+      tattoo_concept: tattooConcept,
+      animal_person_emotion: animalPersonEmotion || null,
+      abstract_energy: abstractEnergy || null,
+      tattoo_size: tattooSize || null,
+      color_preference: colorPreference || null,
+      photo_references: photoReferences && photoReferences.length > 0 ? JSON.stringify(photoReferences) : null,
+      placement_photos: placementPhotos && placementPhotos.length > 0 ? JSON.stringify(placementPhotos) : null,
+      newsletter_signup: newsletterSignup === 'true' ? 1 : 0, // integer
+      inquiry_type: inquiryType,
+      message: message || '', // Required field - use empty string instead of null
       status: 'new',
-      email_sent: 0,
+      email_sent: 0, // integer
     }).returning();
 
     // Send email notification to Andrea
