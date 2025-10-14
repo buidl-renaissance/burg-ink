@@ -297,7 +297,7 @@ const InquiriesPage: FC = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <AdminLayout currentPage="inquiries">
         <PageContainer>
           <LoadingSpinner>Loading inquiries...</LoadingSpinner>
         </PageContainer>
@@ -306,7 +306,7 @@ const InquiriesPage: FC = () => {
   }
 
   return (
-    <AdminLayout>
+    <AdminLayout currentPage="inquiries">
       <PageContainer>
         <Header>
           <Title>Inquiries</Title>
