@@ -28,41 +28,72 @@ const Filters = styled.div`
 `;
 
 const Select = styled.select`
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: white;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  
+  &:hover {
+    border-color: #96885f;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+  }
+  
+  &:disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+  }
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
 `;
 
 const Th = styled.th`
   background: #f8f9fa;
-  padding: 1rem;
+  padding: 1.25rem 1rem;
   text-align: left;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #dee2e6;
+  color: #2c3e50;
+  border-bottom: 2px solid #e9ecef;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const Td = styled.td`
-  padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
-  vertical-align: top;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+  font-size: 0.9rem;
 `;
 
 const StatusBadge = styled.span<{ status: string }>`
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
   background: ${({ status }) => {
     switch (status) {
       case 'new': return '#e3f2fd';
@@ -81,6 +112,15 @@ const StatusBadge = styled.span<{ status: string }>`
       default: return '#757575';
     }
   }};
+  border: 1px solid ${({ status }) => {
+    switch (status) {
+      case 'new': return '#bbdefb';
+      case 'contacted': return '#ffcc02';
+      case 'completed': return '#c8e6c9';
+      case 'archived': return '#e0e0e0';
+      default: return '#e0e0e0';
+    }
+  }};
 `;
 
 const MessagePreview = styled.div`
@@ -89,6 +129,70 @@ const MessagePreview = styled.div`
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  
+  &:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+  }
+`;
+
+const ContactInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const EmailLink = styled.a`
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+`;
+
+const PhoneLink = styled.a`
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: #495057;
+    text-decoration: underline;
+  }
+`;
+
+const DateDisplay = styled.div`
+  color: #6c757d;
+  font-size: 0.85rem;
+  font-weight: 500;
+`;
+
+const NameDisplay = styled.div`
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+`;
+
+const TypeDisplay = styled.div`
+  text-transform: capitalize;
+  color: #6c757d;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  display: inline-block;
 `;
 
 const Modal = styled.div<{ isOpen: boolean }>`
@@ -357,17 +461,27 @@ const InquiriesPage: FC = () => {
           <tbody>
             {inquiries.map((inquiry) => (
               <tr key={inquiry.id}>
-                <Td>{formatDate(inquiry.created_at)}</Td>
-                <Td>{inquiry.name}</Td>
                 <Td>
-                  <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
-                  {inquiry.phone && (
-                    <div>
-                      <a href={`tel:${inquiry.phone}`}>{inquiry.phone}</a>
-                    </div>
-                  )}
+                  <DateDisplay>{formatDate(inquiry.created_at)}</DateDisplay>
                 </Td>
-                <Td style={{ textTransform: 'capitalize' }}>{inquiry.inquiry_type}</Td>
+                <Td>
+                  <NameDisplay>{inquiry.name}</NameDisplay>
+                </Td>
+                <Td>
+                  <ContactInfo>
+                    <EmailLink href={`mailto:${inquiry.email}`}>
+                      {inquiry.email}
+                    </EmailLink>
+                    {inquiry.phone && (
+                      <PhoneLink href={`tel:${inquiry.phone}`}>
+                        {inquiry.phone}
+                      </PhoneLink>
+                    )}
+                  </ContactInfo>
+                </Td>
+                <Td>
+                  <TypeDisplay>{inquiry.inquiry_type}</TypeDisplay>
+                </Td>
                 <Td>
                   <StatusBadge status={inquiry.status}>
                     {inquiry.status}
