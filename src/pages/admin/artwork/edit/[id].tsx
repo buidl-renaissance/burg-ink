@@ -39,7 +39,7 @@ export default function EditArtworkPage() {
     }
   };
 
-  const handleSuccess = (updatedArtwork: Artwork) => {
+  const handleSuccess = () => {
     // Redirect back to artwork list after successful update
     router.push('/admin/artwork');
   };

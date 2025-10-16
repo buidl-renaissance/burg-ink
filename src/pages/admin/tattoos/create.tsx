@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
 import { AdminLayout } from '@/components/AdminLayout';
-import { TattooForm, TattooFormRef, Tattoo } from '@/components/TattooForm';
+import { TattooForm, TattooFormRef } from '@/components/TattooForm';
 import { FaTimes, FaCheck } from 'react-icons/fa';
 
 export default function CreateTattooPage() {
@@ -12,7 +12,7 @@ export default function CreateTattooPage() {
   const formRef = useRef<TattooFormRef>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSuccess = (tattoo: Tattoo) => {
+  const handleSuccess = () => {
     // Redirect back to tattoos list after successful creation
     router.push('/admin/tattoos');
   };

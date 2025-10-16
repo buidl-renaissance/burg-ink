@@ -38,7 +38,7 @@ export default function EditTattooPage() {
     }
   };
 
-  const handleSuccess = (updatedTattoo: Tattoo) => {
+  const handleSuccess = () => {
     // Redirect back to tattoos list after successful update
     router.push('/admin/tattoos');
   };

@@ -44,9 +44,6 @@ const TattoosPage: FC<TattoosPageProps> = ({ tattoos }) => {
     router.push(`/tattoos/${tattoo.slug}`);
   };
 
-  // Get unique categories from tattoos
-  const categories = ['All', ...new Set(tattoos.map(t => t.category).filter(Boolean) as string[])];
-
   return (
     <PageLayout title="Tattoo Gallery">
       <PageContainer>
@@ -64,11 +61,19 @@ const TattoosPage: FC<TattoosPageProps> = ({ tattoos }) => {
                   description: tattoo.description || '',
                   image: tattoo.image || '',
                   type: 'tattoo',
-                  artist: tattoo.artist,
+                  artist: tattoo.artist ? {
+                    id: tattoo.artist.id,
+                    name: tattoo.artist.name,
+                    handle: tattoo.artist.slug || '',
+                    slug: tattoo.artist.slug || '',
+                    profile_picture: tattoo.artist.profile_picture || '',
+                    bio: tattoo.artist.bio || '',
+                    created_at: '',
+                    updated_at: '',
+                    deleted_at: null,
+                  } : undefined,
                   data: tattoo.data,
                   meta: tattoo.meta,
-                  created_at: tattoo.created_at || '',
-                  updated_at: tattoo.updated_at || '',
                 }} 
               />
             </ArtworkCardClickableContainer>

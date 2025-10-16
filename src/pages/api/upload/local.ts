@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    const [fields, files] = await form.parse(req);
+    const [, files] = await form.parse(req);
     const uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
 
     if (!uploadedFile) {

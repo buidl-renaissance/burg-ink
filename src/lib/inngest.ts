@@ -72,7 +72,7 @@ export async function triggerFileProcessing(
 
 // Utility function to trigger media analysis
 export async function triggerMediaAnalysis(
-  mediaId: number,
+  mediaId: string,
   imageUrl: string
 ) {
   return await inngest.send({
@@ -86,7 +86,7 @@ export async function triggerMediaAnalysis(
 
 // Utility function to trigger batch media analysis
 export async function triggerBatchMediaAnalysis(
-  mediaIds: number[] = []
+  mediaIds: string[] = []
 ) {
   return await inngest.send({
     name: "media.analyze.batch",

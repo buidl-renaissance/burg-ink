@@ -18,14 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get media processing status for the user
     const mediaRecords = await db.query.media.findMany({
       where: eq(media.user_id, user.id),
-      orderBy: (media, { desc }) => [desc(media.updated_at)],
+      orderBy: (media, { desc }) => [desc(media.created_at)],
       limit: 50,
     });
 
     // Get Google Drive sync status
     const driveAssets = await db.query.googleDriveAssets.findMany({
       where: eq(googleDriveAssets.user_id, user.id),
-      orderBy: (googleDriveAssets, { desc }) => [desc(googleDriveAssets.updated_at)],
+      orderBy: (googleDriveAssets, { desc }) => [desc(googleDriveAssets.created_at)],
       limit: 20,
     });
 
@@ -55,8 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         source: m.source,
         description: m.description,
         tags: m.tags ? JSON.parse(m.tags) : [],
-        spaces_url: m.spaces_url,
-        processed_at: m.processed_at,
+        original_url: m.original_url,
       }));
 
     res.status(200).json({

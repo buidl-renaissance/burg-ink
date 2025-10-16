@@ -20,8 +20,8 @@ export interface Tattoo {
   placement?: string;
   size?: string;
   style?: string;
-  meta?: any;
-  data?: any;
+  meta?: Record<string, unknown>;
+  data?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }

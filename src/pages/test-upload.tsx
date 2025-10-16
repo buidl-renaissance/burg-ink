@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { PageLayout } from '@/components/PageLayout';
+import PageLayout from '@/components/PageLayout';
 import { EnhancedUpload } from '@/components/EnhancedUpload';
 
 const TestContainer = styled.div`

@@ -92,23 +92,6 @@ const TextArea = styled.textarea`
   }
 `;
 
-const Select = styled.select`
-  padding: 0.75rem;
-  border: 2px solid #ddd;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-
-  &:focus {
-    outline: none;
-    border-color: #96885f;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0.6rem;
-    font-size: 0.9rem;
-  }
-`;
-
 const SubmitButton = styled.button`
   padding: 1rem 2rem;
   background-color: transparent;
@@ -356,13 +339,6 @@ const ArtistStatement = styled.div`
     margin: 1.5rem 0;
     padding: 0.8rem;
   }
-`;
-
-const BudgetInfo = styled.div`
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 0.5rem;
-  font-style: italic;
 `;
 
 const InquirePage: FC = () => {
@@ -735,7 +711,7 @@ const InquirePage: FC = () => {
                 />
               </FileUploadArea>
               <SectionDescription>
-                Where do you want this tattoo placed? Please attach photos of the area you had in mind. *Tip: take photo with camera parallel to body surface with good lighting- it's best to find a friend to help!*
+                Where do you want this tattoo placed? Please attach photos of the area you had in mind. *Tip: take photo with camera parallel to body surface with good lighting- it&apos;s best to find a friend to help!*
               </SectionDescription>
               {placementPhotos.length > 0 && (
                 <FileList>

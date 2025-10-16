@@ -3,7 +3,7 @@
 import styled from 'styled-components';
 import Link from 'next/link';
 import { useState } from 'react';
-import { FaHome, FaPalette, FaUsers, FaCalendar, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark } from 'react-icons/fa';
+import { FaHome, FaPalette, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark } from 'react-icons/fa';
 
 interface AdminLayoutProps {
   children: React.ReactNode;

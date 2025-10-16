@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import { useRouter } from 'next/router';
 import { AdminLayout } from '@/components/AdminLayout';
 import { ArtworkForm } from '@/components/ArtworkForm';
-import { Artwork } from '@/utils/interfaces';
 import { FaTimes, FaCheck } from 'react-icons/fa';
 
 export default function CreateArtworkPage() {
@@ -13,7 +12,7 @@ export default function CreateArtworkPage() {
   const formRef = useRef<{ submitForm: () => void }>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSuccess = (artwork: Artwork) => {
+  const handleSuccess = () => {
     // Redirect back to artwork list after successful creation
     router.push('/admin/artwork');
   };
