@@ -19,7 +19,6 @@
     "@aws-sdk/client-s3": "^3.837.0",
     "@aws-sdk/lib-storage": "^3.896.0",
     "@aws-sdk/s3-request-presigner": "^3.837.0",
-    "@img/sharp-libvips-darwin-arm64": "1.2.3",
     "@langchain/community": "^0.3.47",
     "@langchain/core": "^0.3.61",
     "@langchain/openai": "^0.5.16",
