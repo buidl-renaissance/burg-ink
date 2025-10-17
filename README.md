@@ -1,6 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Burg Ink - Artist Admin Panel
 
-## Getting Started
+A comprehensive Next.js application for managing tattoo and artwork portfolios with intelligent media processing, automated workflows, and marketing assistance.
+
+## 📋 Project Overview
+
+This project provides a full-featured admin panel for artists to manage their portfolios, with features including:
+
+- **Media Management**: Upload, process, and organize tattoo and artwork images
+- **AI-Powered Classification**: Automatic detection and categorization of media
+- **Portfolio Management**: Create and manage tattoo and artwork entries
+- **Inquiry System**: Handle client inquiries and communications
+- **Marketing Assistant**: Generate captions, hashtags, and schedule social media posts
+- **Responsive Design**: Mobile-first admin interface with card-based layouts
+
+## ✨ Current Features
+
+### ✅ Implemented
+- **Media Upload & Processing**: Upload images with automatic thumbnail generation
+- **AI Image Analysis**: GPT-4o powered analysis for tattoos and artwork
+- **Portfolio Management**: Create and edit tattoo and artwork entries
+- **Inquiry System**: Handle client inquiries with mobile-responsive interface
+- **Admin Dashboard**: Comprehensive admin panel with navigation
+- **Settings Management**: Configure site settings and preferences
+- **Mobile Responsive**: Card-based layouts for mobile devices
+
+### 🚧 In Development
+- **Marketing Assistant**: Social media content generation and scheduling
+- **Automated Workflows**: Rule-based automation for media processing
+- **Taxonomy Management**: Admin-configurable categories and tags
+- **Audit Logging**: Track changes and user actions
+
+## 📚 Documentation
+
+For detailed implementation plans, feature specifications, and roadmap:
+
+**[📖 Product Requirements Document (PRD)](docs/PRD.md)**
+
+The PRD contains comprehensive information about:
+- Database schema and entity relationships
+- Upload intelligence and AI classification pipeline
+- Automated workflows and rule engine
+- Marketing assistant capabilities
+- Implementation roadmap and sprint planning
+
+## 🛠️ Technology Stack
+
+- **Frontend**: Next.js 13+ with TypeScript
+- **Styling**: Styled Components
+- **Database**: SQLite with Turso (cloud) / Drizzle ORM
+- **AI/ML**: OpenAI GPT-4o for image analysis and content generation
+- **Media Processing**: Sharp for image optimization
+- **Background Jobs**: Inngest for workflow automation
+- **File Storage**: DigitalOcean Spaces
+- **Email**: Resend for transactional emails
+- **Deployment**: Vercel
+
+## 🚀 Getting Started
 
 First, run the development server:
 

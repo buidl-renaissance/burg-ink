@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // Helper function to trigger batch resize
-async function triggerBatchResize(mediaIds: number[]) {
+async function triggerBatchResize(mediaIds: string[]) {
   const { inngest } = await import("@/lib/inngest");
   return await inngest.send({
     name: "media.resize.batch",

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useImperativeHandle, forwardRef, useRef } from 'react';
 import styled from 'styled-components';
-import { UploadButton } from './UploadButton';  
+import { MediaSelector } from './MediaSelector';
 import { createArtwork, updateArtwork, getArtist } from '@/utils/api';
 import { Artwork, Artist } from '@/utils/interfaces';
 import { ArtistSearch } from './ArtistSearch';
@@ -11,9 +11,17 @@ import Image from 'next/image';
 interface ArtworkFormProps {
   onSuccess?: (artwork: Artwork) => void;
   artwork?: Artwork | null;
+  hideSubmitButton?: boolean;
+  onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
-export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
+export interface ArtworkFormRef {
+  submitForm: () => void;
+}
+
+export const ArtworkForm = forwardRef<ArtworkFormRef, ArtworkFormProps>(
+  function ArtworkForm({ onSuccess, artwork, hideSubmitButton, onSubmittingChange }, ref) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [title, setTitle] = useState(artwork?.title || '');
   const [description, setDescription] = useState(artwork?.description || '');
   const [artist, setArtist] = useState<Artist | null>(artwork?.artist || null);
@@ -45,20 +53,19 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
     }
   }, [artwork]);
 
-  const handleUploadComplete = (urls: string[]) => {
-    // For artwork form, we only use the first uploaded image
-    if (urls.length > 0) {
-      setImageUrl(urls[0]);
-      setStatus(null);
-    }
+  const handleMediaSelect = (url: string) => {
+    setImageUrl(url);
+    setStatus(null);
   };
 
-  const handleUploadError = (error: string) => {
-    setStatus({
-      message: `Failed to upload media: ${error}`,
-      isError: true,
-    });
-  };
+  // Expose submitForm method via ref
+  useImperativeHandle(ref, () => ({
+    submitForm: () => {
+      if (formRef.current) {
+        formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }
+  }));
 
   const isVideo = (url: string) => {
     return url.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i) || 
@@ -78,6 +85,7 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
     }
 
     setIsSubmitting(true);
+    onSubmittingChange?.(true);
     setStatus(null);
 
     try {
@@ -125,27 +133,25 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
       });
     } finally {
       setIsSubmitting(false);
+      onSubmittingChange?.(false);
     }
   };
 
   return (
-    <FormContainer>
-      <FormTitle>{artwork?.id ? 'Edit Artwork' : 'Create New Artwork'}</FormTitle>
-
-      <form onSubmit={handleSubmit}>
-        <UploadContainer>
-          <UploadText>Upload your artwork image or video</UploadText>
-
-          <UploadButton
+    <FormWrapper>
+      <form ref={formRef} onSubmit={handleSubmit}>
+        <FormGroup>
+          <Label>Select or Upload Media</Label>
+          <MediaSelector
+            selectedMediaUrl={imageUrl}
+            onSelect={handleMediaSelect}
             accept="image/*,video/*"
-            multiple={false}
-            onUploadComplete={handleUploadComplete}
-            onUploadError={handleUploadError}
-          >
-            {imageUrl ? 'Change Media' : 'Select Media'}
-          </UploadButton>
+          />
+        </FormGroup>
 
-          {imageUrl && (
+        {imageUrl && (
+          <PreviewSection>
+            <PreviewLabel>Selected Media Preview</PreviewLabel>
             <ImagePreview>
               {isVideo(imageUrl) ? (
                 <video
@@ -164,8 +170,8 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
                 />
               )}
             </ImagePreview>
-          )}
-        </UploadContainer>
+          </PreviewSection>
+        )}
 
         <FormGroup>
           <Label htmlFor="title">Artwork Title</Label>
@@ -212,29 +218,23 @@ export function ArtworkForm({ onSuccess, artwork }: ArtworkFormProps) {
           </StatusMessage>
         )}
 
-        <SubmitButton type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (artwork?.id ? 'Updating...' : 'Creating...') : (artwork?.id ? 'Update Artwork' : 'Create Artwork')}
-        </SubmitButton>
+        {!hideSubmitButton && (
+          <SubmitButton type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (artwork?.id ? 'Updating...' : 'Creating...') : (artwork?.id ? 'Update Artwork' : 'Create Artwork')}
+          </SubmitButton>
+        )}
       </form>
-    </FormContainer>
+    </FormWrapper>
   );
-}
+});
 
-const FormContainer = styled.div`
+// Set display name for better debugging
+ArtworkForm.displayName = 'ArtworkForm';
+
+const FormWrapper = styled.div`
   width: 100%;
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-`;
-
-const FormTitle = styled.h2`
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  color: #333;
-  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
 `;
 
 const FormGroup = styled.div`
@@ -300,30 +300,25 @@ const SubmitButton = styled.button`
   }
 `;
 
-const UploadContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+const PreviewSection = styled.div`
   margin-bottom: 1.5rem;
-  padding: 1.5rem;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
 `;
 
-const UploadText = styled.p`
-  margin-bottom: 1rem;
-  color: #666;
-  text-align: center;
+const PreviewLabel = styled.div`
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0.5rem;
 `;
 
 const ImagePreview = styled.div`
-  margin: 1rem 0;
+  margin: 0;
   position: relative;
   width: 100%;
-  height: 200px;
-  border-radius: 4px;
+  height: 300px;
+  border-radius: 8px;
   overflow: hidden;
+  border: 1px solid #e9ecef;
+  background: #f8f9fa;
 `;
 
 const StatusMessage = styled.div<{ isError?: boolean }>`

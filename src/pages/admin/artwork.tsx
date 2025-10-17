@@ -1,19 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { Artwork } from '@/utils/interfaces';
-import { ArtworkFormModal } from '@/components/ArtworkFormModal';
 import { AdminLayout } from '@/components/AdminLayout';
 import { StatusDropdown } from '@/components/StatusDropdown';
-import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload, FaSearch } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload } from 'react-icons/fa';
 import Image from 'next/image';
 import { ImportArtworkModal } from '@/components/ImportArtworkModal';
-import VectorSearchModal from '@/components/VectorSearchModal';
 import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
 import { GetServerSideProps } from 'next';
-import { TableContainer, Table, Th, Td, ActionButton, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
+import { TableContainer, Table, Th, Td, ActionButton, ActionButtons, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
 
 const AdminContainer = styled.div`
   max-width: 1400px;
@@ -72,41 +71,6 @@ const AddButton = styled.button`
   }
 `;
 
-const SearchButton = styled.button`
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background: #218838;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    justify-content: center;
-  }
-`;
-
-interface SearchResult {
-  id: number;
-  title: string;
-  description: string | null;
-  slug: string;
-  image: string | null;
-  category: string | null;
-  similarity: number;
-}
-
 export const getServerSideProps: GetServerSideProps = async () => {
   const artist = await getArtist(process.env.NEXT_PUBLIC_ARTIST_ID || '');
   return {
@@ -119,13 +83,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
 }
 
 export default function AdminArtworkPage({ artist }: { artist: Artist }) {
+  const router = useRouter();
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isVectorSearchOpen, setIsVectorSearchOpen] = useState(false);
 
   useEffect(() => {
     fetchArtworks();
@@ -168,26 +130,15 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
   };
 
   const handleEdit = (artwork: Artwork) => {
-    setEditingArtwork(artwork);
-    setIsModalOpen(true);
+    router.push(`/admin/artwork/edit/${artwork.id}`);
   };
 
   const handleView = (artwork: Artwork) => {
     window.open(`/artwork/${artwork.slug}`, '_blank');
   };
 
-  const handleArtworkCreated = (artwork: Artwork) => {
-    if (editingArtwork) {
-      setArtworks(artworks.map(a => a.id === artwork.id ? artwork : a));
-      setEditingArtwork(null);
-    } else {
-      setArtworks([artwork, ...artworks]);
-    }
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingArtwork(null);
+  const handleCreateNew = () => {
+    router.push('/admin/artwork/create');
   };
 
   const handleImportArtwork = (imported: Artwork[]) => {
@@ -204,15 +155,6 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
     ]);
   };
 
-  const handleVectorSearchSelect = (searchResult: SearchResult) => {
-    // Find the artwork in the current list and scroll to it
-    const artwork = artworks.find(a => a.id === searchResult.id);
-    if (artwork) {
-      // You could add highlighting or scrolling logic here
-      console.log('Selected artwork from vector search:', artwork);
-    }
-  };
-
   if (loading) {
     return (
       <AdminLayout currentPage="artwork">
@@ -227,10 +169,7 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
         <Header>
           <Title>Artwork Management</Title>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <SearchButton onClick={() => setIsVectorSearchOpen(true)}>
-              <FaSearch /> AI Search
-            </SearchButton>
-            <AddButton onClick={() => setIsModalOpen(true)}>
+            <AddButton onClick={handleCreateNew}>
               <FaPlus /> Add Artwork
             </AddButton>
             <AddButton onClick={() => setIsImportModalOpen(true)}>
@@ -269,7 +208,7 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
               <tbody>
                 {artworks.map((artwork) => (
                   <tr key={artwork.id}>
-                    <Td>
+                    <Td width="80px">
                       <ImageCell>
                         {artwork.image && (
                           <Image
@@ -300,27 +239,29 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
                       />
                     </Td>
                     <Td>
-                      <ActionButton
-                        className="view"
-                        onClick={() => handleView(artwork)}
-                        title="View"
-                      >
-                        <FaEye />
-                      </ActionButton>
-                      <ActionButton
-                        className="edit"
-                        onClick={() => handleEdit(artwork)}
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </ActionButton>
-                      <ActionButton
-                        className="delete"
-                        onClick={() => handleDelete(artwork.id)}
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </ActionButton>
+                      <ActionButtons>
+                        <ActionButton
+                          className="view"
+                          onClick={() => handleView(artwork)}
+                          title="View"
+                        >
+                          <FaEye />
+                        </ActionButton>
+                        <ActionButton
+                          className="edit"
+                          onClick={() => handleEdit(artwork)}
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </ActionButton>
+                        <ActionButton
+                          className="delete"
+                          onClick={() => handleDelete(artwork.id)}
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </ActionButton>
+                      </ActionButtons>
                     </Td>
                   </tr>
                 ))}
@@ -329,25 +270,11 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
           )}
         </TableContainer>
 
-        <ArtworkFormModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          onSuccess={handleArtworkCreated}
-          title={editingArtwork ? 'Edit Artwork' : 'Create New Artwork'}
-          artwork={editingArtwork}
-        />
-
         <ImportArtworkModal
           artist={artist}
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           onImport={handleImportArtwork}
-        />
-
-        <VectorSearchModal
-          isOpen={isVectorSearchOpen}
-          onClose={() => setIsVectorSearchOpen(false)}
-          onSelectArtwork={handleVectorSearchSelect}
         />
       </AdminContainer>
     </AdminLayout>

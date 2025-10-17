@@ -57,6 +57,30 @@ export const artwork = sqliteTable("artwork", {
   typeIdx: index("artwork_type_idx").on(table.type),
 }));
 
+// Tattoos table
+export const tattoos = sqliteTable("tattoos", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  artist_id: integer("artist_id").references(() => artists.id),
+  image: text("image"), // Main tattoo image
+  category: text("category"), // Traditional, Japanese, Geometric, Floral, Blackwork, Watercolor, etc.
+  placement: text("placement"), // Body placement (arm, leg, back, etc.)
+  size: text("size"), // small, medium, large
+  style: text("style"), // Style description
+  meta: text("meta"), // JSON string for additional metadata
+  data: text("data"), // JSON string for additional data
+  embedding: blob("embedding"), // Float32Array vector as binary
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: text("deleted_at"),
+}, (table) => ({
+  slugIdx: uniqueIndex("tattoos_slug_idx").on(table.slug),
+  artistIdx: index("tattoos_artist_idx").on(table.artist_id),
+  categoryIdx: index("tattoos_category_idx").on(table.category),
+}));
+
 // Content table for artwork media
 export const content = sqliteTable("content", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -197,41 +221,83 @@ export const googleDriveAssets = sqliteTable("google_drive_assets", {
   folderIdx: index("gdrive_folder_idx").on(table.folder_id),
 }));
 
-// Media table for storing media assets from various sources
+// Media table for storing media assets from various sources (matching actual database after migration 0016)
 export const media = sqliteTable("media", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  user_id: integer("user_id").references(() => users.id).notNull(),
-  source: text("source").notNull(), // 'google_drive', 'upload', 'url', etc.
-  source_id: text("source_id"), // Original file ID from source
-  filename: text("filename").notNull(),
-  mime_type: text("mime_type").notNull(),
-  size: integer("size"),
-  width: integer("width"),
-  height: integer("height"),
-  spaces_key: text("spaces_key"), // DigitalOcean Spaces object key (original)
-  spaces_url: text("spaces_url"), // DigitalOcean Spaces public URL (original) - keeping for backward compatibility
-  original_url: text("original_url"), // URL for original image
-  medium_url: text("medium_url"), // URL for medium sized image (800px width)
-  thumbnail_url: text("thumbnail_url"), // URL for thumbnail image (200px width)
-  alt_text: text("alt_text"), // Accessibility text for the image
-  processing_status: text("processing_status").default("pending"), // 'pending', 'processing', 'completed', 'failed'
-  ai_analysis: text("ai_analysis"), // JSON string of AI analysis results
-  metadata: text("metadata"), // JSON string of additional metadata
-  tags: text("tags"), // JSON string of extracted tags
+  id: text("id").primaryKey(), // Text UUID as per migration 0016
+  original_url: text("original_url").notNull(), // Snake case as in database
+  medium_url: text("medium_url"), // Snake case as in database
+  thumbnail_url: text("thumbnail_url"), // Snake case as in database
+  source: text("source").notNull(), // 'local' | 'gdrive'
+  source_id: text("source_id"), // Optional source ID for tracking
+  tags: text("tags").default("[]"), // JSON string as in database
+  title: text("title"), // Added from media-manager
   description: text("description"), // AI-generated description
-  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
-  processed_at: text("processed_at"),
+  alt_text: text("alt_text"), // Snake case as in database
+  created_at: integer("created_at").default(sql`(unixepoch())`).notNull(), // Unix timestamp
+  user_id: integer("user_id").references(() => users.id), // Optional user reference
+  filename: text("filename"), // Keep filename for compatibility
+  mime_type: text("mime_type"), // Keep mime type
+  size: integer("size"), // Keep size
+  width: integer("width"), // Original image width
+  height: integer("height"), // Original image height
+  processing_status: text("processing_status").default("pending"), // Keep processing status
+  // New classification fields
+  detected_type: text("detected_type"), // 'tattoo' | 'artwork' | 'unknown'
+  detection_confidence: text("detection_confidence"), // 0.0 to 1.0 as text
+  detections: text("detections"), // JSON blob for detailed AI classification results
+  suggested_entity_id: integer("suggested_entity_id"), // Track if entity was created from this media
+  suggested_entity_type: text("suggested_entity_type"), // 'tattoo' | 'artwork'
 }, (table) => ({
   sourceIdx: index("media_source_idx").on(table.source),
   userIdx: index("media_user_idx").on(table.user_id),
   statusIdx: index("media_status_idx").on(table.processing_status),
   sourceIdIdx: index("media_source_id_idx").on(table.source_id),
+  detectedTypeIdx: index("media_detected_type_idx").on(table.detected_type),
+  confidenceIdx: index("media_confidence_idx").on(table.detection_confidence),
+}));
+
+// Taxonomy table for admin-configurable categories and tags
+export const taxonomy = sqliteTable("taxonomy", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  namespace: text("namespace").notNull(), // e.g., 'tattoo.style', 'tattoo.placement', 'artwork.category'
+  key: text("key").notNull(), // Unique within namespace
+  label: text("label").notNull(), // Display name
+  description: text("description"), // Optional description
+  order: integer("order").default(0), // For sorting within namespace
+  is_active: integer("is_active").default(1), // Boolean flag
+  parent_id: integer("parent_id"), // Self-reference for hierarchical taxonomies (no foreign key to avoid circular reference)
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  namespaceKeyIdx: uniqueIndex("taxonomy_namespace_key_idx").on(table.namespace, table.key),
+  namespaceIdx: index("taxonomy_namespace_idx").on(table.namespace),
+  parentIdx: index("taxonomy_parent_idx").on(table.parent_id),
+  activeIdx: index("taxonomy_active_idx").on(table.is_active),
+}));
+
+// Workflow rules table for automation rules
+export const workflowRules = sqliteTable("workflow_rules", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(), // e.g., "Auto-suggest tattoo creation"
+  description: text("description"), // Optional description
+  trigger: text("trigger").notNull(), // 'on_upload', 'on_classification', 'on_publish'
+  conditions: text("conditions").notNull(), // JSON - e.g., {"detected_type": "tattoo", "min_confidence": 0.7}
+  actions: text("actions").notNull(), // JSON - e.g., [{"type": "flag_media"}, {"type": "notify_admin"}]
+  is_enabled: integer("is_enabled").default(1), // Boolean flag
+  priority: integer("priority").default(0), // Execution order (lower numbers execute first)
+  last_fired_at: text("last_fired_at"), // Timestamp of last execution
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  enabledIdx: index("workflow_enabled_idx").on(table.is_enabled),
+  triggerIdx: index("workflow_trigger_idx").on(table.trigger),
+  priorityIdx: index("workflow_priority_idx").on(table.priority),
 }));
 
 // Inquiries table for storing customer inquiries
 export const inquiries = sqliteTable("inquiries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
   first_name: text("first_name").notNull(),
   last_name: text("last_name").notNull(),
   email: text("email").notNull(),

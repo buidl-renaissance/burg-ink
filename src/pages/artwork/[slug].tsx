@@ -11,13 +11,7 @@ interface ArtworkDetailPageProps {
 
 export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
   return (
-    <PageLayout 
-      title={artwork.title}
-      backLink={{
-        href: "/artwork",
-        text: "Back to Gallery"
-      }}
-    >
+    <PageLayout>
       <Head>
         <title>{artwork.title} | Artwork Gallery</title>
         <meta name="description" content={artwork.description} />
@@ -172,8 +166,8 @@ const Description = styled.p`
 `;
 
 const MetaInfo = styled.div`
-  margin-top: auto;
-  padding-top: 2rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #eee;
 `;
 

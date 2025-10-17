@@ -46,19 +46,19 @@ import { eq } from "drizzle-orm";
  */
 
 export interface ProcessMediaResizePayload {
-  mediaId: number;
+  mediaId: string;
 }
 
 export interface ProcessNewUploadResizePayload {
   originalName: string;
   fileId: string;
   mimeType: string;
-  mediaId: number;
+  mediaId: string;
   originalUrl: string; // URL to download the original image
 }
 
 export interface ProcessBatchResizePayload {
-  mediaIds: number[];
+  mediaIds: string[];
 }
 
 /**
@@ -99,12 +99,11 @@ export const processMediaResize = inngest.createFunction(
 
     // Download the original image
     const imageBuffer = await step.run("download-original", async () => {
-      if (!mediaRecord.spaces_url && !mediaRecord.original_url) {
+      if (!mediaRecord.original_url) {
         throw new Error(`No original URL found for media ${mediaId}`);
       }
 
-      const imageUrl = mediaRecord.original_url || mediaRecord.spaces_url;
-      const response = await fetch(imageUrl!);
+      const response = await fetch(mediaRecord.original_url);
       
       if (!response.ok) {
         throw new Error(`Failed to download image: ${response.statusText}`);
@@ -134,9 +133,9 @@ export const processMediaResize = inngest.createFunction(
 
       return await storageService.storeImageSizes(
         imageSizes,
-        mediaRecord.filename,
+        mediaRecord.filename ?? 'unknown',
         `${mediaRecord.id}-resized`,
-        mediaRecord.mime_type
+        mediaRecord.mime_type ?? 'image/jpeg'
       );
     });
 
@@ -149,17 +148,6 @@ export const processMediaResize = inngest.createFunction(
           thumbnail_url: storedImages.thumbnail.url,
           width: processedImages.originalDimensions.width,
           height: processedImages.originalDimensions.height,
-          metadata: JSON.stringify({
-            ...JSON.parse(mediaRecord.metadata || '{}'),
-            resizing: {
-              originalDimensions: processedImages.originalDimensions,
-              mediumDimensions: processedImages.mediumDimensions,
-              thumbnailDimensions: processedImages.thumbnailDimensions,
-              format: processedImages.format,
-              processedAt: new Date().toISOString(),
-            }
-          }),
-          updated_at: new Date().toISOString(),
         })
         .where(eq(media.id, mediaId));
     });
@@ -168,7 +156,7 @@ export const processMediaResize = inngest.createFunction(
     if (mediaRecord.processing_status === 'pending') {
       await step.run("trigger-ai-analysis", async () => {
         console.log(`Triggering AI analysis for resized media: ${mediaRecord.filename} (${mediaId})`);
-        await triggerAIAnalysis(mediaId, storedImages.medium.url, originalName, mimeType);
+        await triggerAIAnalysis(mediaId, storedImages.medium.url, mediaRecord.filename ?? undefined, mediaRecord.mime_type ?? undefined);
       });
     }
 
@@ -240,20 +228,8 @@ export const processNewUploadResize = inngest.createFunction(
           original_url: storedImages.original.url,
           medium_url: storedImages.medium.url,
           thumbnail_url: storedImages.thumbnail.url,
-          spaces_url: storedImages.original.url, // Backward compatibility
-          spaces_key: storedImages.original.key,
           width: processedImages.originalDimensions.width,
           height: processedImages.originalDimensions.height,
-          metadata: JSON.stringify({
-            resizing: {
-              originalDimensions: processedImages.originalDimensions,
-              mediumDimensions: processedImages.mediumDimensions,
-              thumbnailDimensions: processedImages.thumbnailDimensions,
-              format: processedImages.format,
-              processedAt: new Date().toISOString(),
-            }
-          }),
-          updated_at: new Date().toISOString(),
         })
         .where(eq(media.id, mediaId));
     });
@@ -295,7 +271,7 @@ export const processBatchResize = inngest.createFunction(
         ? records.filter(r => mediaIds.includes(r.id))
         : records.filter(r => !r.medium_url || !r.thumbnail_url);
       
-      return filteredRecords.filter(r => r.spaces_url || r.original_url);
+      return filteredRecords.filter(r => r.original_url);
     });
 
     // Trigger individual resize jobs
@@ -320,7 +296,7 @@ export const processBatchResize = inngest.createFunction(
 /**
  * Utility function to trigger media resize
  */
-export const triggerMediaResize = async (mediaId: number) => {
+export const triggerMediaResize = async (mediaId: string) => {
   return await inngest.send({
     name: "media.resize.process",
     data: { mediaId }
@@ -334,7 +310,7 @@ export const triggerNewUploadResize = async (
   originalName: string,
   fileId: string,
   mimeType: string,
-  mediaId: number,
+  mediaId: string,
   originalUrl: string
 ) => {
   return await inngest.send({
@@ -352,7 +328,7 @@ export const triggerNewUploadResize = async (
 /**
  * Utility function to trigger AI analysis
  */
-export const triggerAIAnalysis = async (mediaId: number, imageUrl: string, filename?: string, mimeType?: string) => {
+export const triggerAIAnalysis = async (mediaId: string, imageUrl: string, filename?: string, mimeType?: string) => {
   return await inngest.send({
     name: "media.analyze",
     data: {

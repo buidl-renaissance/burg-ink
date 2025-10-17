@@ -1,5 +1,5 @@
 import { Artwork } from '@/utils/interfaces';
-import { db, artwork, artists } from '../../db';
+import { db, artwork, artists, tattoos } from '../../db';
 import { eq, desc, asc, isNull, and } from 'drizzle-orm';
 
 // Re-export the database instance
@@ -224,4 +224,93 @@ export async function getArtistBySlug(slug: string) {
     .limit(1);
   
   return result[0] || null;
+}
+
+// Tattoo helper functions
+export async function getAllTattoos() {
+  const result = await db
+    .select()
+    .from(tattoos)
+    .leftJoin(artists, eq(tattoos.artist_id, artists.id))
+    .where(isNull(tattoos.deleted_at))
+    .orderBy(desc(tattoos.created_at));
+  
+  return result.map(row => {
+    let parsedMeta = {};
+    let parsedData = {};
+    try {
+      parsedMeta = row.tattoos.meta ? JSON.parse(row.tattoos.meta) : {};
+    } catch (error) {
+      console.error('Error parsing meta for tattoo:', row.tattoos.id, error);
+      parsedMeta = {};
+    }
+    try {
+      parsedData = row.tattoos.data ? JSON.parse(row.tattoos.data) : {};
+    } catch (error) {
+      console.error('Error parsing data for tattoo:', row.tattoos.id, error);
+      parsedData = {};
+    }
+    
+    return {
+      ...row.tattoos,
+      meta: parsedMeta,
+      data: parsedData,
+      artist: row.artists ? {
+        id: row.artists.id,
+        name: row.artists.name,
+        slug: row.artists.slug,
+        profile_picture: row.artists.profile_picture,
+        bio: row.artists.bio,
+        created_at: row.artists.created_at,
+        updated_at: row.artists.updated_at,
+        deleted_at: row.artists.deleted_at,
+      } : undefined,
+    };
+  });
+}
+
+export async function getTattooBySlug(slug: string) {
+  const result = await db
+    .select()
+    .from(tattoos)
+    .leftJoin(artists, eq(tattoos.artist_id, artists.id))
+    .where(and(
+      eq(tattoos.slug, slug),
+      isNull(tattoos.deleted_at)
+    ))
+    .limit(1);
+  
+  if (result.length === 0) return null;
+  
+  const row = result[0];
+  let parsedMeta: Record<string, unknown> = {};
+  let parsedData: Record<string, unknown> = {};
+  
+  try {
+    parsedMeta = row.tattoos.meta ? JSON.parse(row.tattoos.meta) : {};
+  } catch (error) {
+    console.error('Error parsing meta for tattoo:', row.tattoos.id, error);
+  }
+  
+  try {
+    parsedData = row.tattoos.data ? JSON.parse(row.tattoos.data) : {};
+  } catch (error) {
+    console.error('Error parsing data for tattoo:', row.tattoos.id, error);
+  }
+  
+  return {
+    ...row.tattoos,
+    meta: parsedMeta,
+    data: parsedData,
+    artist: row.artists ? {
+      id: row.artists.id,
+      name: row.artists.name,
+      slug: row.artists.slug,
+      profile_picture: row.artists.profile_picture,
+      bio: row.artists.bio,
+      created_at: row.artists.created_at,
+      updated_at: row.artists.updated_at,
+      deleted_at: row.artists.deleted_at,
+    } : undefined,
+  };
 }

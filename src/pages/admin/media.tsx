@@ -3,29 +3,39 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { MediaUploader } from '@/components/MediaUploader';
-import { GoogleDrivePicker } from '@/components/GoogleDrivePicker';
-import { FaSearch, FaSort, FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaThLarge, FaTimes, FaPlus } from 'react-icons/fa';
+import { UploadMedia } from '@/components/UploadMedia';
+import { MediaProcessingIndicator } from '@/components/MediaProcessingIndicator';
+import { useMediaProcessing } from '@/hooks/useMediaProcessing';
+import { FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaList, FaTimes, FaPlus } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
 // Styled Components
-const Container = styled.div<{ sidebarOpen?: boolean }>`
+const Container = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
-
-  @media (min-width: 1400px) {
-    margin-right: ${props => props.sidebarOpen ? '400px' : '0'};
-    transition: margin-right 0.3s ease;
-  }
+  padding-bottom: 5rem;
 `;
 
 const Header = styled.div`
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 
   @media (max-width: 768px) {
     margin-bottom: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 `;
 
 const Title = styled.h1`
@@ -133,162 +143,153 @@ const UploadSuccess = styled.div`
   gap: 0.5rem;
 `;
 
-const Controls = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
+const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 0;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e9ecef;
 
   @media (max-width: 768px) {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 0;
   }
 `;
 
-const SearchSection = styled.div`
+const ToolbarLeft = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  max-width: 1000px;
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    width: 100%;
+    flex-wrap: wrap;
   }
 `;
 
 const SearchInput = styled.input`
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  
+  min-width: 200px;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #f9fafb;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0.75rem center;
+  background-size: 1.25rem;
+  transition: all 0.2s ease;
+
   &:focus {
     outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+    background: white;
+  }
+
+  &::placeholder {
+    color: #9ca3af;
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
-    font-size: 0.9rem;
+    width: 100%;
+    min-width: auto;
   }
 `;
 
-const SearchButton = styled.button`
-  background: #96885f;
-  color: white;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+const FilterDropdown = styled.select`
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #f9fafb;
+  color: #333;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem;
+  transition: all 0.2s ease;
+
   &:hover {
-    background: #7a6f4d;
+    border-color: #96885f;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    background: white;
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
+    padding: 0.65rem 2rem 0.65rem 0.85rem;
     font-size: 0.9rem;
   }
 `;
 
-const FiltersSection = styled.div`
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-  flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-`;
-
-const FilterGroup = styled.div`
+const ToolbarRight = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 
   @media (max-width: 768px) {
+    width: 100%;
     justify-content: space-between;
   }
 `;
 
-const FilterLabel = styled.label`
-  font-weight: 500;
-  color: #333;
-  font-size: 0.9rem;
-
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-  }
-`;
-
-const FilterSelect = styled.select`
-  padding: 0.5rem;
-  border: 1px solid #e9ecef;
+const UploadButton = styled.button`
+  background: #1a1a1a;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
   border-radius: 6px;
-  background: white;
-  font-size: 0.9rem;
-  
-  &:focus {
-    outline: none;
-    border-color: #96885f;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-    min-width: 120px;
-  }
-`;
-
-const SortButton = styled.button`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: #e9ecef;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-  }
-`;
-
-const ViewToggle = styled.div`
+  font-size: 0.95rem;
+  font-weight: 600;
   display: flex;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #333;
+  }
 
   @media (max-width: 768px) {
-    justify-content: center;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
   }
 `;
 
-const ViewButton = styled.button<{ active: boolean }>`
-  background: ${props => props.active ? '#96885f' : '#f8f9fa'};
-  color: ${props => props.active ? 'white' : '#333'};
-  border: 1px solid ${props => props.active ? '#96885f' : '#e9ecef'};
-  padding: 0.5rem;
+const ViewToggleButton = styled.button<{ active?: boolean }>`
+  padding: 0.75rem;
+  border: 1px solid ${props => props.active ? '#1a1a1a' : '#d1d5db'};
   border-radius: 6px;
+  background: ${props => props.active ? '#1a1a1a' : 'white'};
+  color: ${props => props.active ? 'white' : '#6c757d'};
   cursor: pointer;
-  transition: all 0.3s ease;
-  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+
   &:hover {
-    background: ${props => props.active ? '#7a6f4d' : '#e9ecef'};
+    background: ${props => props.active ? '#1a1a1a' : '#f9fafb'};
+    border-color: #1a1a1a;
   }
 
   @media (max-width: 768px) {
-    padding: 0.5rem;
+    padding: 0.65rem;
+    font-size: 1rem;
   }
 `;
 
@@ -335,40 +336,88 @@ const RetryButton = styled.button`
   }
 `;
 
-const StatsBar = styled.div`
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
+const BottomBarInner = styled.div<{ hasActions?: boolean }>`
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e9ecef;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: ${props => props.hasActions ? 'space-between' : 'flex-start'};
+  gap: 2rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+
+  ${props => props.hasActions && `
+    animation: highlightBar 0.5s ease;
+    background: linear-gradient(to right, #f0f9ff 0%, white 100%);
+  `}
+
+  @keyframes highlightBar {
+    0% {
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+    50% {
+      background: linear-gradient(to right, #dbeafe 0%, #f0f9ff 100%);
+      box-shadow: 0 -4px 20px rgba(59, 130, 246, 0.2);
+    }
+    100% {
+      background: linear-gradient(to right, #f0f9ff 0%, white 100%);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+  }
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
+    gap: 1rem;
+    font-size: 0.9rem;
+    flex-direction: ${props => props.hasActions ? 'row' : 'column'};
   }
 `;
 
-const StatItem = styled.div`
+const BottomBarText = styled.div`
+  color: #6c757d;
+  
+  strong {
+    color: #333;
+    font-weight: 600;
+  }
+`;
+
+const BottomBarActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-left: auto;
+  
+  @media (max-width: 768px) {
+    margin-left: 0;
+  }
+`;
+
+const BottomBarButton = styled.button<{ danger?: boolean }>`
+  background: ${props => props.danger ? '#dc3545' : '#96885f'};
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.danger ? '#c82333' : '#7a6f4d'};
+  }
 
   @media (max-width: 768px) {
-    justify-content: space-between;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
   }
-`;
-
-const StatLabel = styled.span`
-  font-weight: 500;
-  color: #6c757d;
-`;
-
-const StatValue = styled.span`
-  font-weight: 700;
-  color: #333;
 `;
 
 const MediaGrid = styled.div`
@@ -419,23 +468,11 @@ const PlaceholderThumbnail = styled.div`
   font-size: 1.2rem;
 `;
 
-const StatusBadge = styled.div<{ color: string }>`
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: ${props => props.color};
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-`;
-
 const MediaInfo = styled.div`
   padding: 1rem;
 `;
 
-const MediaTitle = styled.h3`
+const CardTitle = styled.h3`
   font-size: 1rem;
   font-weight: 600;
   color: #333;
@@ -545,18 +582,23 @@ const TileGrid = styled.div`
   margin-bottom: 2rem;
 `;
 
-const TileItem = styled.div`
+const TileItem = styled.div<{ selected?: boolean }>`
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: ${props => props.selected 
+    ? '0 8px 32px rgba(59, 130, 246, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.2)' 
+    : '0 2px 8px rgba(0, 0, 0, 0.1)'};
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   aspect-ratio: 1;
+  border: 3px solid ${props => props.selected ? '#3b82f6' : 'transparent'};
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: ${props => props.selected 
+      ? '0 12px 40px rgba(59, 130, 246, 0.7), 0 0 0 1px rgba(59, 130, 246, 0.3)' 
+      : '0 4px 12px rgba(0, 0, 0, 0.15)'};
   }
 `;
 
@@ -577,6 +619,21 @@ const TileImage = styled.div`
   }
 `;
 
+const TileCheckbox = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+    border-radius: 4px;
+  }
+`;
+
 const PlaceholderImage = styled.div`
   display: flex;
   align-items: center;
@@ -589,45 +646,149 @@ const PlaceholderImage = styled.div`
   font-size: 1.2rem;
 `;
 
-const SidebarOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-
-  @media (min-width: 1400px) {
-    display: none;
-  }
-`;
-
-const Sidebar = styled.div`
+// List View Styles
+const MediaTable = styled.div`
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  width: 80%;
-  max-width: 800px;
-  height: 80%;
-  max-height: 800px;
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+`;
 
-  @media (min-width: 1400px) {
-    position: fixed;
-    top: 80px;
-    right: 0;
-    width: 400px;
-    height: calc(100vh - 80px);
-    border-radius: 0;
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+const TableHeader = styled.div`
+  display: grid;
+  grid-template-columns: 30px 60px 1fr 120px 140px;
+  gap: 1rem;
+  padding: 1rem 1.5rem 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 35px 50px 1fr 100px;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
   }
 `;
+
+const TableHeaderCell = styled.div<{ align?: string }>`
+  text-align: ${props => props.align || 'left'};
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  
+  @media (max-width: 768px) {
+    &.hide-mobile {
+      display: none;
+    }
+  }
+`;
+
+const TableRow = styled.div<{ selected?: boolean }>`
+  display: grid;
+  grid-template-columns: 30px 60px 1fr 120px 140px;
+  gap: 1rem;
+  padding: 1rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background: ${props => props.selected ? 'rgba(59, 130, 246, 0.08)' : 'white'};
+
+  &:hover {
+    background: #f8f9fa;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 35px 50px 1fr 100px;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+`;
+
+const TableCell = styled.div<{ align?: string }>`
+  display: flex;
+  align-items: center;
+  text-align: ${props => props.align || 'left'};
+  color: #333;
+  font-size: 0.9rem;
+  min-width: 0;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    &.hide-mobile {
+      display: none;
+    }
+  }
+`;
+
+const TableCheckbox = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+    border-radius: 4px;
+  }
+`;
+
+const ListThumbnail = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 768px) {
+    width: 50px;
+    height: 50px;
+  }
+`;
+
+const FileInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+`;
+
+const FileName = styled.div`
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const FileSubtext = styled.div`
+  color: #6c757d;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 
 const SidebarHeader = styled.div`
   background: #96885f;
@@ -636,6 +797,17 @@ const SidebarHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: fixed;
+  top: 68px;
+  right: 0;
+  width: 400px;
+  z-index: 20;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: 768px) {
+    top: 0;
+    width: 100%;
+  }
 `;
 
 const SidebarTitle = styled.h2`
@@ -654,27 +826,54 @@ const CloseButton = styled.button`
 
 const SidebarContent = styled.div`
   flex: 1;
-  padding: 1rem;
+  padding: 0;
+  padding-top: 68px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding-top: 60px;
+  }
 `;
 
 const SidebarImage = styled.div`
   position: relative;
-  height: 300px;
   background: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  margin-bottom: 1rem;
+  width: 100%;
+  padding: 1.5rem 1.5rem 0;
+  
+  @media (max-width: 768px) {
+    padding: 1rem 1rem 0;
+  }
   
   img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    display: block;
   }
 `;
 
+const SidebarDetailsWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1rem 1.5rem 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem 1rem;
+  }
+`;
+
+const MediaTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+  word-break: break-word;
+`;
+  
 const SidebarSection = styled.div`
   margin-bottom: 1.5rem;
 `;
@@ -694,40 +893,48 @@ const DetailRow = styled.div`
 
 const DescriptionText = styled.p`
   color: #6c757d;
-  margin: 0;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
 `;
 
 const SidebarTags = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 `;
 
 const SidebarTag = styled.span`
   background: #e9ecef;
   color: #495057;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   font-weight: 500;
 `;
 
 const SidebarActions = styled.div`
   display: flex;
   gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 `;
 
 const SidebarActionButton = styled.button<{ danger?: boolean }>`
   background: ${props => props.danger ? '#dc3545' : '#96885f'};
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  flex: 1;
+  font-weight: 500;
+  min-width: fit-content;
   
   &:hover {
     background: ${props => props.danger ? '#c82333' : '#7a6f4d'};
@@ -739,26 +946,87 @@ const StatusValue = styled.span<{ color: string }>`
   font-weight: 500;
 `;
 
+// Classification Badge Components
+const ClassificationBadge = styled.div<{ type: string; confidence: number }>`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: ${props => {
+    if (props.type === 'tattoo') {
+      return props.confidence >= 0.8 ? '#22c55e' : props.confidence >= 0.6 ? '#eab308' : '#6b7280';
+    } else if (props.type === 'artwork') {
+      return props.confidence >= 0.8 ? '#3b82f6' : props.confidence >= 0.6 ? '#8b5cf6' : '#6b7280';
+    }
+    return '#6b7280';
+  }};
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+// const ClassificationBadgeList = styled.div`
+//   position: absolute;
+//   top: 0.5rem;
+//   left: 0.5rem;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 0.25rem;
+//   z-index: 10;
+// `;
+
+const EntityLinkedBadge = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  z-index: 10;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
 // Interfaces and Types
 interface MediaItem {
-  id: number;
+  id: string | number; // Support both for UUID and legacy integer IDs
   source: string;
-  source_id: string;
+  source_id?: string;
   filename: string;
   mime_type: string;
   size: number;
   width?: number;
   height?: number;
+  original_url?: string;
+  medium_url?: string;
   spaces_url?: string;
   thumbnail_url?: string;
-  processing_status: string;
+  processing_status?: string | null;
+  title?: string;
   description?: string;
-  tags: string[];
+  alt_text?: string;
+  tags?: string[];
   ai_analysis?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-  processed_at?: string;
+  // New classification fields
+  detected_type?: string | null;
+  detection_confidence?: string | null;
+  detections?: string | null;
+  suggested_entity_id?: number | null;
+  suggested_entity_type?: string | null;
+  created_at: number; // Unix timestamp in seconds
+  updated_at?: number;
+  processed_at?: number;
 }
 
 interface MediaResponse {
@@ -771,8 +1039,7 @@ interface MediaResponse {
   };
 }
 
-type ViewFormat = 'tile' | 'card';
-type PageSize = 30 | 60 | 90;
+type ViewFormat = 'tile' | 'card' | 'list';
 
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
@@ -788,36 +1055,38 @@ export default function AdminMedia() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('updated_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [confidenceFilter, setConfidenceFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState<PageSize>(30);
   const [viewFormat, setViewFormat] = useState<ViewFormat>('tile');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string | number>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
-  const [showGoogleDrivePicker, setShowGoogleDrivePicker] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     fetchMedia();
-  }, [currentPage, statusFilter, sourceFilter, sortBy, sortOrder, itemsPerPage, fetchMedia]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, sourceFilter, dateFilter, typeFilter, confidenceFilter]);
 
   const fetchMedia = async () => {
     try {
       setLoading(true);
       setError(null);
-      const offset = (currentPage - 1) * itemsPerPage;
+      const offset = (currentPage - 1) * 30;
       
       const params = new URLSearchParams({
-        limit: itemsPerPage.toString(),
+        limit: '30',
         offset: offset.toString(),
-        sort: sortBy,
-        order: sortOrder,
-        status: statusFilter,
         source: sourceFilter,
+        detected_type: typeFilter,
+        confidence_min: confidenceFilter === 'high' ? '0.8' : 
+                       confidenceFilter === 'medium' ? '0.6' : 
+                       confidenceFilter === 'low' ? '0.3' : '',
       });
 
       const response = await fetch(`/api/media?${params}`);
@@ -837,11 +1106,6 @@ export default function AdminMedia() {
     }
   };
 
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchMedia();
-  };
-
   const handleMediaClick = (item: MediaItem) => {
     setSelectedMedia(item);
     setSidebarOpen(true);
@@ -854,27 +1118,15 @@ export default function AdminMedia() {
 
   const handleUploadComplete = (urls: string[]) => {
     const fileCount = urls.length;
-    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} uploaded successfully!`);
-    // Refresh the media list to show the new uploads
+    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} uploaded successfully! Processing...`);
+    
+    // Immediately refresh to show new items with processing status
     fetchMedia();
-    // Clear success message after 5 seconds
-    setTimeout(() => setUploadSuccess(null), 5000);
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => setUploadSuccess(null), 3000);
   };
 
-  const handleGoogleDriveFiles = (files: Record<string, unknown>[]) => {
-    const fileCount = files.length;
-    setUploadSuccess(`${fileCount} file${fileCount > 1 ? 's' : ''} imported from Google Drive!`);
-    setShowGoogleDrivePicker(false);
-    // Refresh the media list to show the new uploads
-    fetchMedia();
-    // Clear success message after 5 seconds
-    setTimeout(() => setUploadSuccess(null), 5000);
-  };
-
-  const handleGoogleDriveError = (error: string) => {
-    console.error('Google Drive error:', error);
-    // You could show an error message to the user here
-  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -884,154 +1136,391 @@ export default function AdminMedia() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string | null) => {
     switch (status) {
-      case 'completed': return '#28a745';
       case 'processing': return '#ffc107';
       case 'failed': return '#dc3545';
+      case 'pending': return '#6c757d';
       default: return '#6c757d';
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status?: string | null) => {
     switch (status) {
-      case 'completed': return 'Completed';
       case 'processing': return 'Processing';
       case 'failed': return 'Failed';
       case 'pending': return 'Pending';
-      default: return status;
+      default: return status || '';
     }
   };
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const isProcessing = (item: MediaItem) => {
+    return item.processing_status === 'pending' || item.processing_status === 'processing';
+  };
+
+  // Classification helper functions
+  const getClassificationBadge = (item: MediaItem) => {
+    if (!item.detected_type || !item.detection_confidence) return null;
+    
+    const confidence = parseFloat(item.detection_confidence);
+    const type = item.detected_type;
+    
+    if (confidence < 0.5) return null; // Don't show low confidence classifications
+    
+    return (
+      <ClassificationBadge type={type} confidence={confidence}>
+        {type === 'tattoo' ? '💉' : type === 'artwork' ? '🎨' : '❓'} {type.charAt(0).toUpperCase() + type.slice(1)} {Math.round(confidence * 100)}%
+      </ClassificationBadge>
+    );
+  };
+
+  const hasEntityLink = (item: MediaItem) => {
+    return item.suggested_entity_id && item.suggested_entity_type;
+  };
+
+  const getEntityLinkIcon = (item: MediaItem) => {
+    if (!hasEntityLink(item)) return null;
+    
+    const icon = item.suggested_entity_type === 'tattoo' ? '💉' : '🎨';
+    return (
+      <EntityLinkedBadge title={`Linked to ${item.suggested_entity_type}`}>
+        {icon}
+      </EntityLinkedBadge>
+    );
+  };
+
+  const filterMediaByClassification = (mediaList: MediaItem[]) => {
+    let filtered = mediaList;
+
+    // Filter by detected type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.detected_type === typeFilter);
+    }
+
+    // Filter by confidence level
+    if (confidenceFilter !== 'all') {
+      filtered = filtered.filter(item => {
+        if (!item.detection_confidence) return false;
+        const confidence = parseFloat(item.detection_confidence);
+        
+        switch (confidenceFilter) {
+          case 'high': return confidence >= 0.8;
+          case 'medium': return confidence >= 0.6 && confidence < 0.8;
+          case 'low': return confidence >= 0.3 && confidence < 0.6;
+          case 'none': return confidence < 0.3 || !item.detected_type;
+          default: return true;
+        }
+      });
+    }
+
+    return filtered;
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.size === media.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(media.map(item => item.id)));
+    }
+  };
+
+  const handleSelectItem = (itemId: string | number) => {
+    const newSelectedItems = new Set(selectedItems);
+    if (newSelectedItems.has(itemId)) {
+      newSelectedItems.delete(itemId);
+    } else {
+      newSelectedItems.add(itemId);
+    }
+    setSelectedItems(newSelectedItems);
+  };
+
+  const handleEdit = () => {
+    // TODO: Implement edit functionality
+    console.log('Edit items:', Array.from(selectedItems));
+  };
+
+  const handleDelete = () => {
+    // TODO: Implement delete functionality
+    console.log('Delete items:', Array.from(selectedItems));
+  };
+
+  // Component to handle real-time updates for a single media item
+  const MediaItemWithProcessing: React.FC<{ item: MediaItem; children: React.ReactNode }> = ({ item, children }) => {
+    const shouldTrack = isProcessing(item);
+    const mediaId = String(item.id);
+    
+    useMediaProcessing({
+      mediaId,
+      enabled: shouldTrack,
+      pollInterval: 2000,
+      onComplete: () => {
+        // Refresh the media list when processing completes
+        fetchMedia();
+      },
+      onError: () => {
+        // Refresh on error too
+        fetchMedia();
+      },
+    });
+
+    return <>{children}</>;
+  };
+
+  const totalPages = Math.ceil(totalItems / 30);
+
+  // Sidebar content
+  const sidebarContent = selectedMedia && (
+    <>
+      <SidebarHeader>
+        <SidebarTitle>Media Details</SidebarTitle>
+        <CloseButton onClick={closeSidebar}>
+          <FaTimes />
+        </CloseButton>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarImage>
+          {(selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url) ? (
+            <img 
+              src={selectedMedia.original_url || selectedMedia.medium_url || selectedMedia.thumbnail_url} 
+              alt={selectedMedia.alt_text || selectedMedia.filename} 
+            />
+          ) : (
+            <PlaceholderImage>
+              <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
+            </PlaceholderImage>
+          )}
+        </SidebarImage>
+        
+        <SidebarDetailsWrapper>
+          <MediaTitle>{selectedMedia.title || selectedMedia.filename}</MediaTitle>
+          
+          {selectedMedia.description && (
+            <DescriptionText>{selectedMedia.description}</DescriptionText>
+          )}
+
+          {selectedMedia.tags && selectedMedia.tags.length > 0 && (
+            <SidebarTags>
+              {selectedMedia.tags.map((tag, index) => (
+                <SidebarTag key={index}>{tag}</SidebarTag>
+              ))}
+            </SidebarTags>
+          )}
+
+          <SidebarActions>
+            {selectedMedia.spaces_url && (
+              <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
+                <FaEye /> View
+              </SidebarActionButton>
+            )}
+            <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
+              <FaDownload /> Download
+            </SidebarActionButton>
+            <SidebarActionButton danger>
+              <FaTrash /> Delete
+            </SidebarActionButton>
+          </SidebarActions>
+
+          <SidebarSection>
+            <SectionTitle>File Information</SectionTitle>
+            <DetailRow>
+              <DetailLabel>Filename:</DetailLabel>
+              <DetailValue>{selectedMedia.filename}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Size:</DetailLabel>
+              <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Dimensions:</DetailLabel>
+              <DetailValue>
+                {selectedMedia.width && selectedMedia.height 
+                  ? `${selectedMedia.width} × ${selectedMedia.height}` 
+                  : 'Processing...'}
+              </DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Type:</DetailLabel>
+              <DetailValue>{selectedMedia.mime_type}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Source:</DetailLabel>
+              <DetailValue>{selectedMedia.source}</DetailValue>
+            </DetailRow>
+            {selectedMedia.processing_status && selectedMedia.processing_status !== 'completed' && (
+              <DetailRow>
+                <DetailLabel>Status:</DetailLabel>
+                <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
+                  {getStatusLabel(selectedMedia.processing_status)}
+                </StatusValue>
+              </DetailRow>
+            )}
+            {selectedMedia.detected_type && (
+              <DetailRow>
+                <DetailLabel>Classification:</DetailLabel>
+                <StatusValue color={selectedMedia.detected_type === 'tattoo' ? '#22c55e' : selectedMedia.detected_type === 'artwork' ? '#3b82f6' : '#6b7280'}>
+                  {selectedMedia.detected_type.charAt(0).toUpperCase() + selectedMedia.detected_type.slice(1)}
+                  {selectedMedia.detection_confidence && ` (${Math.round(parseFloat(selectedMedia.detection_confidence) * 100)}%)`}
+                </StatusValue>
+              </DetailRow>
+            )}
+            {selectedMedia.suggested_entity_type && (
+              <DetailRow>
+                <DetailLabel>Linked Entity:</DetailLabel>
+                <DetailValue>
+                  {selectedMedia.suggested_entity_type.charAt(0).toUpperCase() + selectedMedia.suggested_entity_type.slice(1)}
+                  {selectedMedia.suggested_entity_id && ` (ID: ${selectedMedia.suggested_entity_id})`}
+                </DetailValue>
+              </DetailRow>
+            )}
+          </SidebarSection>
+        </SidebarDetailsWrapper>
+      </SidebarContent>
+    </>
+  );
+
+  // Status bar content
+  const statusBarContent = (
+    <BottomBarInner hasActions={selectedItems.size > 0}>
+      {selectedItems.size > 0 ? (
+        <>
+          <BottomBarText>
+            <strong>{selectedItems.size}</strong> {selectedItems.size === 1 ? 'item' : 'items'} selected
+          </BottomBarText>
+          <BottomBarActions>
+            <BottomBarButton onClick={handleEdit}>
+              <FaEye /> Edit
+            </BottomBarButton>
+            <BottomBarButton danger onClick={handleDelete}>
+              <FaTrash /> Delete
+            </BottomBarButton>
+          </BottomBarActions>
+        </>
+      ) : (
+        <BottomBarText>
+          <strong>{media.length}</strong> of <strong>{totalItems}</strong>
+        </BottomBarText>
+      )}
+    </BottomBarInner>
+  );
 
   return (
-    <AdminLayout currentPage="media">
-      <Container sidebarOpen={sidebarOpen}>
+    <AdminLayout 
+      currentPage="media"
+      rightSidebar={sidebarContent}
+      rightSidebarOpen={sidebarOpen}
+      rightSidebarWidth={400}
+      statusBar={statusBarContent}
+    >
+      <Container>
         <Header>
-          <Title>Media Library</Title>
-          <Subtitle>Manage your media assets and files</Subtitle>
+          <HeaderLeft>
+            <Title>Media Library</Title>
+            <Subtitle>Upload and manage your media files</Subtitle>
+          </HeaderLeft>
+          <UploadButton onClick={() => setShowUploadModal(true)}>
+            <FaPlus /> Upload Files
+          </UploadButton>
         </Header>
 
-        <UploadSection>
-          <UploadHeader>
-            <UploadIcon>
-              <FaPlus />
-            </UploadIcon>
-                      <UploadText>
-            <h3>Upload New Media</h3>
-            <p>Drag and drop multiple images and videos or click to browse. Select multiple files to upload them all at once. Media will be automatically processed and analyzed.</p>
-          </UploadText>
-          </UploadHeader>
-          
-          <MediaUploader 
-            onUploadComplete={handleUploadComplete}
-            accept="image/*,video/*"
-            multiple={true}
-            maxFiles={20}
-            maxFileSize={100}
-          />
-          
-          {uploadSuccess && (
-            <UploadSuccess>
-              ✓ {uploadSuccess}
-            </UploadSuccess>
-          )}
-        </UploadSection>
-
-        <Controls>
-          <SearchSection>
+        <Toolbar>
+          <ToolbarLeft>
             <SearchInput
               type="text"
-              placeholder="Search by filename..."
+              placeholder="Search media..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <SearchButton onClick={handleSearch}>
-              <FaSearch />
-            </SearchButton>
-          </SearchSection>
+            <FilterDropdown
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+            >
+              <option value="all">All media types</option>
+              <option value="local">Images</option>
+              <option value="gdrive">Videos</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
+              <option value="all">All types</option>
+              <option value="tattoo">Tattoos</option>
+              <option value="artwork">Artwork</option>
+              <option value="unknown">Unknown</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={confidenceFilter}
+              onChange={(e) => setConfidenceFilter(e.target.value)}
+            >
+              <option value="all">All confidence</option>
+              <option value="high">High (80%+)</option>
+              <option value="medium">Medium (60-80%)</option>
+              <option value="low">Low (30-60%)</option>
+              <option value="none">No classification</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            >
+              <option value="all">All dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </FilterDropdown>
+          </ToolbarLeft>
 
-          <FiltersSection>
-            <FilterGroup>
-              <FilterLabel>Status:</FilterLabel>
-              <FilterSelect
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-              </FilterSelect>
-            </FilterGroup>
+          <ToolbarRight>
+            <ViewToggleButton
+              active={viewFormat === 'tile'}
+              onClick={() => setViewFormat('tile')}
+              title="Grid View"
+            >
+              <FaTh />
+            </ViewToggleButton>
+            <ViewToggleButton
+              active={viewFormat === 'list'}
+              onClick={() => setViewFormat('list')}
+              title="List View"
+            >
+              <FaList />
+            </ViewToggleButton>
+          </ToolbarRight>
+        </Toolbar>
 
-            <FilterGroup>
-              <FilterLabel>Source:</FilterLabel>
-              <FilterSelect
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
+        {showUploadModal && (
+          <UploadSection>
+            <UploadHeader>
+              <UploadIcon>
+                <FaPlus />
+              </UploadIcon>
+              <UploadText>
+                <h3>Upload New Media</h3>
+                <p>Drag and drop multiple images and videos or click to browse.</p>
+              </UploadText>
+              <button 
+                onClick={() => setShowUploadModal(false)}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#6c757d' }}
               >
-                <option value="all">All Sources</option>
-                <option value="google_drive">Google Drive</option>
-                <option value="upload">Upload</option>
-                <option value="url">URL</option>
-              </FilterSelect>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>Sort:</FilterLabel>
-              <FilterSelect
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="updated_at">Updated</option>
-                <option value="created_at">Created</option>
-                <option value="filename">Filename</option>
-                <option value="processing_status">Status</option>
-              </FilterSelect>
-              <SortButton
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                <FaSort />
-              </SortButton>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>View:</FilterLabel>
-              <ViewToggle>
-                <ViewButton
-                  active={viewFormat === 'tile'}
-                  onClick={() => setViewFormat('tile')}
-                  title="Tile View"
-                >
-                  <FaTh />
-                </ViewButton>
-                <ViewButton
-                  active={viewFormat === 'card'}
-                  onClick={() => setViewFormat('card')}
-                  title="Card View"
-                >
-                  <FaThLarge />
-                </ViewButton>
-              </ViewToggle>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>Per Page:</FilterLabel>
-              <FilterSelect
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(parseInt(e.target.value) as PageSize)}
-              >
-                <option value={30}>30</option>
-                <option value={60}>60</option>
-                <option value={90}>90</option>
-              </FilterSelect>
-            </FilterGroup>
-          </FiltersSection>
-        </Controls>
+                <FaTimes />
+              </button>
+            </UploadHeader>
+            
+            <UploadMedia 
+              onUploadComplete={(urls) => {
+                handleUploadComplete(urls);
+                setShowUploadModal(false);
+              }}
+              accept="image/*,video/*"
+            />
+            
+            {uploadSuccess && (
+              <UploadSuccess>
+                ✓ {uploadSuccess}
+              </UploadSuccess>
+            )}
+          </UploadSection>
+        )}
 
         {loading ? (
           <LoadingContainer>
@@ -1045,70 +1534,150 @@ export default function AdminMedia() {
           </ErrorContainer>
         ) : (
           <>
-            <StatsBar>
-              <StatItem>
-                <StatLabel>Total Files:</StatLabel>
-                <StatValue>{totalItems}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>Showing:</StatLabel>
-                <StatValue>{media.length} of {totalItems}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>View:</StatLabel>
-                <StatValue>{viewFormat === 'tile' ? 'Tile' : 'Card'}</StatValue>
-              </StatItem>
-            </StatsBar>
-
             {viewFormat === 'tile' ? (
               <TileGrid>
-                {media.map((item) => (
-                  <TileItem key={item.id} onClick={() => handleMediaClick(item)}>
-                    <TileImage>
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.filename} />
-                      ) : (
-                        <PlaceholderImage>
-                          <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
-                        </PlaceholderImage>
-                      )}
-                      <StatusBadge color={getStatusColor(item.processing_status)}>
-                        {getStatusLabel(item.processing_status)}
-                      </StatusBadge>
-                    </TileImage>
-                  </TileItem>
+                {filterMediaByClassification(media).map((item) => (
+                  <MediaItemWithProcessing key={item.id} item={item}>
+                    <TileItem 
+                      onClick={() => handleMediaClick(item)}
+                      selected={selectedMedia?.id === item.id}
+                    >
+                      <TileImage>
+                        <TileCheckbox>
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </TileCheckbox>
+                        {item.thumbnail_url || item.medium_url ? (
+                          <img src={item.thumbnail_url || item.medium_url} alt={item.filename} />
+                        ) : (
+                          <PlaceholderImage>
+                            <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
+                          </PlaceholderImage>
+                        )}
+                        {getClassificationBadge(item)}
+                        {getEntityLinkIcon(item)}
+                        {isProcessing(item) ? (
+                          <MediaProcessingIndicator processing overlay />
+                        ) : item.processing_status === 'failed' ? (
+                          <MediaProcessingIndicator failed overlay />
+                        ) : null}
+                      </TileImage>
+                    </TileItem>
+                  </MediaItemWithProcessing>
                 ))}
               </TileGrid>
+            ) : viewFormat === 'list' ? (
+              <MediaTable>
+                <TableHeader>
+                  <TableHeaderCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.size === filterMediaByClassification(media).length && filterMediaByClassification(media).length > 0}
+                      onChange={handleSelectAll}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3b82f6', borderRadius: '4px' }}
+                    />
+                  </TableHeaderCell>
+                  <TableHeaderCell></TableHeaderCell>
+                  <TableHeaderCell>File</TableHeaderCell>
+                  <TableHeaderCell className="hide-mobile">Type</TableHeaderCell>
+                  <TableHeaderCell>Uploaded</TableHeaderCell>
+                </TableHeader>
+                {filterMediaByClassification(media).map((item) => (
+                  <MediaItemWithProcessing key={item.id} item={item}>
+                    <TableRow 
+                      onClick={() => handleMediaClick(item)}
+                      selected={selectedMedia?.id === item.id}
+                    >
+                      <TableCell>
+                        <TableCheckbox>
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </TableCheckbox>
+                      </TableCell>
+                      <TableCell>
+                        <ListThumbnail>
+                          {item.thumbnail_url || item.medium_url ? (
+                            <img src={item.thumbnail_url || item.medium_url} alt={item.filename} />
+                          ) : (
+                            <PlaceholderImage>
+                              <span style={{ fontSize: '0.8rem' }}>
+                                {item.mime_type.split('/')[0].toUpperCase()}
+                              </span>
+                            </PlaceholderImage>
+                          )}
+                          {isProcessing(item) && (
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <FaSpinner style={{ animation: 'spin 1s linear infinite', color: '#96885f' }} />
+                            </div>
+                          )}
+                        </ListThumbnail>
+                      </TableCell>
+                      <TableCell>
+                        <FileInfo>
+                          <FileName>{item.title || item.filename}</FileName>
+                          <FileSubtext>{item.filename}</FileSubtext>
+                        </FileInfo>
+                      </TableCell>
+                      <TableCell className="hide-mobile">
+                        {item.mime_type.split('/')[0].charAt(0).toUpperCase() + item.mime_type.split('/')[0].slice(1)}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(item.created_at * 1000).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  </MediaItemWithProcessing>
+                ))}
+              </MediaTable>
             ) : (
               <MediaGrid>
-                {media.map((item) => (
-                  <MediaCard key={item.id}>
-                    <MediaThumbnail>
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.filename} />
-                      ) : (
-                        <PlaceholderThumbnail>
-                          <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
-                        </PlaceholderThumbnail>
-                      )}
-                      <StatusBadge color={getStatusColor(item.processing_status)}>
-                        {getStatusLabel(item.processing_status)}
-                      </StatusBadge>
-                    </MediaThumbnail>
-                    
-                    <MediaInfo>
-                      <MediaTitle>{item.filename}</MediaTitle>
+                {filterMediaByClassification(media).map((item) => (
+                  <MediaItemWithProcessing key={item.id} item={item}>
+                    <MediaCard>
+                      <MediaThumbnail>
+                        {item.thumbnail_url || item.medium_url ? (
+                          <img src={item.thumbnail_url || item.medium_url} alt={item.alt_text || item.filename} />
+                        ) : (
+                          <PlaceholderThumbnail>
+                            <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
+                          </PlaceholderThumbnail>
+                        )}
+                        {getClassificationBadge(item)}
+                        {getEntityLinkIcon(item)}
+                        {isProcessing(item) && (
+                          <MediaProcessingIndicator processing overlay />
+                        )}
+                        {item.processing_status === 'failed' && (
+                          <MediaProcessingIndicator failed overlay />
+                        )}
+                      </MediaThumbnail>
+                      
+                      <MediaInfo>
+                        <CardTitle>{item.title || item.filename}</CardTitle>
                       <MediaDetails>
                         <DetailItem>
                           <DetailLabel>Size:</DetailLabel>
                           <DetailValue>{formatFileSize(item.size)}</DetailValue>
                         </DetailItem>
-                        {item.width && item.height && (
-                          <DetailItem>
-                            <DetailLabel>Dimensions:</DetailLabel>
-                            <DetailValue>{item.width} × {item.height}</DetailValue>
-                          </DetailItem>
-                        )}
+                        <DetailItem>
+                          <DetailLabel>Dimensions:</DetailLabel>
+                          <DetailValue>
+                            {item.width && item.height 
+                              ? `${item.width} × ${item.height}` 
+                              : 'Processing...'}
+                          </DetailValue>
+                        </DetailItem>
                         <DetailItem>
                           <DetailLabel>Source:</DetailLabel>
                           <DetailValue>{item.source}</DetailValue>
@@ -1148,7 +1717,8 @@ export default function AdminMedia() {
                         <FaTrash />
                       </ActionButton>
                     </MediaActions>
-                  </MediaCard>
+                    </MediaCard>
+                  </MediaItemWithProcessing>
                 ))}
               </MediaGrid>
             )}
@@ -1177,203 +1747,6 @@ export default function AdminMedia() {
           </>
         )}
 
-        {/* Google Drive Picker Modal */}
-        {showGoogleDrivePicker && (
-          <SidebarOverlay onClick={() => setShowGoogleDrivePicker(false)}>
-            <GoogleDrivePicker
-              onFilesSelected={handleGoogleDriveFiles}
-              onError={handleGoogleDriveError}
-              onClose={() => setShowGoogleDrivePicker(false)}
-              accept="image/*,video/*"
-              multiple={true}
-            />
-          </SidebarOverlay>
-        )}
-
-        {/* Right Sidebar */}
-        {sidebarOpen && selectedMedia && (
-          <>
-            {/* Modal overlay for smaller screens */}
-            <SidebarOverlay onClick={closeSidebar}>
-              <Sidebar onClick={(e) => e.stopPropagation()}>
-                <SidebarHeader>
-                  <SidebarTitle>Media Details</SidebarTitle>
-                  <CloseButton onClick={closeSidebar}>
-                    <FaTimes />
-                  </CloseButton>
-                </SidebarHeader>
-                
-                <SidebarContent>
-                  <SidebarImage>
-                    {selectedMedia.thumbnail_url ? (
-                      <img src={selectedMedia.thumbnail_url} alt={selectedMedia.filename} />
-                    ) : (
-                      <PlaceholderImage>
-                        <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
-                      </PlaceholderImage>
-                    )}
-                  </SidebarImage>
-                  
-                  <SidebarSection>
-                    <SectionTitle>File Information</SectionTitle>
-                    <DetailRow>
-                      <DetailLabel>Filename:</DetailLabel>
-                      <DetailValue>{selectedMedia.filename}</DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Size:</DetailLabel>
-                      <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
-                    </DetailRow>
-                    {selectedMedia.width && selectedMedia.height && (
-                      <DetailRow>
-                        <DetailLabel>Dimensions:</DetailLabel>
-                        <DetailValue>{selectedMedia.width} × {selectedMedia.height}</DetailValue>
-                      </DetailRow>
-                    )}
-                    <DetailRow>
-                      <DetailLabel>Type:</DetailLabel>
-                      <DetailValue>{selectedMedia.mime_type}</DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Source:</DetailLabel>
-                      <DetailValue>{selectedMedia.source}</DetailValue>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailLabel>Status:</DetailLabel>
-                      <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                        {getStatusLabel(selectedMedia.processing_status)}
-                      </StatusValue>
-                    </DetailRow>
-                  </SidebarSection>
-
-                  {selectedMedia.description && (
-                    <SidebarSection>
-                      <SectionTitle>Description</SectionTitle>
-                      <DescriptionText>{selectedMedia.description}</DescriptionText>
-                    </SidebarSection>
-                  )}
-
-                  {selectedMedia.tags && selectedMedia.tags.length > 0 && (
-                    <SidebarSection>
-                      <SectionTitle>Tags</SectionTitle>
-                      <SidebarTags>
-                        {selectedMedia.tags.map((tag, index) => (
-                          <SidebarTag key={index}>{tag}</SidebarTag>
-                        ))}
-                      </SidebarTags>
-                    </SidebarSection>
-                  )}
-
-                  <SidebarSection>
-                    <SectionTitle>Actions</SectionTitle>
-                    <SidebarActions>
-                      {selectedMedia.spaces_url && (
-                        <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                          <FaEye /> View Original
-                        </SidebarActionButton>
-                      )}
-                      <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                        <FaDownload /> Download
-                      </SidebarActionButton>
-                      <SidebarActionButton danger>
-                        <FaTrash /> Delete
-                      </SidebarActionButton>
-                    </SidebarActions>
-                  </SidebarSection>
-                </SidebarContent>
-              </Sidebar>
-            </SidebarOverlay>
-
-            {/* Fixed sidebar for larger screens */}
-            <Sidebar>
-              <SidebarHeader>
-                <SidebarTitle>Media Details</SidebarTitle>
-                <CloseButton onClick={closeSidebar}>
-                  <FaTimes />
-                </CloseButton>
-              </SidebarHeader>
-              
-              <SidebarContent>
-                <SidebarImage>
-                  {selectedMedia.thumbnail_url ? (
-                    <img src={selectedMedia.thumbnail_url} alt={selectedMedia.filename} />
-                  ) : (
-                    <PlaceholderImage>
-                      <span>{selectedMedia.mime_type.split('/')[0].toUpperCase()}</span>
-                    </PlaceholderImage>
-                  )}
-                </SidebarImage>
-                
-                <SidebarSection>
-                  <SectionTitle>File Information</SectionTitle>
-                  <DetailRow>
-                    <DetailLabel>Filename:</DetailLabel>
-                    <DetailValue>{selectedMedia.filename}</DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Size:</DetailLabel>
-                    <DetailValue>{formatFileSize(selectedMedia.size)}</DetailValue>
-                  </DetailRow>
-                  {selectedMedia.width && selectedMedia.height && (
-                    <DetailRow>
-                      <DetailLabel>Dimensions:</DetailLabel>
-                      <DetailValue>{selectedMedia.width} × {selectedMedia.height}</DetailValue>
-                    </DetailRow>
-                  )}
-                  <DetailRow>
-                    <DetailLabel>Type:</DetailLabel>
-                    <DetailValue>{selectedMedia.mime_type}</DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Source:</DetailLabel>
-                    <DetailValue>{selectedMedia.source}</DetailValue>
-                  </DetailRow>
-                  <DetailRow>
-                    <DetailLabel>Status:</DetailLabel>
-                    <StatusValue color={getStatusColor(selectedMedia.processing_status)}>
-                      {getStatusLabel(selectedMedia.processing_status)}
-                    </StatusValue>
-                  </DetailRow>
-                </SidebarSection>
-
-                {selectedMedia.description && (
-                  <SidebarSection>
-                    <SectionTitle>Description</SectionTitle>
-                    <DescriptionText>{selectedMedia.description}</DescriptionText>
-                  </SidebarSection>
-                )}
-
-                {selectedMedia.tags && selectedMedia.tags.length > 0 && (
-                  <SidebarSection>
-                    <SectionTitle>Tags</SectionTitle>
-                    <SidebarTags>
-                      {selectedMedia.tags.map((tag, index) => (
-                        <SidebarTag key={index}>{tag}</SidebarTag>
-                      ))}
-                    </SidebarTags>
-                  </SidebarSection>
-                )}
-
-                <SidebarSection>
-                  <SectionTitle>Actions</SectionTitle>
-                  <SidebarActions>
-                    {selectedMedia.spaces_url && (
-                      <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                        <FaEye /> View Original
-                      </SidebarActionButton>
-                    )}
-                    <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
-                      <FaDownload /> Download
-                    </SidebarActionButton>
-                    <SidebarActionButton danger>
-                      <FaTrash /> Delete
-                    </SidebarActionButton>
-                  </SidebarActions>
-                </SidebarSection>
-              </SidebarContent>
-            </Sidebar>
-          </>
-        )}
       </Container>
     </AdminLayout>
   );

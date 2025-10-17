@@ -53,10 +53,10 @@ export const EmptyMessage = styled.div`
 
 export const ActionButtons = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 
   @media (max-width: 768px) {
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
 `;
 
@@ -108,36 +108,76 @@ export const TitleCell = styled.div`
 
 
 export const ActionButton = styled.button<{ danger?: boolean }>`
-  background: ${props => props.danger ? '#dc3545' : '#6c757d'};
-  color: white;
-  border: none;
-  padding: 0.5rem;
+  background: ${props => props.danger ? '#dc3545' : '#f8f9fa'};
+  color: ${props => props.danger ? 'white' : '#333'};
+  border: 1px solid ${props => props.danger ? '#dc3545' : '#dee2e6'};
+  padding: 0.625rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
 
   @media (max-width: 768px) {
-    padding: 0.4rem;
-    font-size: 0.8rem;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.85rem;
   }
 
   &.edit {
-    color: #007bff;
+    background: #e7f3ff;
+    color: #0066cc;
+    border-color: #b3d9ff;
+    
+    &:hover {
+      background: #cce5ff;
+      border-color: #99ccff;
+    }
   }
 
   &.delete {
-    color: #dc3545;
+    background: #ffe6e6;
+    color: #cc0000;
+    border-color: #ffcccc;
+    
+    &:hover {
+      background: #ffcccc;
+      border-color: #ff9999;
+    }
   }
 
   &.view {
-    color: #28a745;
+    background: #e6f7ed;
+    color: #1e7e34;
+    border-color: #b3e6cc;
+    
+    &:hover {
+      background: #ccf0dd;
+      border-color: #99e6bb;
+    }
   }
 
   &.send {
+    background: #f5f3ed;
     color: #96885f;
+    border-color: #d9d3c2;
+    
+    &:hover {
+      background: #ebe7db;
+      border-color: #c9c1aa;
+    }
   }
 
   &:hover {
-    background: ${props => props.danger ? '#c82333' : '#5a6268'};
+    background: ${props => props.danger ? '#c82333' : '#e9ecef'};
+    border-color: ${props => props.danger ? '#bd2130' : '#cbd3da'};
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 `;

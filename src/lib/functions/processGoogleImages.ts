@@ -105,7 +105,7 @@ interface ProcessSingleFilePayload {
 }
 
 interface AnalyzeMediaPayload {
-  mediaId: number;
+  mediaId: string;
   imageUrl: string;
 }
 
@@ -204,9 +204,9 @@ export const processSingleFile = inngest.createFunction(
 
     if (existingMedia) {
       // If media exists but hasn't been analyzed, trigger analysis
-      if (existingMedia.processing_status === 'pending' && existingMedia.spaces_url) {
+      if (existingMedia.processing_status === 'pending' && existingMedia.original_url) {
         await step.run("trigger-analysis-for-existing", async () => {
-          await triggerMediaAnalysis(existingMedia.id, existingMedia.spaces_url!);
+          await triggerMediaAnalysis(existingMedia.id, existingMedia.original_url!);
         });
       }
       
@@ -237,18 +237,19 @@ export const processSingleFile = inngest.createFunction(
 
     // Create media record
     const newMedia = await step.run("create-media-record", async () => {
+      const mediaId = crypto.randomUUID();
       const [mediaRecord] = await db.insert(media).values({
+        id: mediaId,
         user_id: userId,
         source: 'google_drive',
         source_id: fileId,
         filename: fileName,
         mime_type: fileMimeType,
         size: parseInt(fileSize || '0'),
-        spaces_key: storedFile.key,
-        spaces_url: storedFile.url,
+        original_url: storedFile.url,
         thumbnail_url: fileThumbnailLink,
         processing_status: 'pending',
-        metadata: JSON.stringify({
+        tags: JSON.stringify({
           googleDriveFileId: fileId,
           googleDriveFileName: fileName,
           googleDriveFileSize: fileSize,
@@ -258,8 +259,7 @@ export const processSingleFile = inngest.createFunction(
           importedAt: new Date().toISOString(),
           processedBy: 'inngest',
         }),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: Math.floor(Date.now() / 1000),
       }).returning();
 
       return mediaRecord;
@@ -312,9 +312,9 @@ export const processSingleFile = inngest.createFunction(
 
     // Trigger AI analysis for the new media
     await step.run("trigger-ai-analysis", async () => {
-      if (newMedia.spaces_url) {
+      if (newMedia.original_url) {
         console.log(`Triggering AI analysis for: ${fileName} (${newMedia.id})`);
-        await triggerMediaAnalysis(newMedia.id, newMedia.spaces_url);
+        await triggerMediaAnalysis(newMedia.id, newMedia.original_url);
       }
     });
 
@@ -350,8 +350,8 @@ export const analyzeMedia = inngest.createFunction(
       return record;
     });
 
-    if (!mediaRecord.spaces_url) {
-      throw new Error(`No spaces URL for media ${mediaId}`);
+    if (!mediaRecord.original_url) {
+      throw new Error(`No original URL for media ${mediaId}`);
     }
 
     // Update status to processing
@@ -359,7 +359,6 @@ export const analyzeMedia = inngest.createFunction(
       await db.update(media)
         .set({
           processing_status: 'processing',
-          updated_at: new Date().toISOString(),
         })
         .where(eq(media.id, mediaId));
     });
@@ -367,7 +366,7 @@ export const analyzeMedia = inngest.createFunction(
     // Analyze with AI
     const analysis = await step.run("analyze-image", async () => {
       console.log(`Analyzing media: ${mediaRecord.filename} (${mediaId})`);
-      return await analyzeImage(mediaRecord.spaces_url!);
+      return await analyzeImage(mediaRecord.original_url!);
     });
 
     // Update media record with analysis results
@@ -375,11 +374,8 @@ export const analyzeMedia = inngest.createFunction(
       await db.update(media)
         .set({
           processing_status: 'completed',
-          ai_analysis: JSON.stringify(analysis),
           tags: JSON.stringify(analysis.tags),
           description: analysis.description,
-          processed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         })
         .where(eq(media.id, mediaId));
     });
@@ -490,18 +486,19 @@ export const processGoogleImages = inngest.createFunction(
           );
 
           // Create media record
+          const mediaId = crypto.randomUUID();
           const [newMedia] = await db.insert(media).values({
+            id: mediaId,
             user_id: userId,
             source: 'google_drive',
             source_id: file.id,
             filename: file.name,
             mime_type: file.mimeType,
             size: parseInt(file.size || '0'),
-            spaces_key: storedFile.key,
-            spaces_url: storedFile.url,
+            original_url: storedFile.url,
             thumbnail_url: file.thumbnailLink,
             processing_status: 'pending',
-            metadata: JSON.stringify({
+            tags: JSON.stringify({
               googleDriveFileId: file.id,
               googleDriveFileName: file.name,
               googleDriveFileSize: file.size,
@@ -511,8 +508,7 @@ export const processGoogleImages = inngest.createFunction(
               importedAt: new Date().toISOString(),
               processedBy: 'inngest',
             }),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            created_at: Math.floor(Date.now() / 1000),
           }).returning();
 
           results.push({ media: newMedia, status: 'created' });
@@ -582,8 +578,8 @@ export const processGoogleImages = inngest.createFunction(
         const mediaRecord = fileResult.media;
         
         try {
-          if (!mediaRecord.spaces_url) {
-            console.log(`No spaces URL for media ${mediaRecord.id}, skipping analysis`);
+          if (!mediaRecord.original_url) {
+            console.log(`No original URL for media ${mediaRecord.id}, skipping analysis`);
             continue;
           }
 
@@ -593,22 +589,18 @@ export const processGoogleImages = inngest.createFunction(
           await db.update(media)
             .set({
               processing_status: 'processing',
-              updated_at: new Date().toISOString(),
             })
             .where(eq(media.id, mediaRecord.id));
 
           // Analyze with AI
-          const analysis = await analyzeImage(mediaRecord.spaces_url);
+          const analysis = await analyzeImage(mediaRecord.original_url);
 
           // Update media record with analysis results
           await db.update(media)
             .set({
               processing_status: 'completed',
-              ai_analysis: JSON.stringify(analysis),
               tags: JSON.stringify(analysis.tags),
               description: analysis.description,
-              processed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             })
             .where(eq(media.id, mediaRecord.id));
 
@@ -626,7 +618,6 @@ export const processGoogleImages = inngest.createFunction(
           await db.update(media)
             .set({
               processing_status: 'failed',
-              updated_at: new Date().toISOString(),
             })
             .where(eq(media.id, mediaRecord.id));
 
@@ -683,7 +674,7 @@ export const triggerFileProcessing = async (file: DriveFile, userId: number, fol
   });
 };
 
-export const triggerMediaAnalysis = async (mediaId: number, imageUrl: string) => {
+export const triggerMediaAnalysis = async (mediaId: string, imageUrl: string) => {
   return await inngest.send({
     name: "media.analyze",
     data: {
@@ -769,7 +760,7 @@ export const analyzeMediaBatch = inngest.createFunction(
   },
   { event: "media.analyze.batch" },
   async ({ event, step }) => {
-    const { mediaIds } = event.data as { mediaIds: number[] };
+    const { mediaIds } = event.data as { mediaIds: string[] };
 
     // Get media records that need analysis
     const mediaRecords = await step.run("get-pending-media", async () => {
@@ -782,13 +773,13 @@ export const analyzeMediaBatch = inngest.createFunction(
         ? records.filter(r => mediaIds.includes(r.id))
         : records;
       
-      return filteredRecords.filter(r => r.spaces_url);
+      return filteredRecords.filter(r => r.original_url);
     });
 
     // Trigger parallel analysis
     const analysisPromises = await step.run("trigger-analysis", async () => {
       const promises = mediaRecords.map(record => 
-        triggerMediaAnalysis(record.id, record.spaces_url!)
+        triggerMediaAnalysis(record.id, record.original_url!)
       );
       
       console.log(`Triggered ${promises.length} media analysis jobs`);

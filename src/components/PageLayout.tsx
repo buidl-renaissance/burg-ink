@@ -16,6 +16,15 @@ interface PageLayoutProps {
 
 const StyledPage = styled.div`
   background-color: #fff;
+  min-height: 100vh;
+`;
+
+const ContentWrapper = styled.div<{ hasHeader: boolean }>`
+  padding-top: ${props => props.hasHeader ? '0' : '8rem'};
+
+  @media (max-width: 768px) {
+    padding-top: ${props => props.hasHeader ? '0' : '6rem'};
+  }
 `;
 
 export const PageContainer = styled.div<{
@@ -123,10 +132,12 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   description,
   backLink,
 }) => {
+  const hasHeader = !!(title || description);
+  
   return (
     <StyledPage>
       <MainNavBar />
-      {(title || description) && (
+      {hasHeader && (
         <PageHeaderContainer>
           <PageHeader>
             {backLink && (
@@ -140,7 +151,9 @@ const PageLayout: React.FC<PageLayoutProps> = ({
         </PageHeaderContainer>
       )}
 
-      {children}
+      <ContentWrapper hasHeader={hasHeader}>
+        {children}
+      </ContentWrapper>
     </StyledPage>
   );
 };
