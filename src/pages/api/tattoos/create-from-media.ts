@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { media, tattoos, artists } from '../../../db/schema';
+import { db } from '../../../../db';
+import { media, tattoos, artists } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { MediaClassification } from '../../../lib/ai';
 
@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
-      .trim('-') + '-' + Date.now();
+      .replace(/^-+|-+$/g, '') + '-' + Date.now();
 
     // Create tattoo data with AI-suggested fields
     const tattooData = {
@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       image: mediaRecord.medium_url || mediaRecord.original_url,
       category: classification?.suggestedCategory || 'Traditional',
       placement: classification?.placement || 'Arm',
-      size: classification?.detections?.tattoo?.score > 0.7 ? 'Medium' : 'Large',
+      size: (classification?.detections?.tattoo?.score ?? 0) > 0.7 ? 'Medium' : 'Large',
       style: classification?.style || 'Custom',
       meta: JSON.stringify({
         source_media_id: mediaId,

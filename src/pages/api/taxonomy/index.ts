@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { taxonomy } from '../../../db/schema';
+import { db } from '../../../../db';
+import { taxonomy } from '../../../../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,22 +8,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { namespace, active_only } = req.query;
       
-      let query = db.select().from(taxonomy);
-      
-      // Filter by namespace if provided
+      // Build where conditions
+      const conditions = [];
       if (namespace && typeof namespace === 'string') {
-        query = query.where(eq(taxonomy.namespace, namespace));
+        conditions.push(eq(taxonomy.namespace, namespace));
       }
-      
-      // Filter by active status if requested
       if (active_only === 'true') {
-        query = query.where(eq(taxonomy.is_active, 1));
+        conditions.push(eq(taxonomy.is_active, 1));
       }
       
-      // Order by namespace, then by order
-      query = query.orderBy(asc(taxonomy.namespace), asc(taxonomy.order));
+      // Build query with conditions
+      const query = db.select().from(taxonomy);
+      const queryWithWhere = conditions.length > 0 
+        ? query.where(and(...conditions))
+        : query;
       
-      const taxonomies = await query;
+      const taxonomies = await queryWithWhere.orderBy(
+        asc(taxonomy.namespace), 
+        asc(taxonomy.order)
+      );
       
       res.status(200).json({ taxonomies });
     } catch (error) {

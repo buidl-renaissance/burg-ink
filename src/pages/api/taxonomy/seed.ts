@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { taxonomy } from '../../../db/schema';
+import { db } from '../../../../db';
+import { taxonomy } from '../../../../db/schema';
 // import { eq } from 'drizzle-orm';
 import { DEFAULT_TAXONOMIES } from '../../../lib/taxonomies/seed';
 

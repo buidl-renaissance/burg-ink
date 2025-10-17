@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
-      .trim('-') + '-' + Date.now();
+      .replace(/^-+|-+$/g, '') + '-' + Date.now();
 
     // Determine artwork type based on classification or filename
     let artworkType = 'artwork';
