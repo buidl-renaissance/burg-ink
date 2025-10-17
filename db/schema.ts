@@ -241,11 +241,57 @@ export const media = sqliteTable("media", {
   width: integer("width"), // Original image width
   height: integer("height"), // Original image height
   processing_status: text("processing_status").default("pending"), // Keep processing status
+  // New classification fields
+  detected_type: text("detected_type"), // 'tattoo' | 'artwork' | 'unknown'
+  detection_confidence: text("detection_confidence"), // 0.0 to 1.0 as text
+  detections: text("detections"), // JSON blob for detailed AI classification results
+  suggested_entity_id: integer("suggested_entity_id"), // Track if entity was created from this media
+  suggested_entity_type: text("suggested_entity_type"), // 'tattoo' | 'artwork'
 }, (table) => ({
   sourceIdx: index("media_source_idx").on(table.source),
   userIdx: index("media_user_idx").on(table.user_id),
   statusIdx: index("media_status_idx").on(table.processing_status),
   sourceIdIdx: index("media_source_id_idx").on(table.source_id),
+  detectedTypeIdx: index("media_detected_type_idx").on(table.detected_type),
+  confidenceIdx: index("media_confidence_idx").on(table.detection_confidence),
+}));
+
+// Taxonomy table for admin-configurable categories and tags
+export const taxonomy = sqliteTable("taxonomy", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  namespace: text("namespace").notNull(), // e.g., 'tattoo.style', 'tattoo.placement', 'artwork.category'
+  key: text("key").notNull(), // Unique within namespace
+  label: text("label").notNull(), // Display name
+  description: text("description"), // Optional description
+  order: integer("order").default(0), // For sorting within namespace
+  is_active: integer("is_active").default(1), // Boolean flag
+  parent_id: integer("parent_id"), // Self-reference for hierarchical taxonomies (no foreign key to avoid circular reference)
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  namespaceKeyIdx: uniqueIndex("taxonomy_namespace_key_idx").on(table.namespace, table.key),
+  namespaceIdx: index("taxonomy_namespace_idx").on(table.namespace),
+  parentIdx: index("taxonomy_parent_idx").on(table.parent_id),
+  activeIdx: index("taxonomy_active_idx").on(table.is_active),
+}));
+
+// Workflow rules table for automation rules
+export const workflowRules = sqliteTable("workflow_rules", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(), // e.g., "Auto-suggest tattoo creation"
+  description: text("description"), // Optional description
+  trigger: text("trigger").notNull(), // 'on_upload', 'on_classification', 'on_publish'
+  conditions: text("conditions").notNull(), // JSON - e.g., {"detected_type": "tattoo", "min_confidence": 0.7}
+  actions: text("actions").notNull(), // JSON - e.g., [{"type": "flag_media"}, {"type": "notify_admin"}]
+  is_enabled: integer("is_enabled").default(1), // Boolean flag
+  priority: integer("priority").default(0), // Execution order (lower numbers execute first)
+  last_fired_at: text("last_fired_at"), // Timestamp of last execution
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  enabledIdx: index("workflow_enabled_idx").on(table.is_enabled),
+  triggerIdx: index("workflow_trigger_idx").on(table.trigger),
+  priorityIdx: index("workflow_priority_idx").on(table.priority),
 }));
 
 // Inquiries table for storing customer inquiries

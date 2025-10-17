@@ -946,6 +946,57 @@ const StatusValue = styled.span<{ color: string }>`
   font-weight: 500;
 `;
 
+// Classification Badge Components
+const ClassificationBadge = styled.div<{ type: string; confidence: number }>`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: ${props => {
+    if (props.type === 'tattoo') {
+      return props.confidence >= 0.8 ? '#22c55e' : props.confidence >= 0.6 ? '#eab308' : '#6b7280';
+    } else if (props.type === 'artwork') {
+      return props.confidence >= 0.8 ? '#3b82f6' : props.confidence >= 0.6 ? '#8b5cf6' : '#6b7280';
+    }
+    return '#6b7280';
+  }};
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const ClassificationBadgeList = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 10;
+`;
+
+const EntityLinkedBadge = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  z-index: 10;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
 // Interfaces and Types
 interface MediaItem {
   id: string | number; // Support both for UUID and legacy integer IDs
@@ -967,6 +1018,12 @@ interface MediaItem {
   tags?: string[];
   ai_analysis?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+  // New classification fields
+  detected_type?: string | null;
+  detection_confidence?: string | null;
+  detections?: string | null;
+  suggested_entity_id?: number | null;
+  suggested_entity_type?: string | null;
   created_at: number; // Unix timestamp in seconds
   updated_at?: number;
   processed_at?: number;
@@ -1000,6 +1057,8 @@ export default function AdminMedia() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [confidenceFilter, setConfidenceFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [viewFormat, setViewFormat] = useState<ViewFormat>('tile');
@@ -1012,7 +1071,7 @@ export default function AdminMedia() {
   useEffect(() => {
     fetchMedia();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, sourceFilter, dateFilter]);
+  }, [currentPage, sourceFilter, dateFilter, typeFilter, confidenceFilter]);
 
   const fetchMedia = async () => {
     try {
@@ -1024,6 +1083,10 @@ export default function AdminMedia() {
         limit: '30',
         offset: offset.toString(),
         source: sourceFilter,
+        detected_type: typeFilter,
+        confidence_min: confidenceFilter === 'high' ? '0.8' : 
+                       confidenceFilter === 'medium' ? '0.6' : 
+                       confidenceFilter === 'low' ? '0.3' : '',
       });
 
       const response = await fetch(`/api/media?${params}`);
@@ -1092,6 +1155,64 @@ export default function AdminMedia() {
 
   const isProcessing = (item: MediaItem) => {
     return item.processing_status === 'pending' || item.processing_status === 'processing';
+  };
+
+  // Classification helper functions
+  const getClassificationBadge = (item: MediaItem) => {
+    if (!item.detected_type || !item.detection_confidence) return null;
+    
+    const confidence = parseFloat(item.detection_confidence);
+    const type = item.detected_type;
+    
+    if (confidence < 0.5) return null; // Don't show low confidence classifications
+    
+    return (
+      <ClassificationBadge type={type} confidence={confidence}>
+        {type === 'tattoo' ? '💉' : type === 'artwork' ? '🎨' : '❓'} {type.charAt(0).toUpperCase() + type.slice(1)} {Math.round(confidence * 100)}%
+      </ClassificationBadge>
+    );
+  };
+
+  const hasEntityLink = (item: MediaItem) => {
+    return item.suggested_entity_id && item.suggested_entity_type;
+  };
+
+  const getEntityLinkIcon = (item: MediaItem) => {
+    if (!hasEntityLink(item)) return null;
+    
+    const icon = item.suggested_entity_type === 'tattoo' ? '💉' : '🎨';
+    return (
+      <EntityLinkedBadge title={`Linked to ${item.suggested_entity_type}`}>
+        {icon}
+      </EntityLinkedBadge>
+    );
+  };
+
+  const filterMediaByClassification = (mediaList: MediaItem[]) => {
+    let filtered = mediaList;
+
+    // Filter by detected type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.detected_type === typeFilter);
+    }
+
+    // Filter by confidence level
+    if (confidenceFilter !== 'all') {
+      filtered = filtered.filter(item => {
+        if (!item.detection_confidence) return false;
+        const confidence = parseFloat(item.detection_confidence);
+        
+        switch (confidenceFilter) {
+          case 'high': return confidence >= 0.8;
+          case 'medium': return confidence >= 0.6 && confidence < 0.8;
+          case 'low': return confidence >= 0.3 && confidence < 0.6;
+          case 'none': return confidence < 0.3 || !item.detected_type;
+          default: return true;
+        }
+      });
+    }
+
+    return filtered;
   };
 
   const handleSelectAll = () => {
@@ -1233,6 +1354,24 @@ export default function AdminMedia() {
                 </StatusValue>
               </DetailRow>
             )}
+            {selectedMedia.detected_type && (
+              <DetailRow>
+                <DetailLabel>Classification:</DetailLabel>
+                <StatusValue color={selectedMedia.detected_type === 'tattoo' ? '#22c55e' : selectedMedia.detected_type === 'artwork' ? '#3b82f6' : '#6b7280'}>
+                  {selectedMedia.detected_type.charAt(0).toUpperCase() + selectedMedia.detected_type.slice(1)}
+                  {selectedMedia.detection_confidence && ` (${Math.round(parseFloat(selectedMedia.detection_confidence) * 100)}%)`}
+                </StatusValue>
+              </DetailRow>
+            )}
+            {selectedMedia.suggested_entity_type && (
+              <DetailRow>
+                <DetailLabel>Linked Entity:</DetailLabel>
+                <DetailValue>
+                  {selectedMedia.suggested_entity_type.charAt(0).toUpperCase() + selectedMedia.suggested_entity_type.slice(1)}
+                  {selectedMedia.suggested_entity_id && ` (ID: ${selectedMedia.suggested_entity_id})`}
+                </DetailValue>
+              </DetailRow>
+            )}
           </SidebarSection>
         </SidebarDetailsWrapper>
       </SidebarContent>
@@ -1298,6 +1437,25 @@ export default function AdminMedia() {
               <option value="all">All media types</option>
               <option value="local">Images</option>
               <option value="gdrive">Videos</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
+              <option value="all">All types</option>
+              <option value="tattoo">Tattoos</option>
+              <option value="artwork">Artwork</option>
+              <option value="unknown">Unknown</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={confidenceFilter}
+              onChange={(e) => setConfidenceFilter(e.target.value)}
+            >
+              <option value="all">All confidence</option>
+              <option value="high">High (80%+)</option>
+              <option value="medium">Medium (60-80%)</option>
+              <option value="low">Low (30-60%)</option>
+              <option value="none">No classification</option>
             </FilterDropdown>
             <FilterDropdown
               value={dateFilter}
@@ -1377,7 +1535,7 @@ export default function AdminMedia() {
           <>
             {viewFormat === 'tile' ? (
               <TileGrid>
-                {media.map((item) => (
+                {filterMediaByClassification(media).map((item) => (
                   <MediaItemWithProcessing key={item.id} item={item}>
                     <TileItem 
                       onClick={() => handleMediaClick(item)}
@@ -1399,6 +1557,8 @@ export default function AdminMedia() {
                             <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
                           </PlaceholderImage>
                         )}
+                        {getClassificationBadge(item)}
+                        {getEntityLinkIcon(item)}
                         {isProcessing(item) ? (
                           <MediaProcessingIndicator processing overlay />
                         ) : item.processing_status === 'failed' ? (
@@ -1415,7 +1575,7 @@ export default function AdminMedia() {
                   <TableHeaderCell>
                     <input
                       type="checkbox"
-                      checked={selectedItems.size === media.length && media.length > 0}
+                      checked={selectedItems.size === filterMediaByClassification(media).length && filterMediaByClassification(media).length > 0}
                       onChange={handleSelectAll}
                       style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3b82f6', borderRadius: '4px' }}
                     />
@@ -1425,7 +1585,7 @@ export default function AdminMedia() {
                   <TableHeaderCell className="hide-mobile">Type</TableHeaderCell>
                   <TableHeaderCell>Uploaded</TableHeaderCell>
                 </TableHeader>
-                {media.map((item) => (
+                {filterMediaByClassification(media).map((item) => (
                   <MediaItemWithProcessing key={item.id} item={item}>
                     <TableRow 
                       onClick={() => handleMediaClick(item)}
@@ -1481,7 +1641,7 @@ export default function AdminMedia() {
               </MediaTable>
             ) : (
               <MediaGrid>
-                {media.map((item) => (
+                {filterMediaByClassification(media).map((item) => (
                   <MediaItemWithProcessing key={item.id} item={item}>
                     <MediaCard>
                       <MediaThumbnail>
@@ -1492,6 +1652,8 @@ export default function AdminMedia() {
                             <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
                           </PlaceholderThumbnail>
                         )}
+                        {getClassificationBadge(item)}
+                        {getEntityLinkIcon(item)}
                         {isProcessing(item) && (
                           <MediaProcessingIndicator processing overlay />
                         )}

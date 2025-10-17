@@ -52,6 +52,19 @@ export interface MarketingResponse {
   recommendations?: string[];
 }
 
+export interface MediaClassification {
+  detectedType: 'tattoo' | 'artwork' | 'unknown';
+  confidence: number; // 0.0 to 1.0
+  detections: {
+    tattoo: { score: number; reasoning: string };
+    artwork: { score: number; reasoning: string };
+  };
+  suggestedTags: string[];
+  suggestedCategory?: string;
+  placement?: string; // for tattoos
+  style?: string;
+}
+
 export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
   try {
     const response = await openai.chat.completions.create({
@@ -426,5 +439,107 @@ Format your response as a comprehensive marketing plan with clear sections and a
   } catch (error) {
     console.error('Error generating marketing summary:', error);
     throw new Error(`Failed to generate marketing summary: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+const MEDIA_CLASSIFICATION_PROMPT = `You are an expert AI assistant that classifies images for a tattoo and artwork portfolio management system.
+
+Your task is to analyze images and determine if they are:
+1. TATTOO - Images of tattoos on skin (including healed tattoos, fresh tattoos, tattoo designs on paper/screens)
+2. ARTWORK - Traditional or digital artwork, paintings, drawings, prints, sculptures, etc.
+3. UNKNOWN - Neither clearly a tattoo nor artwork (e.g., random photos, text, unclear content)
+
+For each classification, provide:
+- A confidence score (0.0 to 1.0) for tattoo and artwork
+- Detailed reasoning for your assessment
+- Suggested tags for categorization
+- Category/style information if applicable
+- Body placement for tattoos
+- Artistic style for artwork
+
+Return your response as a JSON object with this exact structure:
+{
+  "detectedType": "tattoo" | "artwork" | "unknown",
+  "confidence": 0.0 to 1.0,
+  "detections": {
+    "tattoo": {
+      "score": 0.0 to 1.0,
+      "reasoning": "detailed explanation"
+    },
+    "artwork": {
+      "score": 0.0 to 1.0,
+      "reasoning": "detailed explanation"
+    }
+  },
+  "suggestedTags": ["tag1", "tag2", "tag3"],
+  "suggestedCategory": "category name if applicable",
+  "placement": "body placement for tattoos",
+  "style": "artistic style description"
+}
+
+Focus on accuracy and provide detailed reasoning for your classifications.`;
+
+export async function classifyMediaImage(imageUrl: string): Promise<MediaClassification> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: MEDIA_CLASSIFICATION_PROMPT,
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this image and classify it as tattoo, artwork, or unknown with confidence scores and detailed reasoning.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+                detail: "high",
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1200,
+      temperature: 0.2, // Lower temperature for more consistent classification
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
+
+    // Clean and parse the JSON response (remove markdown code blocks if present)
+    const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+    const classification = JSON.parse(cleanContent) as MediaClassification;
+    
+    // Validate the response structure
+    if (!classification.detectedType || typeof classification.confidence !== 'number' || 
+        !classification.detections || !classification.suggestedTags) {
+      throw new Error('Invalid response structure from OpenAI');
+    }
+
+    // Ensure confidence is between 0 and 1
+    classification.confidence = Math.max(0, Math.min(1, classification.confidence));
+
+    return classification;
+  } catch (error) {
+    console.error('Error classifying image with OpenAI:', error);
+    
+    // Return fallback values if classification fails
+    return {
+      detectedType: 'unknown',
+      confidence: 0.0,
+      detections: {
+        tattoo: { score: 0.0, reasoning: 'Classification failed' },
+        artwork: { score: 0.0, reasoning: 'Classification failed' }
+      },
+      suggestedTags: ['image', 'unknown'],
+    };
   }
 } 

@@ -4,7 +4,8 @@ import { media } from '../../../db/schema';
 import { uploadFile, getFileKey } from '@/lib/storage/index';
 import { generateResizedVersions, getFileExtension } from '@/lib/storage/resize';
 import { eq } from 'drizzle-orm';
-import { analyzeMediaImage } from '@/lib/ai';
+import { analyzeMediaImage, classifyMediaImage } from '@/lib/ai';
+import { WorkflowEngine } from '@/lib/workflows/engine';
 import sharp from 'sharp';
 
 export const processMediaUpload = inngest.createFunction(
@@ -94,12 +95,36 @@ export const processMediaUpload = inngest.createFunction(
       }
     });
 
-    // Update database record with resized versions and AI analysis
+    // Run media classification on the original image
+    const mediaClassification = await step.run('media-classification', async () => {
+      console.log(`Running media classification for ${mediaId}`);
+      
+      try {
+        const classification = await classifyMediaImage(originalUrl);
+        console.log(`Media classification completed:`, classification);
+        return classification;
+      } catch (error) {
+        console.error(`Media classification failed for ${mediaId}:`, error);
+        // Return fallback values if classification fails
+        return {
+          detectedType: 'unknown' as const,
+          confidence: 0.0,
+          detections: {
+            tattoo: { score: 0.0, reasoning: 'Classification failed' },
+            artwork: { score: 0.0, reasoning: 'Classification failed' }
+          },
+          suggestedTags: ['image', 'unknown'],
+        };
+      }
+    });
+
+    // Update database record with resized versions, AI analysis, and classification
     await step.run('update-database', async () => {
       console.log(`Updating database record for ${mediaId}`);
       console.log(`Medium URL: ${result.mediumUrl}`);
       console.log(`Thumbnail URL: ${result.thumbnailUrl}`);
       console.log(`AI Analysis:`, aiAnalysis);
+      console.log(`Media Classification:`, mediaClassification);
       
       try {
         // First verify the record exists
@@ -118,7 +143,10 @@ export const processMediaUpload = inngest.createFunction(
           thumbnail_url: existingRecord.thumbnail_url
         });
         
-        // Update the record with resized versions, dimensions, and AI analysis
+        // Combine AI tags with classification suggested tags
+        const allTags = [...new Set([...aiAnalysis.tags, ...mediaClassification.suggestedTags])];
+        
+        // Update the record with resized versions, dimensions, AI analysis, and classification
         await db
           .update(media)
           .set({
@@ -127,10 +155,13 @@ export const processMediaUpload = inngest.createFunction(
             width: result.width,
             height: result.height,
             processing_status: 'completed',
-            tags: JSON.stringify(aiAnalysis.tags),
+            tags: JSON.stringify(allTags),
             title: aiAnalysis.title,
             description: aiAnalysis.description,
             alt_text: aiAnalysis.altText,
+            detected_type: mediaClassification.detectedType,
+            detection_confidence: mediaClassification.confidence.toString(),
+            detections: JSON.stringify(mediaClassification.detections),
           })
           .where(eq(media.id, mediaId));
         
@@ -145,13 +176,49 @@ export const processMediaUpload = inngest.createFunction(
           medium_url: updatedRecord?.medium_url,
           thumbnail_url: updatedRecord?.thumbnail_url,
           title: updatedRecord?.title,
-          tags: updatedRecord?.tags
+          tags: updatedRecord?.tags,
+          detected_type: updatedRecord?.detected_type,
+          detection_confidence: updatedRecord?.detection_confidence
         });
         
         console.log(`Successfully updated database for ${mediaId}`);
       } catch (error) {
         console.error(`Failed to update database for ${mediaId}:`, error);
         throw error;
+      }
+    });
+
+    // Evaluate workflow rules after classification
+    const workflowExecutions = await step.run('evaluate-workflows', async () => {
+      console.log(`Evaluating workflow rules for ${mediaId}`);
+      
+      try {
+        // Get the updated media record for workflow context
+        const mediaRecord = await db.query.media.findFirst({
+          where: eq(media.id, mediaId)
+        });
+        
+        if (!mediaRecord) {
+          throw new Error(`Media record ${mediaId} not found for workflow evaluation`);
+        }
+        
+        // Create workflow context
+        const context = {
+          media: mediaRecord,
+          classification: mediaClassification,
+          trigger: 'on_upload'
+        };
+        
+        // Evaluate workflow rules
+        const executions = await WorkflowEngine.evaluateRules('on_upload', context);
+        
+        console.log(`Workflow evaluation completed for ${mediaId}:`, executions);
+        
+        return executions;
+      } catch (error) {
+        console.error(`Workflow evaluation failed for ${mediaId}:`, error);
+        // Don't fail the entire process if workflow evaluation fails
+        return [];
       }
     });
 
@@ -163,6 +230,8 @@ export const processMediaUpload = inngest.createFunction(
           thumbnailUrl: result.thumbnailUrl,
         },
         aiAnalysis,
+        mediaClassification,
+        workflowExecutions,
       };
     } catch (error) {
       // Handle any errors and update status to failed
