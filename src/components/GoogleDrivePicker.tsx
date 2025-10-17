@@ -198,6 +198,27 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
+  const loadFiles = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/google-drive/files');
+      if (!response.ok) {
+        throw new Error('Failed to load files');
+      }
+
+      const data = await response.json();
+      setFiles(data.files || []);
+    } catch (error) {
+      console.error('Error loading files:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load files');
+      onError?.(error instanceof Error ? error.message : 'Failed to load files');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Initialize Google Drive API
   useEffect(() => {
     const initializeGoogleDrive = async () => {
@@ -236,27 +257,6 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
       console.error('Auth error:', error);
       setError(error instanceof Error ? error.message : 'Authentication failed');
       onError?.(error instanceof Error ? error.message : 'Authentication failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadFiles = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/google-drive/files');
-      if (!response.ok) {
-        throw new Error('Failed to load files');
-      }
-
-      const data = await response.json();
-      setFiles(data.files || []);
-    } catch (error) {
-      console.error('Error loading files:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load files');
-      onError?.(error instanceof Error ? error.message : 'Failed to load files');
     } finally {
       setIsLoading(false);
     }
