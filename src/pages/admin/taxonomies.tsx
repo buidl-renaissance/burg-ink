@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaSpinner, FaDownload, FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
+import { FaSpinner, FaDownload, FaSearch, FaFilter } from 'react-icons/fa';
 import { TaxonomyManager } from '../../components/TaxonomyManager';
 import { AdminLayout } from '../../components/AdminLayout';
 
@@ -48,13 +48,13 @@ export default function TaxonomiesAdmin() {
       // Group by namespace and calculate stats
       const namespaceMap = new Map<string, { total: number; active: number }>();
       
-      taxonomies.forEach((item: any) => {
-        const existing = namespaceMap.get(item.namespace) || { total: 0, active: 0 };
+      taxonomies.forEach((item: Record<string, unknown>) => {
+        const existing = namespaceMap.get(String(item.namespace)) || { total: 0, active: 0 };
         existing.total++;
         if (item.is_active === 1) {
           existing.active++;
         }
-        namespaceMap.set(item.namespace, existing);
+        namespaceMap.set(String(item.namespace), existing);
       });
 
       const namespaceList: TaxonomyNamespace[] = Array.from(namespaceMap.entries())
@@ -69,7 +69,7 @@ export default function TaxonomiesAdmin() {
       setStats({
         total_namespaces: namespaceList.length,
         total_items: taxonomies.length,
-        active_items: taxonomies.filter((item: any) => item.is_active === 1).length
+        active_items: taxonomies.filter((item: Record<string, unknown>) => item.is_active === 1).length
       });
 
     } catch (err) {

@@ -55,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (conditions) {
         try {
           JSON.parse(conditions);
-        } catch (error) {
+        } catch {
           return res.status(400).json({ error: 'conditions must be valid JSON' });
         }
       }
@@ -63,13 +63,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (actions) {
         try {
           JSON.parse(actions);
-        } catch (error) {
+        } catch {
           return res.status(400).json({ error: 'actions must be valid JSON' });
         }
       }
       
       // Prepare update data
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
       if (trigger !== undefined) updateData.trigger = trigger;

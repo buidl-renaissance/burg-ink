@@ -4,22 +4,35 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaPlus, FaTrash, FaSave, FaTimes, FaPlay, FaSpinner, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 
+interface WorkflowCondition {
+  field: string;
+  operator: string;
+  value: string | number | boolean;
+}
+
+interface WorkflowAction {
+  type: string;
+  params: Record<string, unknown>;
+}
+
 interface WorkflowRule {
   id?: number;
   name: string;
   description?: string;
   trigger: string;
-  conditions: any;
-  actions: any[];
+  conditions: Record<string, WorkflowCondition>;
+  actions: WorkflowAction[];
   is_enabled: number;
   priority: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface WorkflowRuleBuilderProps {
   rule?: WorkflowRule;
   onSave: (rule: WorkflowRule) => Promise<void>;
   onCancel: () => void;
-  onTest?: (rule: WorkflowRule) => Promise<any>;
+  onTest?: (rule: WorkflowRule) => Promise<{ success: boolean; message: string }>;
   saving?: boolean;
   className?: string;
 }
@@ -87,7 +100,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
     preview: false
   });
 
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string; details?: unknown } | null>(null);
   const [testing, setTesting] = useState(false);
 
   useEffect(() => {
@@ -118,7 +131,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
       const result = await onTest(formData);
       setTestResult(result);
     } catch (error) {
-      setTestResult({ error: error instanceof Error ? error.message : 'Test failed' });
+      setTestResult({ success: false, message: 'Test failed', error: error instanceof Error ? error.message : 'Test failed' });
     } finally {
       setTesting(false);
     }
@@ -143,7 +156,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
     });
   };
 
-  const updateCondition = (key: string, updates: any) => {
+  const updateCondition = (key: string, updates: Partial<WorkflowCondition>) => {
     setFormData({
       ...formData,
       conditions: {
@@ -171,7 +184,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
     });
   };
 
-  const updateAction = (index: number, updates: any) => {
+  const updateAction = (index: number, updates: Partial<WorkflowAction>) => {
     const newActions = [...formData.actions];
     newActions[index] = { ...newActions[index], ...updates };
     setFormData({ ...formData, actions: newActions });
@@ -193,16 +206,18 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
     return CONDITION_FIELDS[formData.trigger as keyof typeof CONDITION_FIELDS] || [];
   };
 
-  const renderConditionInput = (field: any, condition: any, onChange: (value: any) => void) => {
+  const renderConditionInput = (field: { type: string; value: string; label: string; options?: string[]; min?: number; max?: number; step?: number } | undefined, condition: WorkflowCondition, onChange: (value: string | number | boolean) => void) => {
+    if (!field) return null;
+    
     switch (field.type) {
       case 'select':
         return (
           <SelectInput
-            value={condition.value}
+            value={String(condition.value)}
             onChange={(e) => onChange(e.target.value)}
           >
             <option value="">Select {field.label}</option>
-            {field.options.map((option: string) => (
+            {field.options?.map((option: string) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </SelectInput>
@@ -211,7 +226,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
         return (
           <NumberInput
             type="number"
-            value={condition.value}
+            value={Number(condition.value)}
             onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
             min={field.min}
             max={field.max}
@@ -222,7 +237,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
         return (
           <TextInput
             type="text"
-            value={condition.value}
+            value={String(condition.value)}
             onChange={(e) => onChange(e.target.value)}
             placeholder={`Enter ${field.label}`}
           />
@@ -231,7 +246,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
   };
 
   const generatePreview = () => {
-    const conditions = Object.values(formData.conditions).map((condition: any) => {
+    const conditions = Object.values(formData.conditions).map((condition: WorkflowCondition) => {
       const field = getConditionFields().find(f => f.value === condition.field);
       return `${field?.label || condition.field} ${condition.operator} ${condition.value}`;
     }).join(' AND ');
@@ -355,7 +370,7 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
                   <EmptyMessage>No conditions defined. Rule will trigger on all {formData.trigger.replace('_', ' ')} events.</EmptyMessage>
                 </EmptyState>
               ) : (
-                Object.entries(formData.conditions).map(([key, condition]: [string, any]) => {
+                Object.entries(formData.conditions).map(([key, condition]: [string, WorkflowCondition]) => {
                   const fields = getConditionFields();
                   const field = fields.find(f => f.value === condition.field);
                   
@@ -495,9 +510,9 @@ export const WorkflowRuleBuilder: React.FC<WorkflowRuleBuilderProps> = ({
               ) : (
                 <SuccessMessage>Rule test completed successfully!</SuccessMessage>
               )}
-              {testResult.details && (
-                <TestDetails>{JSON.stringify(testResult.details, null, 2)}</TestDetails>
-              )}
+               {testResult.details ? (
+                 <TestDetails>{JSON.stringify(testResult.details as Record<string, unknown>, null, 2)}</TestDetails>
+               ) : null}
             </TestResultContent>
           </TestResult>
         )}

@@ -133,7 +133,7 @@ export const MediaClassificationPrompt: React.FC<MediaClassificationPromptProps>
           </PromptDescription>
           {media.title && (
             <PromptSubtext>
-              Suggested title: "{media.title}"
+              Suggested title: &quot;{media.title}&quot;
             </PromptSubtext>
           )}
         </PromptText>

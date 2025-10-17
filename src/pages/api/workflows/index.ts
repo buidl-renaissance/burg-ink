@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         JSON.parse(conditions);
         JSON.parse(actions);
-      } catch (error) {
+      } catch {
         return res.status(400).json({ error: 'conditions and actions must be valid JSON' });
       }
       

@@ -969,15 +969,15 @@ const ClassificationBadge = styled.div<{ type: string; confidence: number }>`
   border: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
-const ClassificationBadgeList = styled.div`
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 10;
-`;
+// const ClassificationBadgeList = styled.div`
+//   position: absolute;
+//   top: 0.5rem;
+//   left: 0.5rem;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 0.25rem;
+//   z-index: 10;
+// `;
 
 const EntityLinkedBadge = styled.div`
   position: absolute;

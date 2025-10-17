@@ -3,32 +3,35 @@ import { workflowRules } from '../../../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
 export interface WorkflowContext {
-  media: any; // Media record
-  classification?: any; // MediaClassification result
-  user?: any; // User record
-  [key: string]: any; // Additional context data
+  media: Record<string, unknown>; // Media record
+  classification?: Record<string, unknown>; // MediaClassification result
+  user?: Record<string, unknown>; // User record
+  [key: string]: unknown; // Additional context data
 }
 
 export interface WorkflowCondition {
   type: string;
-  value: any;
+  value: string | number | boolean;
   operator?: string; // 'equals', 'greater_than', 'contains', etc.
 }
 
 export interface WorkflowAction {
   type: string;
-  params: Record<string, any>;
+  params: Record<string, unknown>;
 }
 
 export interface WorkflowRule {
   id: number;
   name: string;
-  description?: string;
+  description: string | null;
   trigger: string;
   conditions: string; // JSON string
   actions: string; // JSON string
-  is_enabled: number;
-  priority: number;
+  is_enabled: number | null;
+  priority: number | null;
+  last_fired_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface WorkflowExecution {
@@ -45,30 +48,30 @@ export interface WorkflowExecution {
 const conditionEvaluators = {
   detected_type: (context: WorkflowContext, condition: WorkflowCondition): boolean => {
     const detectedType = context.classification?.detectedType || context.media?.detected_type;
-    return detectedType === condition.value;
+    return String(detectedType || '') === String(condition.value);
   },
   
   min_confidence: (context: WorkflowContext, condition: WorkflowCondition): boolean => {
-    const confidence = parseFloat(context.classification?.confidence || context.media?.detection_confidence || '0');
-    return confidence >= condition.value;
+    const confidence = parseFloat(String(context.classification?.confidence || context.media?.detection_confidence || '0'));
+    return confidence >= Number(condition.value);
   },
   
   has_tags: (context: WorkflowContext, condition: WorkflowCondition): boolean => {
-    const tags = context.media?.tags ? JSON.parse(context.media.tags) : [];
+    const tags = context.media?.tags ? JSON.parse(String(context.media.tags)) : [];
     const requiredTags = Array.isArray(condition.value) ? condition.value : [condition.value];
     return requiredTags.some((tag: string) => tags.includes(tag));
   },
   
   mime_type: (context: WorkflowContext, condition: WorkflowCondition): boolean => {
-    const mimeType = context.media?.mime_type || '';
+    const mimeType = String(context.media?.mime_type || '');
     if (condition.operator === 'starts_with') {
-      return mimeType.startsWith(condition.value);
+      return mimeType.startsWith(String(condition.value));
     }
-    return mimeType === condition.value;
+    return mimeType === String(condition.value);
   },
   
   processing_status: (context: WorkflowContext, condition: WorkflowCondition): boolean => {
-    return context.media?.processing_status === condition.value;
+    return String(context.media?.processing_status || '') === String(condition.value);
   },
 };
 
@@ -76,41 +79,39 @@ const conditionEvaluators = {
 const actionExecutors = {
   flag_media: async (context: WorkflowContext, action: WorkflowAction): Promise<void> => {
     // Add a flag to the media record
-    const flags = context.media.flags ? JSON.parse(context.media.flags) : [];
+    const flags = context.media.flags ? JSON.parse(String(context.media.flags)) : [];
     const newFlag = action.params.flag;
     
     if (!flags.includes(newFlag)) {
       flags.push(newFlag);
       // Note: In a real implementation, you'd update the media record here
-      console.log(`Flagged media ${context.media.id} with: ${newFlag}`);
+      console.log(`Flagged media ${context.media.id} with: ${String(newFlag)}`);
     }
   },
   
   apply_tags: async (context: WorkflowContext, action: WorkflowAction): Promise<void> => {
     // Apply tags from taxonomy
-    const currentTags = context.media.tags ? JSON.parse(context.media.tags) : [];
     const newTags = Array.isArray(action.params.tags) ? action.params.tags : [action.params.tags];
     
-    const updatedTags = [...new Set([...currentTags, ...newTags])];
     console.log(`Applied tags to media ${context.media.id}:`, newTags);
     // Note: In a real implementation, you'd update the media record here
   },
   
   create_entity: async (context: WorkflowContext, action: WorkflowAction): Promise<void> => {
     // Mark media for entity creation
-    console.log(`Marking media ${context.media.id} for ${action.params.type} creation`);
+    console.log(`Marking media ${context.media.id} for ${String(action.params.type)} creation`);
     // Note: In a real implementation, you'd update the media record with suggested_entity_type
   },
   
   notify_admin: async (context: WorkflowContext, action: WorkflowAction): Promise<void> => {
     // Send notification to admin
-    console.log(`Admin notification: ${action.params.message}`);
+    console.log(`Admin notification: ${String(action.params.message)}`);
     // Note: In a real implementation, you'd integrate with notification system
   },
   
   set_status: async (context: WorkflowContext, action: WorkflowAction): Promise<void> => {
     // Update processing status
-    console.log(`Setting media ${context.media.id} status to: ${action.params.status}`);
+    console.log(`Setting media ${context.media.id} status to: ${String(action.params.status)}`);
     // Note: In a real implementation, you'd update the media record
   },
 };

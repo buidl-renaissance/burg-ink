@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { media, artwork, artists } from '../../../db/schema';
+import { db } from '../../../../db';
+import { media, artwork, artists } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { MediaClassification } from '../../../lib/ai';
 

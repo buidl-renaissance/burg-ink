@@ -2,22 +2,33 @@
 
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaSpinner, FaPlus, FaPlay, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaSpinner, FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { WorkflowRuleBuilder } from '../../components/WorkflowRuleBuilder';
 import { AdminLayout } from '../../components/AdminLayout';
 
+interface WorkflowCondition {
+  field: string;
+  operator: string;
+  value: string | number | boolean;
+}
+
+interface WorkflowAction {
+  type: string;
+  params: Record<string, unknown>;
+}
+
 interface WorkflowRule {
-  id: number;
+  id?: number;
   name: string;
   description?: string;
   trigger: string;
-  conditions: any;
-  actions: any[];
+  conditions: Record<string, WorkflowCondition>;
+  actions: WorkflowAction[];
   is_enabled: number;
   priority: number;
   last_fired_at?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export default function WorkflowsAdmin() {
@@ -27,7 +38,7 @@ export default function WorkflowsAdmin() {
   const [editingRule, setEditingRule] = useState<WorkflowRule | null>(null);
   const [creatingRule, setCreatingRule] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
+  const [, setTesting] = useState(false);
 
   useEffect(() => {
     fetchWorkflows();
@@ -174,7 +185,7 @@ export default function WorkflowsAdmin() {
     return labels[trigger] || trigger;
   };
 
-  const getActionLabels = (actions: any[]) => {
+  const getActionLabels = (actions: WorkflowAction[]) => {
     const actionLabels: Record<string, string> = {
       'flag_media': 'Flag Media',
       'apply_tags': 'Apply Tags',
@@ -292,7 +303,7 @@ export default function WorkflowsAdmin() {
 
         <WorkflowsList>
           {sortedWorkflows.map((workflow) => (
-            <WorkflowCard key={workflow.id} enabled={workflow.is_enabled === 1}>
+            <WorkflowCard key={workflow.id || `workflow-${Math.random()}`} enabled={workflow.is_enabled === 1}>
               <CardHeader>
                 <CardHeaderLeft>
                   <CardTitle>{workflow.name}</CardTitle>
@@ -303,7 +314,7 @@ export default function WorkflowsAdmin() {
                     Priority: {workflow.priority}
                   </PriorityBadge>
                   <ToggleButton
-                    onClick={() => handleToggleRule(workflow.id, workflow.is_enabled)}
+                    onClick={() => workflow.id && handleToggleRule(workflow.id, workflow.is_enabled)}
                     enabled={workflow.is_enabled === 1}
                   >
                     {workflow.is_enabled === 1 ? <FaToggleOn /> : <FaToggleOff />}
@@ -326,7 +337,7 @@ export default function WorkflowsAdmin() {
                     <DetailRow>
                       <DetailLabel>Last Executed:</DetailLabel>
                       <DetailValue>
-                        {new Date(workflow.last_fired_at).toLocaleString()}
+                        {workflow.last_fired_at ? new Date(workflow.last_fired_at).toLocaleString() : 'Never'}
                       </DetailValue>
                     </DetailRow>
                   )}
@@ -334,7 +345,7 @@ export default function WorkflowsAdmin() {
                   <DetailRow>
                     <DetailLabel>Created:</DetailLabel>
                     <DetailValue>
-                      {new Date(workflow.created_at).toLocaleDateString()}
+                      {workflow.created_at ? new Date(workflow.created_at).toLocaleDateString() : 'Unknown'}
                     </DetailValue>
                   </DetailRow>
                 </CardDetails>
@@ -349,7 +360,7 @@ export default function WorkflowsAdmin() {
                   Edit
                 </ActionButton>
                 <ActionButton 
-                  onClick={() => handleDeleteRule(workflow.id)}
+                  onClick={() => workflow.id && handleDeleteRule(workflow.id)}
                   danger
                 >
                   <FaTrash />

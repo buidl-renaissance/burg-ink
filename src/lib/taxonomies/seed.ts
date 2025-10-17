@@ -1,4 +1,4 @@
-import { taxonomy } from '../../../db/schema';
+// import { taxonomy } from '../../../db/schema';
 
 export interface TaxonomySeedData {
   namespace: string;
