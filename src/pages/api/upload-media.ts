@@ -62,17 +62,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Create media record in database
     const newMedia = await db.insert(media).values({
+      id: fileId, // Use fileId as the media ID
+      original_url: storedFile.url,
       user_id: user?.id || 1, // Default to user 1 if no auth
       source: 'upload',
       source_id: fileId,
       filename: uploadedFile.originalFilename || 'uploaded-media',
       mime_type: uploadedFile.mimetype || 'application/octet-stream',
       size: uploadedFile.size || 0,
-      spaces_key: storedFile.key,
-      spaces_url: storedFile.url,
       processing_status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }).returning();
 
     // Clean up the temporary file

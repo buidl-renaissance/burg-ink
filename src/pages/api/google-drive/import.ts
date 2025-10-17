@@ -99,17 +99,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Create media record
         const newMedia = await db.insert(media).values({
+          id: createHash('md5').update(`${fileId}-${Date.now()}`).digest('hex'),
+          original_url: storedFile.url,
           user_id: user.id,
           source: 'google_drive',
           source_id: fileId,
           filename: fileData.name,
           mime_type: fileData.mimeType,
           size: parseInt(fileData.size) || 0,
-          spaces_key: storedFile.key,
-          spaces_url: storedFile.url,
           processing_status: 'pending',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         }).returning();
 
         importedFiles.push({

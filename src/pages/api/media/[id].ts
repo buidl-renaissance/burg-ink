@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { media } from '../../../db/schema';
+import { media } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -11,10 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'Invalid media ID' });
   }
 
-  const mediaId = parseInt(id);
-  if (isNaN(mediaId)) {
-    return res.status(400).json({ message: 'Invalid media ID' });
-  }
+  const mediaId = id;
 
   try {
     const user = await getAuthorizedUser(req);

@@ -69,7 +69,7 @@ export const processMediaAnalysis = inngest.createFunction(
           tags: JSON.stringify(analysisResult.tags),
           description: analysisResult.description,
           alt_text: analysisResult.altText,
-          ai_analysis: JSON.stringify({
+          detections: JSON.stringify({
             tags: analysisResult.tags,
             description: analysisResult.description,
             altText: analysisResult.altText,
@@ -78,8 +78,6 @@ export const processMediaAnalysis = inngest.createFunction(
             analyzedAt: new Date().toISOString(),
             model: 'gpt-4-vision-preview'
           }),
-          processed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         };
 
         await db.update(media)
@@ -106,7 +104,7 @@ export const processMediaAnalysis = inngest.createFunction(
         await db.update(media)
           .set({
             processing_status: 'failed',
-            ai_analysis: JSON.stringify({
+            detections: JSON.stringify({
               error: error instanceof Error ? error.message : 'Unknown error',
               failedAt: new Date().toISOString()
             }),
@@ -126,7 +124,7 @@ export const processMediaAnalysis = inngest.createFunction(
 /**
  * Trigger AI analysis for a media file
  */
-export async function triggerMediaAnalysis(mediaId: number, imageUrl: string, filename: string, mimeType: string) {
+export async function triggerMediaAnalysis(mediaId: string, imageUrl: string, filename: string, mimeType: string) {
   try {
     await inngest.send({
       name: 'media.analyze',
