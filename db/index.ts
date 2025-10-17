@@ -3,11 +3,11 @@ import { createClient } from '@libsql/client';
 import * as schema from './schema';
 
 // Use local SQLite if DATABASE_URL is set, otherwise use Turso
-const useLocalDb = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('turso');
+const useLocalDb = process.env.TURSO_DATABASE_URL && !process.env.TURSO_DATABASE_URL.includes('turso');
 
 const client = useLocalDb 
   ? createClient({
-      url: process.env.DATABASE_URL!,
+      url: process.env.TURSO_DATABASE_URL!,
     })
   : createClient({
       url: process.env.TURSO_DATABASE_URL!,

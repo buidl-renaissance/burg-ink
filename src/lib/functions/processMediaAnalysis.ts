@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { analyzeImageWithVision, extractImageMetadata } from '../ai/visionAnalysis';
 
 interface MediaAnalysisPayload {
-  mediaId: number;
+  mediaId: string;
   imageUrl: string;
   filename: string;
   mimeType: string;
@@ -110,7 +110,6 @@ export const processMediaAnalysis = inngest.createFunction(
               error: error instanceof Error ? error.message : 'Unknown error',
               failedAt: new Date().toISOString()
             }),
-            updated_at: new Date().toISOString(),
           })
           .where(eq(media.id, mediaId));
       });

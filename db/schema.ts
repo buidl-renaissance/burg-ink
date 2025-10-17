@@ -229,6 +229,7 @@ export const media = sqliteTable("media", {
   thumbnail_url: text("thumbnail_url"), // Snake case as in database
   source: text("source").notNull(), // 'local' | 'gdrive'
   source_id: text("source_id"), // Optional source ID for tracking
+  ai_analysis: text("ai_analysis"), // JSON string for AI analysis results
   tags: text("tags").default("[]"), // JSON string as in database
   title: text("title"), // Added from media-manager
   description: text("description"), // AI-generated description
