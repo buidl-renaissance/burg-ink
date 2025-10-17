@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaComments, FaLightbulb, FaDownload, FaShare, FaUser, FaPalette, FaBullseye, FaChartLine } from 'react-icons/fa';
+import { FaComments, FaLightbulb, FaDownload, FaShare, FaPalette, FaChartLine, FaCopy, FaTimes, FaCheck, FaTrash, FaSpinner, FaBolt, FaShareAlt } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 import { MarketingMessage, ArtistProfile, MarketingResponse } from '@/lib/ai';
 
@@ -12,6 +12,50 @@ interface Message {
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+interface GeneratedContent {
+  content: string;
+  hashtags: string[];
+  platform: string;
+  tone: string;
+  characterCount: number;
+  metadata: {
+    ctas: string[];
+    mentions: string[];
+    keywords: string[];
+    estimatedEngagement: string;
+  };
+  variations?: string[];
+}
+
+interface ContentGenerationState {
+  isGenerating: boolean;
+  generatedContent: GeneratedContent | null;
+  showContentPanel: boolean;
+  contentType: 'social-post' | 'caption' | 'hashtags' | 'bio' | 'artist-statement' | 'email';
+  platform: 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'email';
+  tone: 'professional' | 'casual' | 'hype' | 'minimal' | 'storytelling' | 'educational';
+  copiedToClipboard: boolean;
+}
+
+interface ConversationThread {
+  id: number;
+  title: string;
+  messages: Message[];
+  artistProfile: Partial<ArtistProfile>;
+  conversationStage: string;
+  isActive: boolean;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt: string;
+}
+
+interface ConversationState {
+  currentConversationId: number | null;
+  conversations: ConversationThread[];
+  isLoadingConversations: boolean;
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -38,6 +82,24 @@ export default function MarketingAssistant() {
   const [conversationStage, setConversationStage] = useState<'intro' | 'style' | 'audience' | 'goals' | 'summary' | 'complete'>('intro');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Content generation state
+  const [contentState, setContentState] = useState<ContentGenerationState>({
+    isGenerating: false,
+    generatedContent: null,
+    showContentPanel: false,
+    contentType: 'social-post',
+    platform: 'instagram',
+    tone: 'professional',
+    copiedToClipboard: false
+  });
+
+  // Conversation state
+  const [conversationState, setConversationState] = useState<ConversationState>({
+    currentConversationId: null,
+    conversations: [],
+    isLoadingConversations: false
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -45,6 +107,11 @@ export default function MarketingAssistant() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load conversations on mount since they're always visible
+  useEffect(() => {
+    loadConversations();
+  }, []);
 
   const generateResponse = async (userInput: string): Promise<string> => {
     try {
@@ -56,15 +123,19 @@ export default function MarketingAssistant() {
           content: msg.content
         }));
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/marketing-assistant', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
           message: userInput,
           conversationHistory,
           currentProfile: artistProfile,
+          conversationId: conversationState.currentConversationId,
+          saveConversation: true
         }),
       });
 
@@ -93,10 +164,12 @@ export default function MarketingAssistant() {
 
   const generateMarketingSummary = async (): Promise<string> => {
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/marketing-assistant', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
           action: 'generate-summary',
@@ -186,6 +259,291 @@ export default function MarketingAssistant() {
     setConversationStage('intro');
   };
 
+  // Content generation functions
+  const generateContent = async () => {
+    if (!artistProfile.name) {
+      alert('Please complete your artist profile first by chatting with the assistant.');
+      return;
+    }
+
+    setContentState(prev => ({ ...prev, isGenerating: true }));
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/marketing-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          action: `generate-${contentState.contentType}`,
+          contentType: contentState.contentType,
+          platform: contentState.platform,
+          tone: contentState.tone,
+          currentProfile: {
+            ...artistProfile,
+            artistId: 1 // This should be the actual artist ID
+          },
+          additionalContext: inputValue
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.generatedContent) {
+        setContentState(prev => ({
+          ...prev,
+          generatedContent: data.generatedContent,
+          isGenerating: false
+        }));
+      } else {
+        throw new Error(data.error || 'Failed to generate content');
+      }
+
+    } catch (error) {
+      console.error('Error generating content:', error);
+      setContentState(prev => ({ ...prev, isGenerating: false }));
+      alert('Failed to generate content. Please try again.');
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setContentState(prev => ({ ...prev, copiedToClipboard: true }));
+      setTimeout(() => {
+        setContentState(prev => ({ ...prev, copiedToClipboard: false }));
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
+  };
+
+  const openContentPanel = () => {
+    setContentState(prev => ({ ...prev, showContentPanel: true }));
+  };
+
+  const closeContentPanel = () => {
+    setContentState(prev => ({ ...prev, showContentPanel: false, generatedContent: null }));
+  };
+
+  // Conversation management functions
+  const loadConversations = async () => {
+    setConversationState(prev => ({ ...prev, isLoadingConversations: true }));
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/marketing-assistant/conversations', {
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Ensure dates are properly converted
+        const conversationsWithDates = data.conversations.map((conv: ConversationThread) => ({
+          ...conv,
+          lastMessageAt: conv.lastMessageAt ? new Date(conv.lastMessageAt) : new Date(),
+          createdAt: conv.createdAt ? new Date(conv.createdAt) : new Date(),
+          updatedAt: conv.updatedAt ? new Date(conv.updatedAt) : new Date()
+        }));
+        setConversationState(prev => ({
+          ...prev,
+          conversations: conversationsWithDates,
+          isLoadingConversations: false
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      setConversationState(prev => ({ ...prev, isLoadingConversations: false }));
+    }
+  };
+
+  const loadConversation = async (conversationId: number) => {
+    try {
+      const conversation = conversationState.conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        // Load the conversation and ensure timestamps are Date objects
+        const messagesWithDates = conversation.messages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(messagesWithDates);
+        setArtistProfile(conversation.artistProfile);
+        setConversationStage(conversation.conversationStage as 'intro' | 'summary' | 'complete');
+        setConversationState(prev => ({
+          ...prev,
+          currentConversationId: conversationId
+        }));
+        
+        // Mark as active
+        const token = localStorage.getItem('authToken');
+        await fetch('/api/marketing-assistant/conversations', {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            id: conversationId,
+            isActive: true
+          })
+        });
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  };
+
+  const startNewConversation = () => {
+    setMessages([{
+      id: '1',
+      type: 'assistant',
+      content: "Hello! I'm your AI marketing assistant. I'm here to help you understand your artistic identity and create effective marketing strategies. Let's start by getting to know you and your work better. What's your name?",
+      timestamp: new Date()
+    }]);
+    setArtistProfile({});
+    setConversationStage('intro');
+    setConversationState(prev => ({
+      ...prev,
+      currentConversationId: null
+    }));
+  };
+
+  const deleteConversation = async (conversationId: number) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/marketing-assistant/conversations?id=${conversationId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+      
+      if (response.ok) {
+        setConversationState(prev => ({
+          ...prev,
+          conversations: prev.conversations.filter(c => c.id !== conversationId)
+        }));
+        
+        // If we deleted the current conversation, start a new one
+        if (conversationState.currentConversationId === conversationId) {
+          startNewConversation();
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    }
+  };
+
+
+  // Quick action handlers
+  const handleExportProfile = async () => {
+    if (!artistProfile.name) {
+      alert('Please complete your artist profile first by chatting with the assistant.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/marketing-assistant/export-profile?artistId=1', {
+        method: 'GET',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Create and download the file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `artist-profile-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Error exporting profile:', error);
+      alert('Failed to export profile. Please try again.');
+    }
+  };
+
+  const handleMarketingPlan = async () => {
+    if (!artistProfile.name) {
+      alert('Please complete your artist profile first by chatting with the assistant.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/marketing-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          action: 'generate-summary',
+          currentProfile: artistProfile
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Marketing plan generation failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Display the marketing plan in a modal or alert
+      const planWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+      if (planWindow) {
+        planWindow.document.write(`
+          <html>
+            <head>
+              <title>Marketing Plan - ${artistProfile.name}</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+                h1 { color: #333; border-bottom: 2px solid #96885f; padding-bottom: 10px; }
+                h2 { color: #555; margin-top: 30px; }
+                .recommendation { background: #f8f9fa; padding: 15px; margin: 10px 0; border-left: 4px solid #96885f; }
+                .timestamp { color: #666; font-size: 0.9em; }
+              </style>
+            </head>
+            <body>
+              <h1>Marketing Plan for ${artistProfile.name}</h1>
+              <p class="timestamp">Generated on ${new Date().toLocaleString()}</p>
+              <div>${data.message.replace(/\n/g, '<br>')}</div>
+              ${data.recommendations ? `
+                <h2>Key Recommendations</h2>
+                ${data.recommendations.map((rec: string) => `<div class="recommendation">${rec}</div>`).join('')}
+              ` : ''}
+            </body>
+          </html>
+        `);
+        planWindow.document.close();
+      } else {
+        alert('Please allow popups to view your marketing plan.');
+      }
+
+    } catch (error) {
+      console.error('Error generating marketing plan:', error);
+      alert('Failed to generate marketing plan. Please try again.');
+    }
+  };
+
   return (
     <AdminLayout currentPage="marketing-assistant">
       <Container>
@@ -198,108 +556,314 @@ export default function MarketingAssistant() {
         </Header>
 
         <Content>
-          <ChatSection>
-            <ChatHeader>
-              <ChatTitle>Artist Marketing Chat</ChatTitle>
-              <ResetButton onClick={resetConversation}>
-                <FaShare /> New Conversation
-              </ResetButton>
-            </ChatHeader>
+          <MainContent>
+            <ChatSection>
+              <ChatHeader>
+                <ChatTitle>Artist Marketing Chat</ChatTitle>
+                <ResetButton onClick={resetConversation}>
+                  <FaShare /> New Conversation
+                </ResetButton>
+              </ChatHeader>
 
-            <MessagesContainer>
-              {messages.map((message) => (
-                <MessageBubble key={message.id} type={message.type}>
-                  <MessageContent type={message.type}>{message.content}</MessageContent>
-                  <MessageTime type={message.type}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </MessageTime>
-                </MessageBubble>
-              ))}
-              {isLoading && (
-                <MessageBubble type="assistant">
-                  <TypingIndicator>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </TypingIndicator>
-                </MessageBubble>
-              )}
-              <div ref={messagesEndRef} />
-            </MessagesContainer>
+              <MessagesContainer>
+                {messages.map((message) => (
+                  <MessageBubble key={message.id} type={message.type}>
+                    <MessageContent type={message.type}>{message.content}</MessageContent>
+                    <MessageTime type={message.type}>
+                      {(() => {
+                        try {
+                          const date = new Date(message.timestamp);
+                          return isNaN(date.getTime()) ? 'Invalid time' : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } catch (error) {
+                          console.error('Error parsing message timestamp:', error);
+                          return 'Invalid time';
+                        }
+                      })()}
+                    </MessageTime>
+                  </MessageBubble>
+                ))}
+                {isLoading && (
+                  <MessageBubble type="assistant">
+                    <TypingIndicator>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </TypingIndicator>
+                  </MessageBubble>
+                )}
+                <div ref={messagesEndRef} />
+              </MessagesContainer>
 
-            <InputSection>
-              <InputContainer>
-                <ChatInput
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  disabled={isLoading}
-                />
-                <SendButton onClick={handleSendMessage} disabled={isLoading || !inputValue.trim()}>
-                  <FaComments />
-                </SendButton>
-              </InputContainer>
-            </InputSection>
-          </ChatSection>
+              <InputSection>
+                <InputContainer>
+                  <ChatInput
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    disabled={isLoading}
+                  />
+                  <SendButton onClick={handleSendMessage} disabled={isLoading || !inputValue.trim()}>
+                    <FaComments />
+                  </SendButton>
+                </InputContainer>
+              </InputSection>
+            </ChatSection>
+          </MainContent>
 
-          <Sidebar>
+          <RightSidebar>
             <SidebarSection>
               <SidebarTitle>
-                <FaUser />
-                Artist Profile
+                <FaComments />
+                Conversations
               </SidebarTitle>
-              {artistProfile.name && (
-                <ProfileCard>
-                  <ProfileItem>
-                    <strong>Name:</strong> {artistProfile.name}
-                  </ProfileItem>
-                  {artistProfile.medium && (
-                    <ProfileItem>
-                      <strong>Medium:</strong> {artistProfile.medium}
-                    </ProfileItem>
-                  )}
-                  {artistProfile.style && (
-                    <ProfileItem>
-                      <strong>Style:</strong> {artistProfile.style}
-                    </ProfileItem>
-                  )}
-                  {artistProfile.targetAudience && (
-                    <ProfileItem>
-                      <strong>Target Audience:</strong> {artistProfile.targetAudience}
-                    </ProfileItem>
-                  )}
-                  {artistProfile.goals && (
-                    <ProfileItem>
-                      <strong>Goals:</strong> {artistProfile.goals}
-                    </ProfileItem>
-                  )}
-                </ProfileCard>
-              )}
+              
+              <ConversationList>
+                {conversationState.isLoadingConversations ? (
+                  <ConversationLoading>Loading conversations...</ConversationLoading>
+                ) : conversationState.conversations.length === 0 ? (
+                  <ConversationEmpty>No previous conversations</ConversationEmpty>
+                ) : (
+                  conversationState.conversations.map((conversation) => (
+                    <ConversationItem
+                      key={conversation.id}
+                      active={conversationState.currentConversationId === conversation.id}
+                      onClick={() => loadConversation(conversation.id)}
+                    >
+                      <ConversationTitle>{conversation.title}</ConversationTitle>
+                      <ConversationMeta>
+                        {(() => {
+                          try {
+                            const date = new Date(conversation.lastMessageAt || conversation.createdAt || conversation.updatedAt);
+                            if (isNaN(date.getTime())) {
+                              return 'No date';
+                            }
+                            const now = new Date();
+                            const diffTime = Math.abs(now.getTime() - date.getTime());
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays === 1) {
+                              return 'Today';
+                            } else if (diffDays === 2) {
+                              return 'Yesterday';
+                            } else if (diffDays <= 7) {
+                              return `${diffDays - 1} days ago`;
+                            } else {
+                              return date.toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+                              });
+                            }
+                          } catch (error) {
+                            console.error('Error parsing conversation timestamp:', error);
+                            return 'No date';
+                          }
+                        })()}
+                        {conversation.isActive && <ActiveIndicator>Active</ActiveIndicator>}
+                      </ConversationMeta>
+                      <ConversationActions>
+                        <ConversationActionButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteConversation(conversation.id);
+                          }}
+                        >
+                          <FaTrash />
+                        </ConversationActionButton>
+                      </ConversationActions>
+                    </ConversationItem>
+                  ))
+                )}
+              </ConversationList>
             </SidebarSection>
 
             <SidebarSection>
               <SidebarTitle>
-                <FaBullseye />
+                <FaBolt />
                 Quick Actions
               </SidebarTitle>
-              <ActionButtons>
-                <ActionButton>
+              
+              <QuickActionsList>
+                <QuickActionButton onClick={handleExportProfile}>
                   <FaDownload />
                   Export Profile
-                </ActionButton>
-                <ActionButton>
+                </QuickActionButton>
+                
+                <QuickActionButton onClick={handleMarketingPlan}>
                   <FaChartLine />
                   Marketing Plan
-                </ActionButton>
-                <ActionButton>
+                </QuickActionButton>
+                
+                <QuickActionButton onClick={openContentPanel}>
                   <FaPalette />
-                  Content Ideas
-                </ActionButton>
-              </ActionButtons>
+                  Generate Content
+                </QuickActionButton>
+                
+                <QuickActionButton onClick={openContentPanel}>
+                  <FaShareAlt />
+                  Social Media
+                </QuickActionButton>
+              </QuickActionsList>
             </SidebarSection>
-          </Sidebar>
+          </RightSidebar>
         </Content>
+
+        {/* Content Generation Panel */}
+        {contentState.showContentPanel && (
+          <ContentPanelOverlay>
+            <ContentPanel>
+              <ContentPanelHeader>
+                <ContentPanelTitle>
+                  <FaPalette />
+                  Content Generator
+                </ContentPanelTitle>
+                <CloseButton onClick={closeContentPanel}>
+                  <FaTimes />
+                </CloseButton>
+              </ContentPanelHeader>
+
+              <ContentPanelBody>
+                {!contentState.generatedContent ? (
+                  <ContentForm>
+                    <FormGroup>
+                      <Label>Content Type</Label>
+                      <Select
+                        value={contentState.contentType}
+                        onChange={(e) => setContentState(prev => ({ 
+                          ...prev, 
+                          contentType: e.target.value as 'social-post' | 'caption' | 'hashtags' | 'bio' | 'artist-statement' | 'email'
+                        }))}
+                      >
+                        <option value="social-post">Social Media Post</option>
+                        <option value="caption">Caption Only</option>
+                        <option value="hashtags">Hashtags</option>
+                        <option value="bio">Artist Bio</option>
+                        <option value="artist-statement">Artist Statement</option>
+                        <option value="email">Email Template</option>
+                      </Select>
+                    </FormGroup>
+
+                    <FormGroup>
+                      <Label>Platform</Label>
+                      <Select
+                        value={contentState.platform}
+                        onChange={(e) => setContentState(prev => ({ 
+                          ...prev, 
+                          platform: e.target.value as 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'email'
+                        }))}
+                      >
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="email">Email</option>
+                      </Select>
+                    </FormGroup>
+
+                    <FormGroup>
+                      <Label>Tone</Label>
+                      <Select
+                        value={contentState.tone}
+                        onChange={(e) => setContentState(prev => ({ 
+                          ...prev, 
+                          tone: e.target.value as 'professional' | 'casual' | 'hype' | 'minimal' | 'storytelling' | 'educational'
+                        }))}
+                      >
+                        <option value="professional">Professional</option>
+                        <option value="casual">Casual</option>
+                        <option value="hype">Hype</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="storytelling">Storytelling</option>
+                        <option value="educational">Educational</option>
+                      </Select>
+                    </FormGroup>
+
+                    <FormGroup>
+                      <Label>Additional Context (Optional)</Label>
+                      <TextArea
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder="Add any specific details about the content you want to create..."
+                        rows={3}
+                      />
+                    </FormGroup>
+
+                    <GenerateButton 
+                      onClick={generateContent} 
+                      disabled={contentState.isGenerating}
+                    >
+                      {contentState.isGenerating ? (
+                        <>
+                          <FaSpinner />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <FaLightbulb />
+                          Generate Content
+                        </>
+                      )}
+                    </GenerateButton>
+                  </ContentForm>
+                ) : (
+                  <GeneratedContentDisplay>
+                    <GeneratedContentHeader>
+                      <GeneratedContentTitle>
+                        Generated {contentState.contentType.replace('-', ' ')} for {contentState.platform}
+                      </GeneratedContentTitle>
+                      <ContentMeta>
+                        {contentState.generatedContent.characterCount} characters • {contentState.generatedContent.tone} tone
+                      </ContentMeta>
+                    </GeneratedContentHeader>
+
+                    <ContentPreview>
+                      <ContentText>{contentState.generatedContent.content}</ContentText>
+                      {contentState.generatedContent.hashtags.length > 0 && (
+                        <HashtagsList>
+                          {contentState.generatedContent.hashtags.map((tag, index) => (
+                            <Hashtag key={index}>{tag}</Hashtag>
+                          ))}
+                        </HashtagsList>
+                      )}
+                    </ContentPreview>
+
+                    <ContentActions>
+                      <CopyButton 
+                        onClick={() => copyToClipboard(
+                          contentState.generatedContent!.content + 
+                          (contentState.generatedContent!.hashtags.length > 0 ? 
+                            '\n\n' + contentState.generatedContent!.hashtags.join(' ') : '')
+                        )}
+                      >
+                        {contentState.copiedToClipboard ? <FaCheck /> : <FaCopy />}
+                        {contentState.copiedToClipboard ? 'Copied!' : 'Copy to Clipboard'}
+                      </CopyButton>
+                      
+                      <RegenerateButton onClick={() => {
+                        setContentState(prev => ({ ...prev, generatedContent: null }));
+                      }}>
+                        <FaLightbulb />
+                        Generate New
+                      </RegenerateButton>
+                    </ContentActions>
+
+                    {contentState.generatedContent.metadata.ctas.length > 0 && (
+                      <CTASuggestions>
+                        <CTATitle>Suggested CTAs:</CTATitle>
+                        <CTAList>
+                          {contentState.generatedContent.metadata.ctas.map((cta, index) => (
+                            <CTAItem key={index}>{cta}</CTAItem>
+                          ))}
+                        </CTAList>
+                      </CTASuggestions>
+                    )}
+                  </GeneratedContentDisplay>
+                )}
+              </ContentPanelBody>
+            </ContentPanel>
+          </ContentPanelOverlay>
+        )}
       </Container>
     </AdminLayout>
   );
@@ -344,16 +908,35 @@ const Subtitle = styled.p`
 `;
 
 const Content = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 2rem;
+  display: flex;
+  gap: 1rem;
   height: calc(100vh - 200px);
 
   @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     height: auto;
   }
 `;
+
+
+const MainContent = styled.div`
+  flex: 1;
+`;
+
+const RightSidebar = styled.div`
+  width: 300px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-y: auto;
+  flex-shrink: 0;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    height: auto;
+  }
+`;
+
 
 const ChatSection = styled.div`
   background: white;
@@ -362,6 +945,7 @@ const ChatSection = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
 `;
 
 const ChatHeader = styled.div`
@@ -534,15 +1118,6 @@ const SendButton = styled.button`
   }
 `;
 
-const Sidebar = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-
-  @media (max-width: 1024px) {
-    order: -1;
-  }
-`;
 
 const SidebarSection = styled.div`
   background: white;
@@ -565,42 +1140,419 @@ const SidebarTitle = styled.h3`
   margin: 0 0 1rem 0;
 `;
 
-const ProfileCard = styled.div`
-  background: #f8f9fa;
+// Content Generation Panel Styles
+const ContentPanelOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+`;
+
+const ContentPanel = styled.div`
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ContentPanelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+`;
+
+const ContentPanelTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+`;
+
+const CloseButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+`;
+
+const ContentPanelBody = styled.div`
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const ContentForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const Label = styled.label`
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+`;
+
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const TextArea = styled.textarea`
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const GenerateButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: #96885f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #7a6f4d;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+const GeneratedContentDisplay = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const GeneratedContentHeader = styled.div`
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+`;
+
+const GeneratedContentTitle = styled.h3`
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  text-transform: capitalize;
+`;
+
+const ContentMeta = styled.p`
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+`;
+
+const ContentPreview = styled.div`
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+`;
+
+const ContentText = styled.div`
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #374151;
+  margin-bottom: 1rem;
+`;
+
+const HashtagsList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+`;
+
+const Hashtag = styled.span`
+  background: #96885f;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+`;
+
+const ContentActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+const CopyButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #059669;
+    transform: translateY(-1px);
+  }
+`;
+
+const RegenerateButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+  }
+`;
+
+const CTASuggestions = styled.div`
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
   border-radius: 8px;
   padding: 1rem;
 `;
 
-const ProfileItem = styled.div`
-  margin-bottom: 0.5rem;
+const CTATitle = styled.h4`
+  margin: 0 0 0.5rem 0;
   font-size: 0.9rem;
-  line-height: 1.4;
+  font-weight: 600;
+  color: #92400e;
+`;
 
-  &:last-child {
-    margin-bottom: 0;
+const CTAList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const CTAItem = styled.div`
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #374151;
+  border-left: 3px solid #f59e0b;
+`;
+
+const ConversationList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+const ConversationItem = styled.div<{ active: boolean }>`
+  padding: 0.75rem;
+  background: ${props => props.active ? '#f0f8ff' : '#f8f9fa'};
+  border: 1px solid ${props => props.active ? '#96885f' : '#e9ecef'};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    background: ${props => props.active ? '#e6f3ff' : '#e9ecef'};
+    border-color: #96885f;
   }
 `;
 
-const ActionButtons = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+const ConversationTitle = styled.div`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
-const ActionButton = styled.button`
+const ConversationMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #666;
+`;
+
+const ActiveIndicator = styled.span`
+  background: #10b981;
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+`;
+
+const ConversationActions = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  ${ConversationItem}:hover & {
+    opacity: 1;
+  }
+`;
+
+const ConversationActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #e9ecef;
+    background: #dc2626;
+    transform: scale(1.1);
+  }
+`;
+
+const ConversationLoading = styled.div`
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+`;
+
+const ConversationEmpty = styled.div`
+  padding: 1rem;
+  text-align: center;
+  color: #999;
+  font-size: 0.85rem;
+  font-style: italic;
+`;
+
+// Quick Actions Styles
+const QuickActionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const QuickActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  &:hover {
+    background: #f8f9fa;
     border-color: #96885f;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    color: #96885f;
+    font-size: 1rem;
   }
 `; 

@@ -32,6 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         email: userData.email,
         profile_picture: userData.profile_picture,
         bio: userData.bio,
+        role: userData.role,
+        is_verified: userData.is_verified,
       }
     });
 

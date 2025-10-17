@@ -96,8 +96,12 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
         const formData = new FormData();
         formData.append('image', file);
 
+        const token = localStorage.getItem('authToken');
         const response = await fetch('/api/upload-media', {
           method: 'POST',
+          headers: {
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
           body: formData,
         });
 

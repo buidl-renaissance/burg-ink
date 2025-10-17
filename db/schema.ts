@@ -119,6 +119,8 @@ export const users = sqliteTable("users", {
   password: text("password"),
   bio: text("bio"),
   profile_picture: text("profile_picture"),
+  role: text("role").default("user"), // 'admin' | 'user' | 'artist'
+  is_verified: integer("is_verified").default(0), // Email verification status
   data: text("data"), // JSON string for additional data
   google_id: text("google_id"),
   google_drive_token: text("google_drive_token"),
@@ -131,6 +133,53 @@ export const users = sqliteTable("users", {
 }, (table) => ({
   cidIdx: uniqueIndex("user_cid_idx").on(table.cid),
   emailIdx: uniqueIndex("user_email_idx").on(table.email),
+  roleIdx: index("user_role_idx").on(table.role),
+}));
+
+// Saved Marketing Content table
+export const savedMarketingContent = sqliteTable("saved_marketing_content", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id),
+  artist_id: integer("artist_id").references(() => artists.id),
+  entity_id: integer("entity_id"), // artwork or tattoo id
+  entity_type: text("entity_type"), // 'artwork' | 'tattoo'
+  content_type: text("content_type").notNull(), // 'social-post' | 'caption' | 'hashtags' | 'bio' | 'artist-statement' | 'email'
+  platform: text("platform").notNull(), // 'instagram' | 'facebook' | 'twitter' | 'tiktok' | 'email'
+  tone: text("tone").notNull(), // 'professional' | 'casual' | 'hype' | 'minimal' | 'storytelling' | 'educational'
+  content: text("content").notNull(),
+  hashtags: text("hashtags"), // JSON string of hashtags
+  metadata: text("metadata"), // JSON string for additional data (CTAs, mentions, etc.)
+  title: text("title"), // User-defined title for saved content
+  tags: text("tags"), // JSON string of user tags for organization
+  is_favorite: integer("is_favorite").default(0), // 0 or 1
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  userIdx: index("saved_content_user_idx").on(table.user_id),
+  artistIdx: index("saved_content_artist_idx").on(table.artist_id),
+  contentTypeIdx: index("saved_content_type_idx").on(table.content_type),
+  platformIdx: index("saved_content_platform_idx").on(table.platform),
+}));
+
+// Marketing Assistant Conversation Threads table
+export const marketingConversations = sqliteTable("marketing_conversations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id),
+  artist_id: integer("artist_id").references(() => artists.id),
+  title: text("title").notNull(), // User-defined or auto-generated title
+  messages: text("messages").notNull(), // JSON string of conversation messages
+  artist_profile: text("artist_profile"), // JSON string of artist profile at time of conversation
+  conversation_stage: text("conversation_stage").default("intro"), // Current stage of conversation
+  is_active: integer("is_active").default(1), // 0 or 1 - whether this is the current active conversation
+  tags: text("tags"), // JSON string of user tags for organization
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  last_message_at: text("last_message_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  userIdx: index("conversation_user_idx").on(table.user_id),
+  artistIdx: index("conversation_artist_idx").on(table.artist_id),
+  activeIdx: index("conversation_active_idx").on(table.is_active),
+  lastMessageIdx: index("conversation_last_message_idx").on(table.last_message_at),
 }));
 
 // Venues table for events

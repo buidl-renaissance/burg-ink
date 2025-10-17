@@ -379,8 +379,12 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           : f
       ));
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/upload-media', {
         method: 'POST',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
         body: formData,
       });
 

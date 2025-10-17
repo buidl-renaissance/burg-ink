@@ -50,6 +50,13 @@ export interface MarketingResponse {
   profile?: Partial<ArtistProfile>;
   stage?: 'intro' | 'style' | 'audience' | 'goals' | 'summary' | 'complete';
   recommendations?: string[];
+  contentSuggestions?: {
+    socialPost?: string;
+    caption?: string;
+    hashtags?: string[];
+    bio?: string;
+    artistStatement?: string;
+  };
 }
 
 export interface MediaClassification {

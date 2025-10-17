@@ -1089,7 +1089,12 @@ export default function AdminMedia() {
                        confidenceFilter === 'low' ? '0.3' : '',
       });
 
-      const response = await fetch(`/api/media?${params}`);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/media?${params}`, {
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);

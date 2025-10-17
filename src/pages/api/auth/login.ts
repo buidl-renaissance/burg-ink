@@ -3,6 +3,7 @@ import { createToken } from '@/lib/auth';
 import { db } from '../../../../db';
 import { users } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -25,9 +26,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // For now, we'll skip password verification since we don't have password fields
-    // In a real implementation, you would hash and verify passwords
-    // This is a simplified version for demonstration
+    // Check if user has a password (some users might only have Google OAuth)
+    if (!user.password) {
+      return res.status(401).json({ 
+        message: 'Please sign in with Google or reset your password' 
+      });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
     // Create JWT token
     const token = createToken({

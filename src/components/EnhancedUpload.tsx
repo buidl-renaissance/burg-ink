@@ -122,8 +122,12 @@ export const EnhancedUpload: React.FC<EnhancedUploadProps> = ({
         const formData = new FormData();
         formData.append('file', file);
 
+        const token = localStorage.getItem('authToken');
         const response = await fetch('/api/upload/local', {
           method: 'POST',
+          headers: {
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
           body: formData,
         });
 

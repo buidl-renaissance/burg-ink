@@ -127,6 +127,27 @@
       "when": 1760713420762,
       "tag": "0017_conscious_strong_guy",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1760737927499,
+      "tag": "0018_rich_wild_child",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1760738437209,
+      "tag": "0019_luxuriant_giant_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1760739748759,
+      "tag": "0020_harsh_boomerang",
+      "breakpoints": true
     }
   ]
 }

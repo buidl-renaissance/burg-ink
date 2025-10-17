@@ -5,15 +5,19 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { FaGoogle, FaEye, FaEyeSlash } from 'react-icons/fa';
 import Head from 'next/head';
+import Link from 'next/link';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const handleGoogleLogin = async () => {
@@ -31,23 +35,34 @@ export default function LoginPage() {
     }
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsLoading(true);
       setError('');
       
-      const response = await fetch('/api/auth/login', {
+      // Validate passwords match
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(errorData.message || 'Registration failed');
       }
 
       const data = await response.json();
@@ -58,8 +73,8 @@ export default function LoginPage() {
       // Redirect to dashboard or home
       router.push('/');
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : 'Login failed');
+      console.error('Registration error:', err);
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -75,22 +90,35 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>Login | Burg Ink</title>
-        <meta name="description" content="Login to your Burg Ink account" />
+        <title>Register | Burg Ink</title>
+        <meta name="description" content="Create your Burg Ink account" />
       </Head>
       
-      <LoginContainer>
-        <LoginCard>
+      <RegisterContainer>
+        <RegisterCard>
           <Logo>
             <h1>Burg Ink</h1>
             <p>Contemporary Art Gallery</p>
           </Logo>
           
-          <LoginForm onSubmit={handleEmailLogin}>
-            <FormTitle>Welcome Back</FormTitle>
-            <Subtitle>Sign in to your account</Subtitle>
+          <RegisterForm onSubmit={handleRegister}>
+            <FormTitle>Create Account</FormTitle>
+            <Subtitle>Join our community of artists and art lovers</Subtitle>
             
             {error && <ErrorMessage>{error}</ErrorMessage>}
+            
+            <FormGroup>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter your full name"
+                required
+              />
+            </FormGroup>
             
             <FormGroup>
               <Label htmlFor="email">Email</Label>
@@ -114,7 +142,7 @@ export default function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   required
                 />
                 <PasswordToggle
@@ -126,14 +154,31 @@ export default function LoginPage() {
               </PasswordContainer>
             </FormGroup>
             
-            <LoginButton type="submit" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </LoginButton>
+            <FormGroup>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <PasswordContainer>
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm your password"
+                  required
+                />
+                <PasswordToggle
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </PasswordToggle>
+              </PasswordContainer>
+            </FormGroup>
             
-            <ForgotPasswordLink>
-              <a href="/forgot-password">Forgot your password?</a>
-            </ForgotPasswordLink>
-          </LoginForm>
+            <RegisterButton type="submit" disabled={isLoading}>
+              {isLoading ? 'Creating Account...' : 'Create Account'}
+            </RegisterButton>
+          </RegisterForm>
           
           <Divider>
             <DividerText>or</DividerText>
@@ -144,17 +189,16 @@ export default function LoginPage() {
             Continue with Google
           </GoogleButton>
           
-          <SignupLink>
-            Don&apos;t have an account?{' '}
-            <a href="/register">Sign up</a>
-          </SignupLink>
-        </LoginCard>
-      </LoginContainer>
+          <LoginLink>
+            Already have an account? <Link href="/login">Sign in</Link>
+          </LoginLink>
+        </RegisterCard>
+      </RegisterContainer>
     </>
   );
 }
 
-const LoginContainer = styled.div`
+const RegisterContainer = styled.div`
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -163,7 +207,7 @@ const LoginContainer = styled.div`
   padding: 1rem;
 `;
 
-const LoginCard = styled.div`
+const RegisterCard = styled.div`
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -191,7 +235,7 @@ const Logo = styled.div`
   }
 `;
 
-const LoginForm = styled.form`
+const RegisterForm = styled.form`
   margin-bottom: 1.5rem;
 `;
 
@@ -261,7 +305,7 @@ const PasswordToggle = styled.button`
   }
 `;
 
-const LoginButton = styled.button`
+const RegisterButton = styled.button`
   width: 100%;
   padding: 0.75rem;
   background-color: #96885f;
@@ -280,21 +324,6 @@ const LoginButton = styled.button`
   &:disabled {
     background-color: #ccc;
     cursor: not-allowed;
-  }
-`;
-
-const ForgotPasswordLink = styled.div`
-  text-align: center;
-  margin-top: 1rem;
-  
-  a {
-    color: #96885f;
-    text-decoration: none;
-    font-size: 0.9rem;
-    
-    &:hover {
-      text-decoration: underline;
-    }
   }
 `;
 
@@ -339,22 +368,18 @@ const GoogleButton = styled.button`
   
   &:hover:not(:disabled) {
     background-color: #f8f9fa;
-    border-color: #ccc;
+    border-color: #bbb;
   }
   
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
-  svg {
-    color: #4285f4;
-  }
 `;
 
-const SignupLink = styled.p`
+const LoginLink = styled.p`
   text-align: center;
-  margin: 1.5rem 0 0 0;
+  margin-top: 1.5rem;
   color: #666;
   font-size: 0.9rem;
   
@@ -371,10 +396,10 @@ const SignupLink = styled.p`
 
 const ErrorMessage = styled.div`
   background-color: #fee;
-  color: #c53030;
+  color: #c33;
   padding: 0.75rem;
   border-radius: 6px;
   margin-bottom: 1rem;
   font-size: 0.9rem;
-  border: 1px solid #feb2b2;
-`; 
+  border: 1px solid #fcc;
+`;
