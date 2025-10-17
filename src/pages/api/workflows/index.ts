@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { workflowRules } from '../../../db/schema';
+import { db } from '../../../../db';
+import { workflowRules } from '../../../../db/schema';
 import { asc, eq } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,17 +8,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { enabled_only } = req.query;
       
-      let query = db.select().from(workflowRules);
+      const query = db.select().from(workflowRules);
+      const queryWithWhere = enabled_only === 'true'
+        ? query.where(eq(workflowRules.is_enabled, 1))
+        : query;
       
-      // Filter by enabled status if requested
-      if (enabled_only === 'true') {
-        query = query.where(eq(workflowRules.is_enabled, 1));
-      }
-      
-      // Order by priority, then by name
-      query = query.orderBy(asc(workflowRules.priority), asc(workflowRules.name));
-      
-      const rules = await query;
+      const rules = await queryWithWhere.orderBy(
+        asc(workflowRules.priority), 
+        asc(workflowRules.name)
+      );
       
       res.status(200).json({ rules });
     } catch (error) {

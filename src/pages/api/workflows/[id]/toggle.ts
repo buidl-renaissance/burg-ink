@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { workflowRules } from '../../../db/schema';
+import { db } from '../../../../../db';
+import { workflowRules } from '../../../../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

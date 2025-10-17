@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../../db';
-import { workflowRules } from '../../../db/schema';
+import { db } from '../../../../../db';
+import { workflowRules } from '../../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { WorkflowEngine } from '../../../../lib/workflows/engine';
 
