@@ -253,6 +253,33 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     return null;
   };
 
+  const uploadFilesSequentially = async (filesToUpload: UploadFile[]) => {
+    if (filesToUpload.length === 0) return;
+
+    setIsUploading(true);
+
+    try {
+      // Upload files sequentially to avoid overwhelming the server
+      for (const file of filesToUpload) {
+        await uploadFile(file);
+      }
+
+      // Get completed URLs from all files
+      const completedFiles = uploadFiles.filter(f => f.status === 'completed');
+      const urls = completedFiles.map(f => f.url!).filter(Boolean);
+      
+      if (urls.length > 0) {
+        onUploadComplete(urls);
+      }
+
+    } catch (error) {
+      console.error('Upload process error:', error);
+      onUploadError?.(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
     
@@ -288,7 +315,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       // Automatically start uploading the new files
       uploadFilesSequentially(newFiles);
     }
-  }, [uploadFiles.length, maxFiles, maxFileSize, accept, onUploadError, uploadFilesSequentially, validateFile]);
+  }, [uploadFiles.length, maxFiles, onUploadError, uploadFilesSequentially, validateFile]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -380,32 +407,6 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     }
   };
 
-  const uploadFilesSequentially = async (filesToUpload: UploadFile[]) => {
-    if (filesToUpload.length === 0) return;
-
-    setIsUploading(true);
-
-    try {
-      // Upload files sequentially to avoid overwhelming the server
-      for (const file of filesToUpload) {
-        await uploadFile(file);
-      }
-
-      // Get completed URLs from all files
-      const completedFiles = uploadFiles.filter(f => f.status === 'completed');
-      const urls = completedFiles.map(f => f.url!).filter(Boolean);
-      
-      if (urls.length > 0) {
-        onUploadComplete(urls);
-      }
-
-    } catch (error) {
-      console.error('Upload process error:', error);
-      onUploadError?.(error instanceof Error ? error.message : 'Upload failed');
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
 
   const totalProgress = uploadFiles.length > 0 
