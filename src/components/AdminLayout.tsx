@@ -234,6 +234,7 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   position: relative;
+  /* Navbar spacing handled by global .navbar-visible class */
 
   @media (max-width: 768px) {
     margin-left: 0;

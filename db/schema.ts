@@ -412,3 +412,15 @@ export const emails = sqliteTable("emails", {
   inquiryIdx: index("email_inquiry_idx").on(table.inquiry_id),
   userIdx: index("email_user_idx").on(table.user_id),
 }));
+
+// Website Settings table for storing global website settings as key-value pairs
+export const websiteSettings = sqliteTable("website_settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  key: text("key").notNull().unique(), // Setting key (e.g., 'default_artist_profile', 'onboarding_config')
+  value: text("value").notNull(), // Setting value as raw string or JSON-encoded data
+  description: text("description"), // Optional description of what this setting does
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  keyIdx: uniqueIndex("settings_key_idx").on(table.key),
+}));

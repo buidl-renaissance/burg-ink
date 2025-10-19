@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaComments, FaLightbulb, FaDownload, FaShare, FaPalette, FaChartLine, FaCopy, FaTimes, FaCheck, FaTrash, FaSpinner, FaBolt, FaShareAlt } from 'react-icons/fa';
+import { FaComments, FaLightbulb, FaDownload, FaShare, FaPalette, FaChartLine, FaCopy, FaTimes, FaCheck, FaTrash, FaSpinner, FaBolt, FaShareAlt, FaUser, FaLock } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 import { MarketingMessage, ArtistProfile, MarketingResponse } from '@/lib/ai';
+import { useToast } from '@/hooks/useToast';
+import { ToastContainer } from '@/components/common/ToastContainer';
 
 interface Message {
   id: string;
@@ -58,6 +60,13 @@ interface ConversationState {
   isLoadingConversations: boolean;
 }
 
+interface OnboardingState {
+  profile_created: boolean;
+  goals_set: boolean;
+  preferences_configured: boolean;
+  onboarding_complete: boolean;
+}
+
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     props: {
@@ -81,6 +90,51 @@ export default function MarketingAssistant() {
   const [artistProfile, setArtistProfile] = useState<Partial<ArtistProfile>>({});
   const [conversationStage, setConversationStage] = useState<'intro' | 'style' | 'audience' | 'goals' | 'summary' | 'complete'>('intro');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Toast notifications
+  const { toasts, success, error, warning, loading, removeToast } = useToast();
+
+  // Helper function to check onboarding requirements
+  const checkOnboardingRequirement = (actionName: string, requiresComplete: boolean = false) => {
+    const completionPercentage = Object.values(onboardingState).filter(Boolean).length / 4 * 100;
+    
+    if (requiresComplete && !onboardingState.onboarding_complete) {
+      warning({
+        title: `Complete your profile to use ${actionName}`,
+        message: `Your profile is ${Math.round(completionPercentage)}% complete. Finish setup to unlock this feature.`,
+        action: {
+          label: 'Complete Profile',
+          onClick: () => {
+            // Focus on the chat input to encourage completion
+            const chatInput = document.querySelector('textarea[placeholder*="message"]') as HTMLTextAreaElement;
+            if (chatInput) {
+              chatInput.focus();
+            }
+          }
+        }
+      });
+      return false;
+    }
+    
+    if (!onboardingState.profile_created) {
+      warning({
+        title: `Create your profile first`,
+        message: `Start by telling the assistant your name and artistic medium.`,
+        action: {
+          label: 'Start Profile',
+          onClick: () => {
+            const chatInput = document.querySelector('textarea[placeholder*="message"]') as HTMLTextAreaElement;
+            if (chatInput) {
+              chatInput.focus();
+            }
+          }
+        }
+      });
+      return false;
+    }
+    
+    return true;
+  };
 
   // Content generation state
   const [contentState, setContentState] = useState<ContentGenerationState>({
@@ -100,6 +154,14 @@ export default function MarketingAssistant() {
     isLoadingConversations: false
   });
 
+  // Onboarding state
+  const [onboardingState, setOnboardingState] = useState<OnboardingState>({
+    profile_created: false,
+    goals_set: false,
+    preferences_configured: false,
+    onboarding_complete: false
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -108,10 +170,40 @@ export default function MarketingAssistant() {
     scrollToBottom();
   }, [messages]);
 
-  // Load conversations on mount since they're always visible
+  // Load conversations and initial message on mount
   useEffect(() => {
     loadConversations();
+    loadInitialMessage();
   }, []);
+
+  const loadInitialMessage = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/marketing-assistant/initial-message', {
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOnboardingState(data.onboardingState);
+        setArtistProfile(data.currentProfile);
+        
+        // Update the initial message if we have onboarding state
+        if (data.message && data.message !== messages[0]?.content) {
+          setMessages([{
+            id: '1',
+            type: 'assistant',
+            content: data.message,
+            timestamp: new Date()
+          }]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading initial message:', error);
+    }
+  };
 
   const generateResponse = async (userInput: string): Promise<string> => {
     try {
@@ -153,6 +245,11 @@ export default function MarketingAssistant() {
       // Update conversation stage
       if (data.stage) {
         setConversationStage(data.stage);
+      }
+
+      // Update onboarding state
+      if (data.onboardingState) {
+        setOnboardingState(data.onboardingState);
       }
 
       return data.message;
@@ -325,6 +422,9 @@ export default function MarketingAssistant() {
   };
 
   const openContentPanel = () => {
+    if (!checkOnboardingRequirement('Generate Content', false)) {
+      return;
+    }
     setContentState(prev => ({ ...prev, showContentPanel: true }));
   };
 
@@ -444,10 +544,14 @@ export default function MarketingAssistant() {
 
   // Quick action handlers
   const handleExportProfile = async () => {
-    if (!artistProfile.name) {
-      alert('Please complete your artist profile first by chatting with the assistant.');
+    if (!checkOnboardingRequirement('Export Profile', true)) {
       return;
     }
+
+    loading({
+      title: 'Exporting profile...',
+      message: 'Preparing your artist profile for download'
+    });
 
     try {
       const token = localStorage.getItem('authToken');
@@ -475,17 +579,33 @@ export default function MarketingAssistant() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-    } catch (error) {
-      console.error('Error exporting profile:', error);
-      alert('Failed to export profile. Please try again.');
+      success({
+        title: 'Profile exported successfully!',
+        message: 'Your artist profile has been downloaded'
+      });
+
+    } catch (err) {
+      console.error('Error exporting profile:', err);
+      error({
+        title: 'Export failed',
+        message: 'Failed to export profile. Please try again.',
+        action: {
+          label: 'Retry',
+          onClick: handleExportProfile
+        }
+      });
     }
   };
 
   const handleMarketingPlan = async () => {
-    if (!artistProfile.name) {
-      alert('Please complete your artist profile first by chatting with the assistant.');
+    if (!checkOnboardingRequirement('Marketing Plan', true)) {
       return;
     }
+
+    loading({
+      title: 'Generating marketing plan...',
+      message: 'Creating your personalized marketing strategy'
+    });
 
     try {
       const token = localStorage.getItem('authToken');
@@ -534,18 +654,38 @@ export default function MarketingAssistant() {
           </html>
         `);
         planWindow.document.close();
+        
+        success({
+          title: 'Marketing plan generated!',
+          message: 'Your personalized marketing strategy is ready'
+        });
       } else {
-        alert('Please allow popups to view your marketing plan.');
+        warning({
+          title: 'Popup blocked',
+          message: 'Please allow popups to view your marketing plan.',
+          action: {
+            label: 'Try Again',
+            onClick: handleMarketingPlan
+          }
+        });
       }
 
-    } catch (error) {
-      console.error('Error generating marketing plan:', error);
-      alert('Failed to generate marketing plan. Please try again.');
+    } catch (err) {
+      console.error('Error generating marketing plan:', err);
+      error({
+        title: 'Marketing plan failed',
+        message: 'Failed to generate marketing plan. Please try again.',
+        action: {
+          label: 'Retry',
+          onClick: handleMarketingPlan
+        }
+      });
     }
   };
 
   return (
     <AdminLayout currentPage="marketing-assistant">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <Container>
         <Header>
           <Title>
@@ -680,24 +820,84 @@ export default function MarketingAssistant() {
 
             <SidebarSection>
               <SidebarTitle>
+                <FaUser />
+                Profile Progress
+              </SidebarTitle>
+              
+              <ProfileProgressContainer>
+                <ProfileProgressBar>
+                  <ProfileProgressFill 
+                    width={(() => {
+                      const completed = Object.values(onboardingState).filter(Boolean).length;
+                      const total = Object.keys(onboardingState).length;
+                      return (completed / total) * 100;
+                    })()}
+                  />
+                </ProfileProgressBar>
+                <ProfileProgressText>
+                  {(() => {
+                    const completed = Object.values(onboardingState).filter(Boolean).length;
+                    const total = Object.keys(onboardingState).length;
+                    return `${Math.round((completed / total) * 100)}% Complete`;
+                  })()}
+                </ProfileProgressText>
+                
+                <ProfileProgressSteps>
+                  <ProfileStep completed={onboardingState.profile_created}>
+                    <FaCheck />
+                    Basic Profile
+                  </ProfileStep>
+                  <ProfileStep completed={onboardingState.goals_set}>
+                    <FaCheck />
+                    Goals & Audience
+                  </ProfileStep>
+                  <ProfileStep completed={onboardingState.preferences_configured}>
+                    <FaCheck />
+                    Preferences
+                  </ProfileStep>
+                  <ProfileStep completed={onboardingState.onboarding_complete}>
+                    <FaCheck />
+                    Complete
+                  </ProfileStep>
+                </ProfileProgressSteps>
+              </ProfileProgressContainer>
+            </SidebarSection>
+
+            <SidebarSection>
+              <SidebarTitle>
                 <FaBolt />
                 Quick Actions
               </SidebarTitle>
               
               <QuickActionsList>
-                <QuickActionButton onClick={handleExportProfile}>
+                <QuickActionButton 
+                  onClick={handleExportProfile}
+                  disabled={!onboardingState.onboarding_complete}
+                  title={!onboardingState.onboarding_complete ? "Complete your profile first" : ""}
+                >
                   <FaDownload />
                   Export Profile
+                  {!onboardingState.onboarding_complete && <FaLock style={{marginLeft: 'auto', opacity: 0.5}} />}
                 </QuickActionButton>
                 
-                <QuickActionButton onClick={handleMarketingPlan}>
+                <QuickActionButton 
+                  onClick={handleMarketingPlan}
+                  disabled={!onboardingState.onboarding_complete}
+                  title={!onboardingState.onboarding_complete ? "Complete your profile first" : ""}
+                >
                   <FaChartLine />
                   Marketing Plan
+                  {!onboardingState.onboarding_complete && <FaLock style={{marginLeft: 'auto', opacity: 0.5}} />}
                 </QuickActionButton>
                 
-                <QuickActionButton onClick={openContentPanel}>
+                <QuickActionButton 
+                  onClick={openContentPanel}
+                  disabled={!onboardingState.profile_created}
+                  title={!onboardingState.profile_created ? "Create your profile first" : ""}
+                >
                   <FaPalette />
                   Generate Content
+                  {!onboardingState.profile_created && <FaLock style={{marginLeft: 'auto', opacity: 0.5}} />}
                 </QuickActionButton>
                 
                 <QuickActionButton onClick={openContentPanel}>
@@ -1525,34 +1725,87 @@ const QuickActionsList = styled.div`
   gap: 0.5rem;
 `;
 
-const QuickActionButton = styled.button`
+const QuickActionButton = styled.button<{ disabled?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: white;
-  border: 1px solid #e9ecef;
+  background: ${props => props.disabled ? '#f8f9fa' : 'white'};
+  border: 1px solid ${props => props.disabled ? '#e9ecef' : '#e9ecef'};
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #374151;
-  cursor: pointer;
+  color: ${props => props.disabled ? '#9ca3af' : '#374151'};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
   transition: all 0.2s ease;
   text-align: left;
+  opacity: ${props => props.disabled ? 0.6 : 1};
 
   &:hover {
-    background: #f8f9fa;
-    border-color: #96885f;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: ${props => props.disabled ? '#f8f9fa' : '#f8f9fa'};
+    border-color: ${props => props.disabled ? '#e9ecef' : '#96885f'};
+    transform: ${props => props.disabled ? 'none' : 'translateY(-1px)'};
+    box-shadow: ${props => props.disabled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'};
   }
 
   &:active {
-    transform: translateY(0);
+    transform: ${props => props.disabled ? 'none' : 'translateY(0)'};
   }
 
   svg {
-    color: #96885f;
+    color: ${props => props.disabled ? '#9ca3af' : '#96885f'};
     font-size: 1rem;
+  }
+`;
+
+// Profile Progress Styles
+const ProfileProgressContainer = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+`;
+
+const ProfileProgressBar = styled.div`
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+`;
+
+const ProfileProgressFill = styled.div<{ width: number }>`
+  height: 100%;
+  background: linear-gradient(90deg, #96885f, #10b981);
+  width: ${props => props.width}%;
+  transition: width 0.3s ease;
+`;
+
+const ProfileProgressText = styled.div`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  margin-bottom: 1rem;
+`;
+
+const ProfileProgressSteps = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const ProfileStep = styled.div<{ completed: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: ${props => props.completed ? '#10b981' : '#9ca3af'};
+  font-weight: ${props => props.completed ? '600' : '400'};
+
+  svg {
+    font-size: 0.75rem;
+    opacity: ${props => props.completed ? '1' : '0.5'};
   }
 `; 

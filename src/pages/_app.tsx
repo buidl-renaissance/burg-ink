@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/react';
 import { StyleSheetManager, ThemeProvider } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
-import { Navbar } from '@/components/NavBar';
+// import { Navbar } from '@/components/NavBar';
 import { theme } from '@/styles/theme';
 
 // Default metadata for the application
@@ -43,10 +43,10 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider theme={theme}>
           <Component {...pageProps} />
           {/* <FloatingUserProfile /> */}
-          <Navbar 
+          {/* <Navbar 
             breadcrumbs={pageProps.breadcrumbs}
             currentPage={pageProps.currentPage}
-          />
+          /> */}
         </ThemeProvider>
       </StyleSheetManager>
       <Analytics />

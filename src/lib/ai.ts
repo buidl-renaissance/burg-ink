@@ -57,6 +57,12 @@ export interface MarketingResponse {
     bio?: string;
     artistStatement?: string;
   };
+  onboardingState?: {
+    profile_created: boolean;
+    goals_set: boolean;
+    preferences_configured: boolean;
+    onboarding_complete: boolean;
+  };
 }
 
 export interface MediaClassification {
@@ -304,17 +310,70 @@ export async function analyzeTattooImage(imageUrl: string): Promise<TattooAnalys
 export async function generateMarketingResponse(
   userMessage: string,
   conversationHistory: MarketingMessage[],
-  currentProfile: Partial<ArtistProfile>
+  currentProfile: Partial<ArtistProfile>,
+  onboardingConfig?: any
 ): Promise<MarketingResponse> {
   try {
-    const systemPrompt = `You are an expert marketing assistant for artists. Your role is to help artists understand their work and develop effective marketing strategies.
+    // Determine onboarding state based on current profile
+    const onboardingState = {
+      profile_created: !!(currentProfile.name && currentProfile.medium),
+      goals_set: !!(currentProfile.goals && currentProfile.targetAudience),
+      preferences_configured: !!(currentProfile.style && currentProfile.inspiration),
+      onboarding_complete: !!(currentProfile.name && currentProfile.medium && currentProfile.goals && currentProfile.targetAudience && currentProfile.style)
+    };
 
-Your conversation should follow this structure:
-1. **Introduction**: Get the artist's name and basic information
-2. **Style & Medium**: Understand their artistic medium and unique style
-3. **Audience**: Identify their target audience and collectors
-4. **Goals**: Determine their marketing and career objectives
-5. **Summary**: Provide personalized marketing recommendations
+    // Create dynamic system prompt based on onboarding state
+    let systemPrompt = `You are an expert marketing assistant for artists. Your role is to help artists understand their work and develop effective marketing strategies.
+
+Current onboarding state:
+- Profile created: ${onboardingState.profile_created}
+- Goals set: ${onboardingState.goals_set}
+- Preferences configured: ${onboardingState.preferences_configured}
+- Onboarding complete: ${onboardingState.onboarding_complete}
+
+Current artist profile: ${JSON.stringify(currentProfile, null, 2)}`;
+
+    if (!onboardingState.profile_created) {
+      systemPrompt += `
+
+Your current focus: Help the artist create their basic profile by gathering:
+1. Their name
+2. Their primary artistic medium (painting, sculpture, photography, etc.)
+3. Their artistic style or approach
+
+Be encouraging and ask one focused question at a time. Start with getting their name if you don't have it yet.`;
+    } else if (!onboardingState.goals_set) {
+      systemPrompt += `
+
+Your current focus: Help the artist define their marketing goals and target audience:
+1. Who is their target audience/collectors?
+2. What are their primary marketing goals?
+3. What makes their work unique?
+
+Build on their existing profile information and guide them through goal-setting.`;
+    } else if (!onboardingState.preferences_configured) {
+      systemPrompt += `
+
+Your current focus: Help the artist refine their artistic preferences and marketing approach:
+1. Their artistic style and influences
+2. Their inspiration and creative process
+3. Their marketing preferences
+
+Use their existing information to provide more personalized guidance.`;
+    } else {
+      systemPrompt += `
+
+Your current focus: The artist has completed their onboarding! Now you can:
+1. Provide advanced marketing strategies
+2. Help with content creation
+3. Assist with social media planning
+4. Offer specific marketing recommendations
+5. Generate marketing content
+
+Be proactive in suggesting next steps and marketing opportunities.`;
+    }
+
+    systemPrompt += `
 
 Guidelines:
 - Be warm, encouraging, and professional
@@ -323,8 +382,6 @@ Guidelines:
 - Provide specific, actionable marketing advice
 - Use the artist's name and details in your responses
 - Keep responses conversational but informative
-
-Current artist profile: ${JSON.stringify(currentProfile, null, 2)}
 
 Respond in a natural, conversational tone that feels like talking to a knowledgeable marketing consultant.`;
 
@@ -390,6 +447,7 @@ Respond in a natural, conversational tone that feels like talking to a knowledge
       message: content,
       profile: Object.keys(profileUpdates).length > 0 ? profileUpdates : undefined,
       stage,
+      onboardingState,
     };
   } catch (error) {
     console.error('Error generating marketing response:', error);

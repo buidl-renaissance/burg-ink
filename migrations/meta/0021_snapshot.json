@@ -1,0 +1,138 @@
+{
+  "id": "0021",
+  "prevId": "0020",
+  "version": "7",
+  "dialect": "sqlite",
+  "tables": {
+    "artwork": {
+      "name": "artwork",
+      "schema": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "notNull": true,
+          "unique": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text"
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "notNull": true
+        },
+        "artist_id": {
+          "name": "artist_id",
+          "type": "integer",
+          "references": {
+            "table": "artists",
+            "column": "id"
+          }
+        },
+        "image": {
+          "name": "image",
+          "type": "text"
+        },
+        "category": {
+          "name": "category",
+          "type": "text"
+        },
+        "meta": {
+          "name": "meta",
+          "type": "text"
+        },
+        "data": {
+          "name": "data",
+          "type": "text"
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "blob"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "text"
+        }
+      },
+      "indexes": {
+        "slugIdx": {
+          "name": "artwork_slug_idx",
+          "columns": ["slug"],
+          "isUnique": true
+        },
+        "artistIdx": {
+          "name": "artwork_artist_idx",
+          "columns": ["artist_id"]
+        },
+        "typeIdx": {
+          "name": "artwork_type_idx",
+          "columns": ["type"]
+        }
+      }
+    },
+    "website_settings": {
+      "name": "website_settings",
+      "schema": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "notNull": true,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        "settings_data": {
+          "name": "settings_data",
+          "type": "text",
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "userIdx": {
+          "name": "settings_user_idx",
+          "columns": ["user_id"],
+          "isUnique": true
+        }
+      }
+    }
+  }
+}

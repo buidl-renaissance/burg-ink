@@ -7,6 +7,7 @@ const PageContainer = styled.div`
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  /* Navbar spacing handled by global .navbar-visible class */
 `;
 
 const PageTitle = styled.h1`

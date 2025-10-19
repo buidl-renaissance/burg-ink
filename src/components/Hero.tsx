@@ -14,14 +14,9 @@ const HeroContainer = styled.div`
   justify-content: flex-start;
   align-items: center;
   overflow: hidden;
-  padding-top: 4rem;
-  
-  @media (max-width: 768px) {
-    padding-top: 2rem;
-  }
+  /* Navbar spacing handled by global .navbar-visible class */
   
   @media (max-width: 480px) {
-    padding-top: 1.5rem;
     height: 60vh;
   }
 `;

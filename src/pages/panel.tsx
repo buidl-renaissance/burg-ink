@@ -6,6 +6,7 @@ import Hero from "@/components/Hero";
 
 const StyledPage = styled.div`
   margin: 0 auto;
+  /* Navbar spacing handled by global .navbar-visible class */
 `;
 
 const QRCodeSection = styled.div`

@@ -396,6 +396,17 @@ summary svg {
   display: inline;
   margin-top: -0.25rem;
 }
+/* Navbar spacing utilities */
+.navbar-visible {
+  padding-top: 80px !important;
+}
+
+@media (max-width: 768px) {
+  .navbar-visible {
+    padding-top: 70px !important;
+  }
+}
+
 @media screen and (min-width: 768px) {
   #hero {
     grid-template-columns: repeat(2, minmax(0, 1fr));

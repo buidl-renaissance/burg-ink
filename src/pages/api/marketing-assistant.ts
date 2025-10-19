@@ -12,7 +12,7 @@ import {
   GeneratedContent
 } from '@/lib/ai/contentGeneration';
 import { db } from '@/lib/db';
-import { artwork, tattoos, marketingConversations } from '../../../db/schema';
+import { artwork, tattoos, marketingConversations, websiteSettings } from '../../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
 // Helper function to get entity data (artwork or tattoo)
@@ -257,7 +257,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const history: MarketingMessage[] = conversationHistory || [];
     const profile: Partial<ArtistProfile> = currentProfile || {};
 
-    const response = await generateMarketingResponse(message, history, profile);
+    // Get onboarding configuration from website settings
+    let onboardingConfig = null;
+    try {
+      const onboardingSetting = await db.query.websiteSettings.findFirst({
+        where: eq(websiteSettings.key, 'onboarding_config')
+      });
+      if (onboardingSetting) {
+        onboardingConfig = JSON.parse(onboardingSetting.value);
+      }
+    } catch (error) {
+      console.warn('Could not fetch onboarding config:', error);
+    }
+
+    const response = await generateMarketingResponse(message, history, profile, onboardingConfig);
 
     // Save conversation if requested
     if (saveConversation && message) {

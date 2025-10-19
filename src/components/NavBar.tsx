@@ -8,14 +8,15 @@ import { useAuth } from '@/utils/useAuth';
 
 const NavbarContainer = styled.nav`
   position: fixed;
-  bottom: -1px;
+  top: 0;
   left: 0;
   width: 100%;
   padding: 1rem;
   background: ${({ theme }) => theme.background};
-  border-top: 1px solid ${({ theme }) => theme.border};
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 `;
 
 const NavbarContent = styled.div`
@@ -99,6 +100,20 @@ interface NavbarProps {
 
 export function Navbar({ breadcrumbs, currentPage, action }: NavbarProps) {
   const { isAuthenticated, loading } = useAuth();
+
+  // Add/remove navbar-visible class to body based on authentication status
+  React.useEffect(() => {
+    if (isAuthenticated && !loading) {
+      document.body.classList.add('navbar-visible');
+    } else {
+      document.body.classList.remove('navbar-visible');
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('navbar-visible');
+    };
+  }, [isAuthenticated, loading]);
 
   // Don't render if not authenticated or still loading
   if (loading || !isAuthenticated) {

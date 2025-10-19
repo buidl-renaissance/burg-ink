@@ -3,15 +3,32 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
+import { FaEnvelope, FaCheckCircle, FaClock, FaArrowLeft, FaSpinner } from 'react-icons/fa';
 import Head from 'next/head';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/useToast';
+import { ToastContainer } from '@/components/common/ToastContainer';
+import { SecurityBadge } from '@/components/auth/SecurityBadge';
+import { AuthNavBar } from '@/components/auth/AuthNavBar';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [isVerified, setIsVerified] = useState(false);
+  
+  // Toast notifications
+  const { toasts, success, error, warning, loading, removeToast } = useToast();
+
+  // Countdown timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCountdown]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -33,8 +50,10 @@ export default function VerifyEmailPage() {
   const handleVerification = async (token: string) => {
     try {
       setIsLoading(true);
-      setError('');
-      setMessage('');
+      loading({
+        title: 'Verifying email',
+        message: 'Please wait while we verify your email address...'
+      });
 
       const response = await fetch('/api/auth/confirm-verification', {
         method: 'POST',
@@ -46,10 +65,22 @@ export default function VerifyEmailPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Verification failed');
+        let errorMessage = 'Verification failed';
+        
+        if (response.status === 400) {
+          errorMessage = 'Invalid or expired verification token. Please request a new verification email.';
+        } else if (response.status >= 500) {
+          errorMessage = 'Server error. Please try again in a few moments.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      setMessage('Email verified successfully! You can now access all features.');
+      setIsVerified(true);
+      success({
+        title: 'Email verified successfully!',
+        message: 'Your email has been verified. You can now access all features.'
+      });
       
       // Redirect to home after 3 seconds
       setTimeout(() => {
@@ -58,7 +89,14 @@ export default function VerifyEmailPage() {
 
     } catch (err) {
       console.error('Email verification error:', err);
-      setError(err instanceof Error ? err.message : 'Verification failed');
+      error({
+        title: 'Verification failed',
+        message: err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.',
+        action: {
+          label: 'Resend Verification',
+          onClick: resendVerification
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -67,8 +105,10 @@ export default function VerifyEmailPage() {
   const resendVerification = async () => {
     try {
       setIsLoading(true);
-      setError('');
-      setMessage('');
+      loading({
+        title: 'Sending verification email',
+        message: 'Please wait while we send a new verification email...'
+      });
 
       const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
@@ -76,14 +116,35 @@ export default function VerifyEmailPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send verification email');
+        let errorMessage = 'Failed to send verification email';
+        
+        if (response.status === 429) {
+          errorMessage = 'Too many requests. Please wait a few minutes before trying again.';
+        } else if (response.status >= 500) {
+          errorMessage = 'Server error. Please try again in a few moments.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      setMessage('Verification email sent! Check your inbox.');
+      success({
+        title: 'Verification email sent!',
+        message: 'A new verification email has been sent to your inbox. Please check your email and spam folder.'
+      });
+      
+      // Start countdown timer
+      setResendCountdown(60);
 
     } catch (err) {
       console.error('Resend verification error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send verification email');
+      error({
+        title: 'Failed to send verification email',
+        message: err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.',
+        action: {
+          label: 'Try Again',
+          onClick: resendVerification
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -104,6 +165,10 @@ export default function VerifyEmailPage() {
         <meta name="description" content="Verify your email address" />
       </Head>
       
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      
+      <AuthNavBar showBackButton={true} backHref="/" backLabel="Back to Home" />
+      
       <VerifyEmailContainer>
         <VerifyEmailCard>
           <Logo>
@@ -111,22 +176,58 @@ export default function VerifyEmailPage() {
             <p>Contemporary Art Gallery</p>
           </Logo>
           
+          <SecurityBadge variant="compact" />
+          
           <VerifyEmailContent>
-            <FormTitle>Verify Your Email</FormTitle>
+            <EmailIcon>
+              {isVerified ? <FaCheckCircle /> : <FaEnvelope />}
+            </EmailIcon>
+            
+            <FormTitle>
+              {isVerified ? 'Email Verified!' : 'Verify Your Email'}
+            </FormTitle>
+            
             <Subtitle>
-              We've sent a verification link to <strong>{user?.email}</strong>. 
-              Please check your email and click the link to verify your account.
+              {isVerified ? (
+                'Your email has been successfully verified. Redirecting to your dashboard...'
+              ) : (
+                <>We've sent a verification link to <strong>{user?.email}</strong>. <br />
+                Please check your email and click the link to verify your account.</>
+              )}
             </Subtitle>
             
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            {message && <SuccessMessage>{message}</SuccessMessage>}
-            
-            <ResendButton onClick={resendVerification} disabled={isLoading}>
-              {isLoading ? 'Sending...' : 'Resend Verification Email'}
-            </ResendButton>
+            {!isVerified && (
+              <>
+                <CheckEmailTip>
+                  💡 Don't see the email? Check your spam folder or try resending.
+                </CheckEmailTip>
+                
+                <ResendButton 
+                  onClick={resendVerification} 
+                  disabled={isLoading || resendCountdown > 0}
+                >
+                  {isLoading ? (
+                    <>
+                      <FaSpinner className="spinner" />
+                      Sending...
+                    </>
+                  ) : resendCountdown > 0 ? (
+                    <>
+                      <FaClock />
+                      Resend in {resendCountdown}s
+                    </>
+                  ) : (
+                    'Resend Verification Email'
+                  )}
+                </ResendButton>
+              </>
+            )}
             
             <BackToHome>
-              <a href="/">← Back to Home</a>
+              <BackLink href="/">
+                <FaArrowLeft />
+                Back to Home
+              </BackLink>
             </BackToHome>
           </VerifyEmailContent>
         </VerifyEmailCard>
@@ -142,6 +243,23 @@ const VerifyEmailContainer = styled.div`
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 1rem;
+  padding-top: 100px; /* Account for fixed navbar */
+  animation: fadeIn 0.6s ease-out;
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding-top: 80px; /* Smaller padding on mobile */
+  }
 `;
 
 const VerifyEmailCard = styled.div`
@@ -151,6 +269,17 @@ const VerifyEmailCard = styled.div`
   padding: 2.5rem;
   width: 100%;
   max-width: 500px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1.5rem;
+    margin: 0.5rem;
+  }
 `;
 
 const Logo = styled.div`
@@ -174,6 +303,10 @@ const Logo = styled.div`
 
 const VerifyEmailContent = styled.div`
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 `;
 
 const FormTitle = styled.h2`
@@ -190,6 +323,22 @@ const Subtitle = styled.p`
   line-height: 1.5;
 `;
 
+const EmailIcon = styled.div`
+  font-size: 3rem;
+  color: #96885f;
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+`;
+
 const ResendButton = styled.button`
   padding: 0.75rem 1.5rem;
   background-color: #96885f;
@@ -199,47 +348,71 @@ const ResendButton = styled.button`
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   margin-bottom: 1.5rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   
   &:hover:not(:disabled) {
     background-color: #7a6e4e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(150, 136, 95, 0.3);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
   
   &:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 `;
 
 const BackToHome = styled.div`
-  a {
-    color: #96885f;
-    text-decoration: none;
-    font-weight: 500;
-    
-    &:hover {
-      text-decoration: underline;
-    }
+  margin-top: 1rem;
+`;
+
+const BackLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #96885f;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
   }
 `;
 
-const ErrorMessage = styled.div`
-  background-color: #fee;
-  color: #c33;
+const CheckEmailTip = styled.div`
+  background-color: #f0f8ff;
+  color: #1e40af;
   padding: 0.75rem;
   border-radius: 6px;
-  margin-bottom: 1rem;
   font-size: 0.9rem;
-  border: 1px solid #fcc;
+  border: 1px solid #dbeafe;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  max-width: 400px;
 `;
 
-const SuccessMessage = styled.div`
-  background-color: #efe;
-  color: #363;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  border: 1px solid #cfc;
-`;

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import styled from 'styled-components';
+import { LoadingSpinner } from '@/components/common/LoadingSkeleton';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  fallback = <LoadingSpinner>Loading...</LoadingSpinner> 
+  fallback = <LoadingSpinner>Verifying authentication...</LoadingSpinner> 
 }) => {
   const { isAuthenticated, loading, requireAuth } = useAuth();
 
@@ -22,21 +23,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }, [isAuthenticated, loading, requireAuth]);
 
   if (loading) {
-    return <>{fallback}</>;
+    return <LoadingContainer>{fallback}</LoadingContainer>;
   }
 
   if (!isAuthenticated) {
-    return <>{fallback}</>;
+    return <LoadingContainer>{fallback}</LoadingContainer>;
   }
 
   return <>{children}</>;
 };
 
-const LoadingSpinner = styled.div`
+const LoadingContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 200px;
-  font-size: 1.1rem;
-  color: #666;
+  padding: 2rem;
 `;

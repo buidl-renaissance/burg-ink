@@ -7,6 +7,7 @@ import { Metadata } from "next";
 
 const StyledPage = styled.div`
   margin: 0 auto;
+  /* Navbar spacing handled by global .navbar-visible class */
 
   .gallery {
     display: grid;
