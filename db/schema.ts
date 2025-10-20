@@ -119,8 +119,11 @@ export const users = sqliteTable("users", {
   password: text("password"),
   bio: text("bio"),
   profile_picture: text("profile_picture"),
-  role: text("role").default("user"), // 'admin' | 'user' | 'artist'
+  role: text("role").default("user"), // 'admin' | 'user' | 'artist' | 'moderator'
+  status: text("status").default("active"), // 'active' | 'inactive' | 'suspended'
   is_verified: integer("is_verified").default(0), // Email verification status
+  last_login_at: text("last_login_at"), // Last login timestamp
+  login_count: integer("login_count").default(0), // Total login count
   data: text("data"), // JSON string for additional data
   google_id: text("google_id"),
   google_drive_token: text("google_drive_token"),
@@ -134,6 +137,7 @@ export const users = sqliteTable("users", {
   cidIdx: uniqueIndex("user_cid_idx").on(table.cid),
   emailIdx: uniqueIndex("user_email_idx").on(table.email),
   roleIdx: index("user_role_idx").on(table.role),
+  statusIdx: index("user_status_idx").on(table.status),
 }));
 
 // Saved Marketing Content table
@@ -347,6 +351,7 @@ export const workflowRules = sqliteTable("workflow_rules", {
 // Inquiries table for storing customer inquiries
 export const inquiries = sqliteTable("inquiries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  contact_id: integer("contact_id").references(() => contacts.id), // Link to contact record
   name: text("name").notNull(),
   first_name: text("first_name").notNull(),
   last_name: text("last_name").notNull(),
@@ -370,6 +375,7 @@ export const inquiries = sqliteTable("inquiries", {
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
+  contactIdx: index("inquiry_contact_idx").on(table.contact_id),
   emailIdx: index("inquiry_email_idx").on(table.email),
   statusIdx: index("inquiry_status_idx").on(table.status),
   typeIdx: index("inquiry_type_idx").on(table.inquiry_type),
@@ -423,4 +429,151 @@ export const websiteSettings = sqliteTable("website_settings", {
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
   keyIdx: uniqueIndex("settings_key_idx").on(table.key),
+}));
+
+// User Activity Logs table for tracking user actions
+export const userActivityLogs = sqliteTable("user_activity_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // 'login', 'logout', 'profile_update', 'password_change', etc.
+  details: text("details"), // JSON string with additional action details
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  userIdx: index("activity_user_idx").on(table.user_id),
+  actionIdx: index("activity_action_idx").on(table.action),
+  createdAtIdx: index("activity_created_at_idx").on(table.created_at),
+}));
+
+// User Invitations table for tracking pending user invitations
+export const userInvitations = sqliteTable("user_invitations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull(),
+  role: text("role").default("user"), // Role to assign when user accepts invitation
+  invited_by: integer("invited_by").references(() => users.id).notNull(),
+  token: text("token").notNull().unique(), // Unique invitation token
+  expires_at: text("expires_at").notNull(), // Expiration timestamp
+  accepted_at: text("accepted_at"), // When invitation was accepted
+  user_id: integer("user_id").references(() => users.id), // Created user ID after acceptance
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  emailIdx: index("invitation_email_idx").on(table.email),
+  tokenIdx: uniqueIndex("invitation_token_idx").on(table.token),
+  invitedByIdx: index("invitation_invited_by_idx").on(table.invited_by),
+}));
+
+// Contacts table for CRM contact management
+export const contacts = sqliteTable("contacts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  first_name: text("first_name").notNull(),
+  last_name: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  company: text("company"),
+  job_title: text("job_title"),
+  source: text("source").default("website"), // 'website', 'referral', 'social', 'event', 'import'
+  lifecycle_stage: text("lifecycle_stage").default("lead"), // 'lead', 'prospect', 'customer', 'advocate'
+  tags: text("tags").default("[]"), // JSON array of tag names
+  custom_fields: text("custom_fields").default("{}"), // JSON object with custom field values
+  notes: text("notes"), // General notes about the contact
+  avatar_url: text("avatar_url"),
+  is_active: integer("is_active").default(1), // Boolean flag
+  last_contacted_at: text("last_contacted_at"),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  emailIdx: uniqueIndex("contact_email_idx").on(table.email),
+  sourceIdx: index("contact_source_idx").on(table.source),
+  stageIdx: index("contact_stage_idx").on(table.lifecycle_stage),
+  activeIdx: index("contact_active_idx").on(table.is_active),
+}));
+
+// Contact Tags table for organizing contacts
+export const contactTags = sqliteTable("contact_tags", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  color: text("color").default("#96885f"), // Hex color for UI display
+  description: text("description"),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  nameIdx: uniqueIndex("tag_name_idx").on(table.name),
+}));
+
+// Contact Notes table for interaction tracking
+export const contactNotes = sqliteTable("contact_notes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  contact_id: integer("contact_id").references(() => contacts.id).notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  note_type: text("note_type").default("general"), // 'general', 'call', 'email', 'meeting', 'follow_up'
+  content: text("content").notNull(),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  contactIdx: index("note_contact_idx").on(table.contact_id),
+  userIdx: index("note_user_idx").on(table.user_id),
+  createdAtIdx: index("note_created_at_idx").on(table.created_at),
+}));
+
+// Contact Custom Fields table for defining custom fields
+export const contactCustomFields = sqliteTable("contact_custom_fields", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  field_name: text("field_name").notNull(),
+  field_type: text("field_type").notNull(), // 'text', 'number', 'date', 'select', 'multiselect', 'boolean'
+  field_options: text("field_options"), // JSON array for select/multiselect options
+  is_required: integer("is_required").default(0), // Boolean flag
+  display_order: integer("display_order").default(0),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  nameIdx: uniqueIndex("custom_field_name_idx").on(table.field_name),
+  orderIdx: index("custom_field_order_idx").on(table.display_order),
+}));
+
+// Email Campaigns table for email marketing
+export const emailCampaigns = sqliteTable("email_campaigns", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  preview_text: text("preview_text"),
+  html_content: text("html_content").notNull(),
+  text_content: text("text_content"),
+  from_name: text("from_name").notNull(),
+  from_email: text("from_email").notNull(),
+  reply_to: text("reply_to"),
+  status: text("status").default("draft"), // 'draft', 'scheduled', 'sending', 'sent', 'paused', 'cancelled'
+  scheduled_at: text("scheduled_at"), // When campaign should be sent
+  sent_at: text("sent_at"), // When campaign was actually sent
+  created_by: integer("created_by").references(() => users.id).notNull(),
+  recipient_count: integer("recipient_count").default(0),
+  opened_count: integer("opened_count").default(0),
+  clicked_count: integer("clicked_count").default(0),
+  bounced_count: integer("bounced_count").default(0),
+  unsubscribed_count: integer("unsubscribed_count").default(0),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  statusIdx: index("campaign_status_idx").on(table.status),
+  createdByIdx: index("campaign_created_by_idx").on(table.created_by),
+  scheduledIdx: index("campaign_scheduled_idx").on(table.scheduled_at),
+}));
+
+// Campaign Recipients table for tracking individual email sends
+export const campaignRecipients = sqliteTable("campaign_recipients", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  campaign_id: integer("campaign_id").references(() => emailCampaigns.id).notNull(),
+  contact_id: integer("contact_id").references(() => contacts.id).notNull(),
+  email: text("email").notNull(),
+  status: text("status").default("pending"), // 'pending', 'sent', 'delivered', 'opened', 'clicked', 'bounced', 'unsubscribed'
+  sent_at: text("sent_at"),
+  delivered_at: text("delivered_at"),
+  opened_at: text("opened_at"),
+  clicked_at: text("clicked_at"),
+  bounced_at: text("bounced_at"),
+  unsubscribed_at: text("unsubscribed_at"),
+  error_message: text("error_message"),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  campaignIdx: index("recipient_campaign_idx").on(table.campaign_id),
+  contactIdx: index("recipient_contact_idx").on(table.contact_id),
+  emailIdx: index("recipient_email_idx").on(table.email),
+  statusIdx: index("recipient_status_idx").on(table.status),
 }));

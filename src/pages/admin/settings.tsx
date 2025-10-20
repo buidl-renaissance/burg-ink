@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaSave, FaGlobe, FaEnvelope, FaUser, FaPalette, FaLock, FaDatabase } from 'react-icons/fa';
+import { FaSave } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
 interface SiteSettings {
@@ -17,53 +17,61 @@ interface SiteSettings {
   requireEmailVerification: boolean;
 }
 
-interface EmailSettings {
-  smtpHost: string;
-  smtpPort: number;
-  smtpUsername: string;
-  smtpPassword: string;
-  fromEmail: string;
-  fromName: string;
-  enableEmailNotifications: boolean;
+
+
+interface AppearanceSettings {
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  logoUrl: string;
+  faviconUrl: string;
+  fontFamily: string;
+  fontSize: string;
 }
 
-interface UserSettings {
-  defaultUserRole: string;
-  maxLoginAttempts: number;
-  sessionTimeout: number;
-  passwordMinLength: number;
-  requireStrongPassword: boolean;
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  is_verified: boolean;
+  last_login_at?: string;
+  bio?: string;
 }
 
 // Styled Components
 const Container = styled.div`
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #e9ecef;
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 0;
   }
 `;
 
 const Title = styled.h1`
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 600;
   color: #333;
   margin: 0;
 
   @media (max-width: 768px) {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     text-align: center;
   }
 `;
@@ -98,56 +106,15 @@ const SaveButton = styled.button`
   }
 `;
 
-const TabContainer = styled.div`
-  display: flex;
-  border-bottom: 1px solid #e9ecef;
-  margin-bottom: 2rem;
-  overflow-x: auto;
-
-  @media (max-width: 768px) {
-    margin-bottom: 1.5rem;
-  }
-`;
-
-const Tab = styled.button<{ active: boolean }>`
-  background: none;
-  border: none;
-  padding: 1rem 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: ${props => props.active ? '#96885f' : '#6c757d'};
-  border-bottom: 2px solid ${props => props.active ? '#96885f' : 'transparent'};
-  font-weight: ${props => props.active ? '600' : '500'};
-  transition: all 0.3s ease;
-  white-space: nowrap;
-
-  &:hover {
-    color: #96885f;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    gap: 0.25rem;
-  }
-`;
 
 const SettingsContainer = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
-
-  @media (max-width: 768px) {
-    padding: 1.5rem;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 `;
 
-const SettingsSection = styled.div`
-  margin-bottom: 3rem;
+const SectionContainer = styled.div`
+  margin-bottom: 2.5rem;
 
   &:last-child {
     margin-bottom: 0;
@@ -158,12 +125,10 @@ const SectionTitle = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
   color: #333;
-  margin: 0 0 1.5rem 0;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #f8f9fa;
+  margin: 0 0 1rem 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 
   &::before {
     content: '';
@@ -174,68 +139,89 @@ const SectionTitle = styled.h2`
   }
 
   @media (max-width: 768px) {
-    font-size: 1.1rem;
-    margin: 0 0 1rem 0;
+    font-size: 1.125rem;
+    margin: 0 0 0.75rem 0;
+  }
+`;
+
+const SectionCard = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+`;
+
+const SettingsSection = styled.div`
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 `;
 
 const SettingsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 `;
 
 const SettingField = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.5rem;
+  gap: 0.5rem;
+  padding: 1.25rem;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid #e9ecef;
   transition: all 0.2s ease;
 
   &:hover {
     border-color: #96885f;
     background: #f8f7f4;
+    box-shadow: 0 2px 4px rgba(150, 136, 95, 0.1);
   }
 
   @media (max-width: 768px) {
     padding: 1rem;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 `;
 
 const Label = styled.label`
   font-weight: 600;
   color: #333;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   margin-bottom: 0.25rem;
 
   @media (max-width: 768px) {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 `;
 
 const Input = styled.input`
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
   background: white;
   transition: all 0.2s ease;
   
   &:focus {
     outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
   }
 
   &::placeholder {
@@ -243,26 +229,26 @@ const Input = styled.input`
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
+    padding: 0.65rem 0.85rem;
     font-size: 0.9rem;
   }
 `;
 
 const Textarea = styled.textarea`
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
-  min-height: 100px;
+  min-height: 90px;
   background: white;
   transition: all 0.2s ease;
   
   &:focus {
     outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
   }
 
   &::placeholder {
@@ -270,17 +256,17 @@ const Textarea = styled.textarea`
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
+    padding: 0.65rem 0.85rem;
     font-size: 0.9rem;
-    min-height: 80px;
+    min-height: 75px;
   }
 `;
 
 const Select = styled.select`
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -288,98 +274,32 @@ const Select = styled.select`
   &:focus {
     outline: none;
     border-color: #96885f;
-    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+    box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
+    padding: 0.65rem 0.85rem;
     font-size: 0.9rem;
   }
 `;
 
-const ToggleContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: #96885f;
-    background: #f8f7f4;
-  }
-`;
-
-const Toggle = styled.input`
-  width: 44px;
-  height: 24px;
-  appearance: none;
-  background: #e9ecef;
-  border-radius: 12px;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:checked {
-    background: #96885f;
-  }
-
-  &:checked::before {
-    transform: translateX(20px);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: white;
-    top: 3px;
-    left: 3px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  @media (max-width: 768px) {
-    width: 40px;
-    height: 22px;
-
-    &:checked::before {
-      transform: translateX(18px);
-    }
-
-    &::before {
-      width: 16px;
-      height: 16px;
-    }
-  }
-`;
-
-const ToggleLabel = styled.span`
-  font-size: 0.95rem;
-  color: #333;
-  font-weight: 500;
-
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-  }
-`;
 
 const ColorInput = styled.input`
-  width: 60px;
-  height: 40px;
+  width: 50px;
+  height: 36px;
   border: 1px solid #e9ecef;
   border-radius: 6px;
   cursor: pointer;
   outline: none;
+  transition: all 0.2s ease;
 
   &:focus {
     border-color: #96885f;
     box-shadow: 0 0 0 2px rgba(150, 136, 95, 0.1);
+  }
+
+  &:hover {
+    border-color: #96885f;
   }
 `;
 
@@ -399,7 +319,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 export default function AdminSettings() {
-  const [activeTab, setActiveTab] = useState('site');
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   
@@ -414,23 +333,28 @@ export default function AdminSettings() {
     requireEmailVerification: true,
   });
 
-  const [emailSettings, setEmailSettings] = useState<EmailSettings>({
-    smtpHost: 'smtp.gmail.com',
-    smtpPort: 587,
-    smtpUsername: 'noreply@burgink.com',
-    smtpPassword: '',
-    fromEmail: 'noreply@burgink.com',
-    fromName: 'Burg Ink',
-    enableEmailNotifications: true,
+
+
+  const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings>({
+    primaryColor: '#96885f',
+    secondaryColor: '#7a6f4d',
+    accentColor: '#28a745',
+    logoUrl: '',
+    faviconUrl: '',
+    fontFamily: 'system',
+    fontSize: '16',
   });
 
-  const [userSettings, setUserSettings] = useState<UserSettings>({
-    defaultUserRole: 'user',
-    maxLoginAttempts: 5,
-    sessionTimeout: 24,
-    passwordMinLength: 8,
-    requireStrongPassword: true,
-  });
+  // User Management State
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
   useEffect(() => {
     fetchSettings();
@@ -439,9 +363,38 @@ export default function AdminSettings() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      // Mock API call - replace with actual implementation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // In real implementation, fetch settings from API
+      const response = await fetch('/api/admin/settings');
+      const data = await response.json();
+      
+      if (response.ok) {
+        const settings = data.settings;
+        
+        // Update site settings
+        setSiteSettings({
+          siteName: settings.site_name || 'Burg Ink',
+          siteDescription: settings.site_description || 'Contemporary Art Gallery and Community',
+          siteUrl: settings.site_url || 'https://burgink.com',
+          contactEmail: settings.contact_email || 'contact@burgink.com',
+          theme: settings.theme || 'light',
+          maintenanceMode: false,
+          allowRegistration: true,
+          requireEmailVerification: true,
+        });
+
+        // Update appearance settings
+        setAppearanceSettings({
+          primaryColor: settings.primary_color || '#96885f',
+          secondaryColor: settings.secondary_color || '#7a6f4d',
+          accentColor: settings.accent_color || '#28a745',
+          logoUrl: settings.logo_url || '',
+          faviconUrl: settings.favicon_url || '',
+          fontFamily: settings.font_family || 'system',
+          fontSize: settings.font_size || '16',
+        });
+
+      } else {
+        console.error('Failed to fetch settings:', data.error);
+      }
     } catch (error) {
       console.error('Failed to fetch settings:', error);
     } finally {
@@ -453,11 +406,39 @@ export default function AdminSettings() {
     try {
       setSaveStatus('saving');
       
-      // Mock API call - replace with actual implementation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      // Prepare settings object
+      const settings = {
+        site_name: siteSettings.siteName,
+        site_description: siteSettings.siteDescription,
+        site_url: siteSettings.siteUrl,
+        contact_email: siteSettings.contactEmail,
+        theme: siteSettings.theme,
+        primary_color: appearanceSettings.primaryColor,
+        secondary_color: appearanceSettings.secondaryColor,
+        accent_color: appearanceSettings.accentColor,
+        logo_url: appearanceSettings.logoUrl,
+        favicon_url: appearanceSettings.faviconUrl,
+        font_family: appearanceSettings.fontFamily,
+        font_size: appearanceSettings.fontSize,
+      };
+
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ settings }),
+      });
+
+      if (response.ok) {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        const data = await response.json();
+        console.error('Failed to save settings:', data.error);
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
     } catch (error) {
       console.error('Failed to save settings:', error);
       setSaveStatus('error');
@@ -465,18 +446,10 @@ export default function AdminSettings() {
     }
   };
 
-  const tabs = [
-    { id: 'site', label: 'Site Settings', icon: FaGlobe },
-    { id: 'email', label: 'Email Settings', icon: FaEnvelope },
-    { id: 'users', label: 'User Settings', icon: FaUser },
-    { id: 'appearance', label: 'Appearance', icon: FaPalette },
-    { id: 'security', label: 'Security', icon: FaLock },
-    { id: 'advanced', label: 'Advanced', icon: FaDatabase },
-  ];
 
-  const renderSiteSettings = () => (
+  const renderGeneralSettings = () => (
     <SettingsSection>
-      <SectionTitle>General Site Settings</SectionTitle>
+      <SectionTitle>Site Information</SectionTitle>
       <SettingsGrid>
         <SettingField>
           <Label>Site Name</Label>
@@ -519,7 +492,7 @@ export default function AdminSettings() {
         </SettingField>
       </SettingsGrid>
 
-      <SectionTitle>Site Behavior</SectionTitle>
+      <SectionTitle>Theme</SectionTitle>
       <SettingsGrid>
         <SettingField>
           <Label>Theme</Label>
@@ -532,217 +505,686 @@ export default function AdminSettings() {
             <option value="auto">Auto (System)</option>
           </Select>
         </SettingField>
-        
-        <SettingField>
-          <Label>Maintenance Mode</Label>
-          <ToggleContainer>
-            <Toggle
-              checked={siteSettings.maintenanceMode}
-              onChange={(e) => setSiteSettings({ ...siteSettings, maintenanceMode: e.target.checked })}
-            />
-            <ToggleLabel>Enable maintenance mode</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>User Registration</Label>
-          <ToggleContainer>
-            <Toggle
-              checked={siteSettings.allowRegistration}
-              onChange={(e) => setSiteSettings({ ...siteSettings, allowRegistration: e.target.checked })}
-            />
-            <ToggleLabel>Allow new user registrations</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Email Verification</Label>
-          <ToggleContainer>
-            <Toggle
-              checked={siteSettings.requireEmailVerification}
-              onChange={(e) => setSiteSettings({ ...siteSettings, requireEmailVerification: e.target.checked })}
-            />
-            <ToggleLabel>Require email verification</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
       </SettingsGrid>
     </SettingsSection>
   );
 
-  const renderEmailSettings = () => (
-    <SettingsSection>
-      <SectionTitle>SMTP Configuration</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>SMTP Host</Label>
-          <Input
-            type="text"
-            value={emailSettings.smtpHost}
-            onChange={(e) => setEmailSettings({ ...emailSettings, smtpHost: e.target.value })}
-            placeholder="smtp.gmail.com"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>SMTP Port</Label>
-          <Input
-            type="number"
-            value={emailSettings.smtpPort}
-            onChange={(e) => setEmailSettings({ ...emailSettings, smtpPort: parseInt(e.target.value) })}
-            placeholder="587"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>SMTP Username</Label>
-          <Input
-            type="text"
-            value={emailSettings.smtpUsername}
-            onChange={(e) => setEmailSettings({ ...emailSettings, smtpUsername: e.target.value })}
-            placeholder="username@example.com"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>SMTP Password</Label>
-          <Input
-            type="password"
-            value={emailSettings.smtpPassword}
-            onChange={(e) => setEmailSettings({ ...emailSettings, smtpPassword: e.target.value })}
-            placeholder="Enter SMTP password"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>From Email</Label>
-          <Input
-            type="email"
-            value={emailSettings.fromEmail}
-            onChange={(e) => setEmailSettings({ ...emailSettings, fromEmail: e.target.value })}
-            placeholder="noreply@example.com"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>From Name</Label>
-          <Input
-            type="text"
-            value={emailSettings.fromName}
-            onChange={(e) => setEmailSettings({ ...emailSettings, fromName: e.target.value })}
-            placeholder="Site Name"
-          />
-        </SettingField>
-      </SettingsGrid>
 
-      <SectionTitle>Email Preferences</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Email Notifications</Label>
-          <ToggleContainer>
-            <Toggle
-              checked={emailSettings.enableEmailNotifications}
-              onChange={(e) => setEmailSettings({ ...emailSettings, enableEmailNotifications: e.target.checked })}
-            />
-            <ToggleLabel>Enable email notifications</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-      </SettingsGrid>
-    </SettingsSection>
+
+  const UserRow = ({ user, isSelected, onSelect, onEdit }: { user: User; isSelected: boolean; onSelect: (selected: boolean) => void; onEdit: () => void }) => (
+    <tr style={{ borderBottom: '1px solid #e9ecef' }}>
+      <td style={{ padding: '0.75rem' }}>
+        <input 
+          type="checkbox" 
+          checked={isSelected}
+          onChange={(e) => onSelect(e.target.checked)}
+        />
+      </td>
+      <td style={{ padding: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '50%', 
+            background: '#96885f', 
+            color: 'white', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            fontSize: '0.8rem',
+            fontWeight: '600'
+          }}>
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontWeight: '600' }}>{user.name}</div>
+            <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>{user.email}</div>
+          </div>
+        </div>
+      </td>
+      <td style={{ padding: '0.75rem' }}>
+        <span style={{ 
+          padding: '0.25rem 0.5rem', 
+          borderRadius: '4px', 
+          fontSize: '0.8rem',
+          background: user.role === 'admin' ? '#dc3545' : user.role === 'artist' ? '#28a745' : '#6c757d',
+          color: 'white'
+        }}>
+          {user.role}
+        </span>
+      </td>
+      <td style={{ padding: '0.75rem' }}>
+        <span style={{ 
+          padding: '0.25rem 0.5rem', 
+          borderRadius: '4px', 
+          fontSize: '0.8rem',
+          background: user.status === 'active' ? '#28a745' : user.status === 'suspended' ? '#dc3545' : '#6c757d',
+          color: 'white'
+        }}>
+          {user.status}
+        </span>
+      </td>
+      <td style={{ padding: '0.75rem' }}>
+        {user.is_verified ? '✓' : '✗'}
+      </td>
+      <td style={{ padding: '0.75rem', fontSize: '0.8rem', color: '#6c757d' }}>
+        {user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}
+      </td>
+      <td style={{ padding: '0.75rem' }}>
+        <button 
+          onClick={onEdit}
+          style={{ 
+            background: 'none', 
+            border: '1px solid #96885f', 
+            color: '#96885f',
+            padding: '0.25rem 0.5rem', 
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '0.8rem'
+          }}
+        >
+          Edit
+        </button>
+      </td>
+    </tr>
   );
 
-  const renderUserSettings = () => (
-    <SettingsSection>
-      <SectionTitle>User Management</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Default User Role</Label>
-          <Select
-            value={userSettings.defaultUserRole}
-            onChange={(e) => setUserSettings({ ...userSettings, defaultUserRole: e.target.value })}
-          >
-            <option value="user">User</option>
-            <option value="artist">Artist</option>
-            <option value="moderator">Moderator</option>
-            <option value="admin">Admin</option>
+  const BulkActions = ({ selectedUsers, onUpdate }: { selectedUsers: number[]; onUpdate: () => void }) => {
+    const [action, setAction] = useState('');
+    const [reason, setReason] = useState('');
+
+    const handleBulkAction = async () => {
+      if (!action) return;
+
+      try {
+        const response = await fetch('/api/admin/users/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action,
+            user_ids: selectedUsers,
+            reason
+          })
+        });
+
+        if (response.ok) {
+          onUpdate();
+          setAction('');
+          setReason('');
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch {
+        alert('Error performing bulk action');
+      }
+    };
+
+    return (
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <Select value={action} onChange={(e) => setAction(e.target.value)} style={{ minWidth: '120px' }}>
+          <option value="">Select Action</option>
+          <option value="activate">Activate</option>
+          <option value="deactivate">Deactivate</option>
+          <option value="suspend">Suspend</option>
+          <option value="delete">Delete</option>
+        </Select>
+        <Input
+          type="text"
+          placeholder="Reason (optional)"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          style={{ minWidth: '150px' }}
+        />
+        <button 
+          onClick={handleBulkAction}
+          disabled={!action}
+          style={{ 
+            background: '#dc3545', 
+            color: 'white', 
+            border: 'none', 
+            padding: '0.5rem 1rem', 
+            borderRadius: '4px',
+            cursor: action ? 'pointer' : 'not-allowed',
+            opacity: action ? 1 : 0.5
+          }}
+        >
+          Apply
+        </button>
+      </div>
+    );
+  };
+
+  const UserDetailModal = ({ user, onClose, onUpdate }: { user: User; onClose: () => void; onUpdate: () => void }) => {
+    const [formData, setFormData] = useState({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      bio: user.bio || '',
+      password: ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSave = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/admin/users/${user.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          onUpdate();
+          onClose();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch {
+        alert('Error updating user');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '8px',
+          padding: '2rem',
+          maxWidth: '500px',
+          width: '90%',
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}>
+          <h2 style={{ margin: '0 0 1rem 0' }}>Edit User</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <Label>Name</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            
+            <div>
+              <Label>Role</Label>
+              <Select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              >
+                <option value="user">User - Can view content and create inquiries</option>
+                <option value="artist">Artist - Can manage portfolio and create artwork</option>
+                <option value="moderator">Moderator - Can moderate content and manage users</option>
+                <option value="admin">Admin - Full access to all features and settings</option>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Bio</Label>
+              <Textarea
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                rows={3}
+              />
+            </div>
+            
+            <div>
+              <Label>New Password (leave blank to keep current)</Label>
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
+            <button 
+              onClick={onClose}
+              style={{ 
+                background: '#6c757d', 
+                color: 'white', 
+                border: 'none', 
+                padding: '0.75rem 1rem', 
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSave}
+              disabled={loading}
+              style={{ 
+                background: '#96885f', 
+                color: 'white', 
+                border: 'none', 
+                padding: '0.75rem 1rem', 
+                borderRadius: '6px',
+                cursor: 'pointer',
+                opacity: loading ? 0.5 : 1
+              }}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const InviteUserModal = ({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) => {
+    const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      role: 'user'
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleInvite = async () => {
+      if (!formData.name || !formData.email) {
+        alert('Name and email are required');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            sendInvitation: true
+          })
+        });
+
+        if (response.ok) {
+          onSuccess();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch {
+        alert('Error sending invitation');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '8px',
+          padding: '2rem',
+          maxWidth: '400px',
+          width: '90%'
+        }}>
+          <h2 style={{ margin: '0 0 1rem 0' }}>Invite User</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <Label>Name</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="User's full name"
+              />
+            </div>
+            
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="user@example.com"
+              />
+            </div>
+            
+            <div>
+              <Label>Role</Label>
+              <Select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              >
+                <option value="user">User - Can view content and create inquiries</option>
+                <option value="artist">Artist - Can manage portfolio and create artwork</option>
+                <option value="moderator">Moderator - Can moderate content and manage users</option>
+                <option value="admin">Admin - Full access to all features and settings</option>
+              </Select>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
+            <button 
+              onClick={onClose}
+              style={{ 
+                background: '#6c757d', 
+                color: 'white', 
+                border: 'none', 
+                padding: '0.75rem 1rem', 
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleInvite}
+              disabled={loading}
+              style={{ 
+                background: '#96885f', 
+                color: 'white', 
+                border: 'none', 
+                padding: '0.75rem 1rem', 
+                borderRadius: '6px',
+                cursor: 'pointer',
+                opacity: loading ? 0.5 : 1
+              }}
+            >
+              {loading ? 'Sending...' : 'Send Invitation'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Fetch users
+  const fetchUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (roleFilter) params.append('role', roleFilter);
+      if (statusFilter) params.append('status', statusFilter);
+      
+      const response = await fetch(`/api/admin/users?${params.toString()}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUsers(data.users || []);
+      } else {
+        console.error('Failed to fetch users:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [searchTerm, roleFilter, statusFilter]);
+
+  // Load users when component mounts
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const renderUserSettings = () => {
+
+    return (
+      <SettingsSection>
+        <SectionTitle>User Management</SectionTitle>
+        
+
+        {/* Filters and Actions */}
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <Input
+            type="text"
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ minWidth: '200px' }}
+          />
+          <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+            <option value="">All Roles</option>
+            <option value="admin">Admin - Full access</option>
+            <option value="artist">Artist - Portfolio management</option>
+            <option value="moderator">Moderator - Content moderation</option>
+            <option value="user">User - Basic access</option>
           </Select>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Max Login Attempts</Label>
-          <Input
-            type="number"
-            value={userSettings.maxLoginAttempts}
-            onChange={(e) => setUserSettings({ ...userSettings, maxLoginAttempts: parseInt(e.target.value) })}
-            min="1"
-            max="10"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>Session Timeout (hours)</Label>
-          <Input
-            type="number"
-            value={userSettings.sessionTimeout}
-            onChange={(e) => setUserSettings({ ...userSettings, sessionTimeout: parseInt(e.target.value) })}
-            min="1"
-            max="168"
-          />
-        </SettingField>
-        
-        <SettingField>
-          <Label>Minimum Password Length</Label>
-          <Input
-            type="number"
-            value={userSettings.passwordMinLength}
-            onChange={(e) => setUserSettings({ ...userSettings, passwordMinLength: parseInt(e.target.value) })}
-            min="6"
-            max="32"
-          />
-        </SettingField>
-      </SettingsGrid>
+          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="suspended">Suspended</option>
+          </Select>
+          <button 
+            onClick={() => setShowInviteModal(true)}
+            style={{ 
+              background: '#96885f', 
+              color: 'white', 
+              border: 'none', 
+              padding: '0.75rem 1rem', 
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            Invite User
+          </button>
+          {selectedUsers.length > 0 && (
+            <BulkActions selectedUsers={selectedUsers} onUpdate={fetchUsers} />
+          )}
+        </div>
 
-      <SectionTitle>Password Security</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Strong Password Requirement</Label>
-          <ToggleContainer>
-            <Toggle
-              checked={userSettings.requireStrongPassword}
-              onChange={(e) => setUserSettings({ ...userSettings, requireStrongPassword: e.target.checked })}
-            />
-            <ToggleLabel>Require strong passwords (uppercase, lowercase, numbers, symbols)</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-      </SettingsGrid>
-    </SettingsSection>
-  );
+        {/* Users Table */}
+        <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e9ecef' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8f9fa' }}>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>
+                  <input 
+                    type="checkbox" 
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedUsers(users.map(u => u.id));
+                      } else {
+                        setSelectedUsers([]);
+                      }
+                    }}
+                  />
+                </th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>User</th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>Role</th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>Status</th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>Verified</th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>Last Login</th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e9ecef' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usersLoading ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: '2rem', textAlign: 'center' }}>Loading users...</td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: '2rem', textAlign: 'center' }}>No users found</td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <UserRow 
+                    key={user.id} 
+                    user={user} 
+                    isSelected={selectedUsers.includes(user.id)}
+                    onSelect={(selected) => {
+                      if (selected) {
+                        setSelectedUsers([...selectedUsers, user.id]);
+                      } else {
+                        setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                      }
+                    }}
+                    onEdit={() => {
+                      setSelectedUser(user);
+                      setShowUserModal(true);
+                    }}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* User Detail Modal */}
+        {showUserModal && selectedUser && (
+          <UserDetailModal 
+            user={selectedUser} 
+            onClose={() => {
+              setShowUserModal(false);
+              setSelectedUser(null);
+            }}
+            onUpdate={fetchUsers}
+          />
+        )}
+
+        {/* Invite User Modal */}
+        {showInviteModal && (
+          <InviteUserModal 
+            onClose={() => setShowInviteModal(false)}
+            onSuccess={() => {
+              setShowInviteModal(false);
+              fetchUsers();
+            }}
+          />
+        )}
+
+      </SettingsSection>
+    );
+  };
 
   const renderAppearanceSettings = () => (
     <SettingsSection>
-      <SectionTitle>Theme & Colors</SectionTitle>
+      <SectionTitle>Brand Colors</SectionTitle>
       <SettingsGrid>
         <SettingField>
           <Label>Primary Color</Label>
-          <ColorInput
-            type="color"
-            defaultValue="#96885f"
-          />
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <ColorInput
+              type="color"
+              value={appearanceSettings.primaryColor}
+              onChange={(e) => setAppearanceSettings({ ...appearanceSettings, primaryColor: e.target.value })}
+            />
+            <Input
+              type="text"
+              value={appearanceSettings.primaryColor}
+              onChange={(e) => setAppearanceSettings({ ...appearanceSettings, primaryColor: e.target.value })}
+              placeholder="#96885f"
+              style={{ width: '120px' }}
+            />
+          </div>
         </SettingField>
         
         <SettingField>
           <Label>Secondary Color</Label>
-          <ColorInput
-            type="color"
-            defaultValue="#7a6f4d"
-          />
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <ColorInput
+              type="color"
+              value={appearanceSettings.secondaryColor}
+              onChange={(e) => setAppearanceSettings({ ...appearanceSettings, secondaryColor: e.target.value })}
+            />
+            <Input
+              type="text"
+              value={appearanceSettings.secondaryColor}
+              onChange={(e) => setAppearanceSettings({ ...appearanceSettings, secondaryColor: e.target.value })}
+              placeholder="#7a6f4d"
+              style={{ width: '120px' }}
+            />
+          </div>
         </SettingField>
         
         <SettingField>
           <Label>Accent Color</Label>
-          <ColorInput
-            type="color"
-            defaultValue="#28a745"
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <ColorInput
+              type="color"
+              value={appearanceSettings.accentColor}
+              onChange={(e) => setAppearanceSettings({ ...appearanceSettings, accentColor: e.target.value })}
+            />
+            <Input
+              type="text"
+              value={appearanceSettings.accentColor}
+              onChange={(e) => setAppearanceSettings({ ...appearanceSettings, accentColor: e.target.value })}
+              placeholder="#28a745"
+              style={{ width: '120px' }}
+            />
+          </div>
+        </SettingField>
+      </SettingsGrid>
+
+      <SectionTitle>Branding</SectionTitle>
+      <SettingsGrid>
+        <SettingField>
+          <Label>Logo URL</Label>
+          <Input
+            type="url"
+            value={appearanceSettings.logoUrl}
+            onChange={(e) => setAppearanceSettings({ ...appearanceSettings, logoUrl: e.target.value })}
+            placeholder="https://example.com/logo.png"
           />
+          <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
+            Upload your logo to a file hosting service and paste the URL here
+          </div>
+        </SettingField>
+        
+        <SettingField>
+          <Label>Favicon URL</Label>
+          <Input
+            type="url"
+            value={appearanceSettings.faviconUrl}
+            onChange={(e) => setAppearanceSettings({ ...appearanceSettings, faviconUrl: e.target.value })}
+            placeholder="https://example.com/favicon.ico"
+          />
+          <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
+            Small icon that appears in browser tabs (16x16 or 32x32 pixels)
+          </div>
         </SettingField>
       </SettingsGrid>
 
@@ -750,175 +1192,61 @@ export default function AdminSettings() {
       <SettingsGrid>
         <SettingField>
           <Label>Font Family</Label>
-          <Select defaultValue="system">
+          <Select 
+            value={appearanceSettings.fontFamily}
+            onChange={(e) => setAppearanceSettings({ ...appearanceSettings, fontFamily: e.target.value })}
+          >
             <option value="system">System Default</option>
             <option value="inter">Inter</option>
             <option value="roboto">Roboto</option>
             <option value="open-sans">Open Sans</option>
+            <option value="helvetica">Helvetica</option>
+            <option value="arial">Arial</option>
           </Select>
         </SettingField>
         
         <SettingField>
           <Label>Base Font Size</Label>
-          <Select defaultValue="16">
-            <option value="14">14px</option>
-            <option value="16">16px</option>
-            <option value="18">18px</option>
-            <option value="20">20px</option>
+          <Select 
+            value={appearanceSettings.fontSize}
+            onChange={(e) => setAppearanceSettings({ ...appearanceSettings, fontSize: e.target.value })}
+          >
+            <option value="14">14px (Small)</option>
+            <option value="16">16px (Medium)</option>
+            <option value="18">18px (Large)</option>
+            <option value="20">20px (Extra Large)</option>
           </Select>
         </SettingField>
       </SettingsGrid>
     </SettingsSection>
   );
 
-  const renderSecuritySettings = () => (
-    <SettingsSection>
-      <SectionTitle>Security Settings</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Two-Factor Authentication</Label>
-          <ToggleContainer>
-            <Toggle defaultChecked={false} />
-            <ToggleLabel>Require 2FA for admin accounts</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Rate Limiting</Label>
-          <ToggleContainer>
-            <Toggle defaultChecked={true} />
-            <ToggleLabel>Enable rate limiting for API requests</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>CSRF Protection</Label>
-          <ToggleContainer>
-            <Toggle defaultChecked={true} />
-            <ToggleLabel>Enable CSRF protection</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Content Security Policy</Label>
-          <ToggleContainer>
-            <Toggle defaultChecked={true} />
-            <ToggleLabel>Enable strict CSP headers</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-      </SettingsGrid>
 
-      <SectionTitle>Backup & Recovery</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Auto Backup</Label>
-          <ToggleContainer>
-            <Toggle defaultChecked={true} />
-            <ToggleLabel>Automatically backup data daily</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Backup Retention (days)</Label>
-          <Input
-            type="number"
-            defaultValue="30"
-            min="1"
-            max="365"
-          />
-        </SettingField>
-      </SettingsGrid>
-    </SettingsSection>
+
+  const renderAllSettings = () => (
+    <>
+      <SectionContainer>
+        <SectionTitle>🌐 General Settings</SectionTitle>
+        <SectionCard>
+          {renderGeneralSettings()}
+        </SectionCard>
+      </SectionContainer>
+      
+      <SectionContainer>
+        <SectionTitle>🎨 Appearance & Branding</SectionTitle>
+        <SectionCard>
+          {renderAppearanceSettings()}
+        </SectionCard>
+      </SectionContainer>
+      
+      <SectionContainer>
+        <SectionTitle>👥 Users & Roles</SectionTitle>
+        <SectionCard>
+          {renderUserSettings()}
+        </SectionCard>
+      </SectionContainer>
+    </>
   );
-
-  const renderAdvancedSettings = () => (
-    <SettingsSection>
-      <SectionTitle>Database Settings</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Database Type</Label>
-          <Select defaultValue="sqlite">
-            <option value="sqlite">SQLite</option>
-            <option value="postgresql">PostgreSQL</option>
-            <option value="mysql">MySQL</option>
-          </Select>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Connection Pool Size</Label>
-          <Input
-            type="number"
-            defaultValue="10"
-            min="1"
-            max="50"
-          />
-        </SettingField>
-      </SettingsGrid>
-
-      <SectionTitle>Cache Settings</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Enable Caching</Label>
-          <ToggleContainer>
-            <Toggle defaultChecked={true} />
-            <ToggleLabel>Enable Redis caching</ToggleLabel>
-          </ToggleContainer>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Cache TTL (seconds)</Label>
-          <Input
-            type="number"
-            defaultValue="3600"
-            min="60"
-            max="86400"
-          />
-        </SettingField>
-      </SettingsGrid>
-
-      <SectionTitle>Logging</SectionTitle>
-      <SettingsGrid>
-        <SettingField>
-          <Label>Log Level</Label>
-          <Select defaultValue="info">
-            <option value="debug">Debug</option>
-            <option value="info">Info</option>
-            <option value="warn">Warning</option>
-            <option value="error">Error</option>
-          </Select>
-        </SettingField>
-        
-        <SettingField>
-          <Label>Log Retention (days)</Label>
-          <Input
-            type="number"
-            defaultValue="30"
-            min="1"
-            max="365"
-          />
-        </SettingField>
-      </SettingsGrid>
-    </SettingsSection>
-  );
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'site':
-        return renderSiteSettings();
-      case 'email':
-        return renderEmailSettings();
-      case 'users':
-        return renderUserSettings();
-      case 'appearance':
-        return renderAppearanceSettings();
-      case 'security':
-        return renderSecuritySettings();
-      case 'advanced':
-        return renderAdvancedSettings();
-      default:
-        return renderSiteSettings();
-    }
-  };
 
   return (
     <AdminLayout currentPage="settings">
@@ -943,27 +1271,11 @@ export default function AdminSettings() {
         )}
 
         <Content>
-          <TabContainer>
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <Tab
-                  key={tab.id}
-                  active={activeTab === tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <Icon />
-                  <span>{tab.label}</span>
-                </Tab>
-              );
-            })}
-          </TabContainer>
-
           <SettingsContainer>
             {loading ? (
               <LoadingMessage>Loading settings...</LoadingMessage>
             ) : (
-              renderContent()
+              renderAllSettings()
             )}
           </SettingsContainer>
         </Content>
@@ -975,23 +1287,28 @@ export default function AdminSettings() {
 const SuccessMessage = styled.div`
   background: #d4edda;
   color: #155724;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
   margin-bottom: 1rem;
   border: 1px solid #c3e6cb;
+  font-size: 0.9rem;
+  font-weight: 500;
 `;
 
 const ErrorMessage = styled.div`
   background: #f8d7da;
   color: #721c24;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
   margin-bottom: 1rem;
   border: 1px solid #f5c6cb;
+  font-size: 0.9rem;
+  font-weight: 500;
 `;
 
 const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
+  margin-top: 1rem;
 `; 

@@ -3,7 +3,7 @@
 import styled from 'styled-components';
 import Link from 'next/link';
 import { useState } from 'react';
-import { FaHome, FaPalette, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark } from 'react-icons/fa';
+import { FaHome, FaPalette, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark, FaUsers, FaBullhorn } from 'react-icons/fa';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -29,10 +29,9 @@ export function AdminLayout({
     { id: 'artwork', label: 'Artwork', icon: FaPalette, href: '/admin/artwork' },
     { id: 'tattoos', label: 'Tattoos', icon: FaBookmark, href: '/admin/tattoos' },
     { id: 'media', label: 'Media', icon: FaImages, href: '/admin/media' },
-    // { id: 'users', label: 'Users', icon: FaUsers, href: '/admin/users' },
-    // { id: 'events', label: 'Events', icon: FaCalendar, href: '/admin/events' },
+    { id: 'contacts', label: 'Contacts', icon: FaUsers, href: '/admin/contacts' },
+    // { id: 'campaigns', label: 'Campaigns', icon: FaBullhorn, href: '/admin/campaigns' },
     { id: 'inquiries', label: 'Inquiries', icon: FaEnvelope, href: '/admin/inquiries' },
-    // { id: 'emails', label: 'Emails', icon: FaEnvelope, href: '/admin/emails' },
     { id: 'marketing-assistant', label: 'Marketing Assistant', icon: FaLightbulb, href: '/admin/marketing-assistant' },
     { id: 'settings', label: 'Settings', icon: FaCog, href: '/admin/settings' },
   ];

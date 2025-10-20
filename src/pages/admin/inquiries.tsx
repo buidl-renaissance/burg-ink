@@ -3,7 +3,7 @@
 import { FC, useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '../../components/AdminLayout';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaUsers } from 'react-icons/fa';
 import { ActionButton } from '../../components/AdminTableStyles';
 
 const PageContainer = styled.div`
@@ -658,6 +658,7 @@ const LoadingSpinner = styled.div`
 
 interface Inquiry {
   id: number;
+  contact_id: number | null;
   name: string;
   email: string;
   phone: string | null;
@@ -865,17 +866,31 @@ const InquiriesPage: FC = () => {
                       </MessagePreview>
                     </Td>
                     <Td>
-                      <ActionButton
-                        className="view"
-                        onClick={() => {
-                          setSelectedInquiry(inquiry);
-                          setIsModalOpen(true);
-                        }}
-                        disabled={updating}
-                        title="View inquiry details"
-                      >
-                        <FaEye />
-                      </ActionButton>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <ActionButton
+                          className="view"
+                          onClick={() => {
+                            setSelectedInquiry(inquiry);
+                            setIsModalOpen(true);
+                          }}
+                          disabled={updating}
+                          title="View inquiry details"
+                        >
+                          <FaEye />
+                        </ActionButton>
+                        {inquiry.contact_id && (
+                          <ActionButton
+                            className="contact"
+                            onClick={() => {
+                              window.open(`/admin/contacts?contact=${inquiry.contact_id}`, '_blank');
+                            }}
+                            title="View contact profile"
+                            style={{ background: '#96885f', color: 'white' }}
+                          >
+                            <FaUsers />
+                          </ActionButton>
+                        )}
+                      </div>
                     </Td>
                   </tr>
                 ))}

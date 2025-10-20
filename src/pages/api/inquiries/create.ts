@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../../lib/db';
-import { inquiries, emails } from '../../../../db/schema';
+import { inquiries, emails, contacts, contactNotes } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { generateInquiryNotificationEmail } from '../../../lib/emailTemplates';
@@ -127,8 +127,33 @@ Newsletter Signup: ${newsletterSignup === 'true' ? 'Yes' : 'No'}
       message: message,
     });
 
+    // Check if contact already exists
+    let contactId = null;
+    const existingContact = await db.query.contacts.findFirst({
+      where: eq(contacts.email, email)
+    });
+
+    if (existingContact) {
+      contactId = existingContact.id;
+    } else {
+      // Create new contact
+      const [newContact] = await db.insert(contacts).values({
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone: phone || null,
+        source: 'website',
+        lifecycle_stage: 'lead',
+        tags: JSON.stringify(['inquiry']),
+        custom_fields: JSON.stringify({}),
+        is_active: 1
+      }).returning();
+      contactId = newContact.id;
+    }
+
     // Insert inquiry into database
     const [newInquiry] = await db.insert(inquiries).values({
+      contact_id: contactId, // Link to contact
       name: `${firstName} ${lastName}`, // Required field
       first_name: firstName,
       last_name: lastName,
@@ -148,6 +173,16 @@ Newsletter Signup: ${newsletterSignup === 'true' ? 'Yes' : 'No'}
       status: 'new',
       email_sent: 0, // integer
     }).returning();
+
+    // Add inquiry as contact note
+    if (contactId) {
+      await db.insert(contactNotes).values({
+        contact_id: contactId,
+        user_id: 1, // System user ID - you might want to create a system user
+        note_type: 'inquiry',
+        content: `New ${inquiryType} inquiry submitted: ${tattooConcept}`
+      });
+    }
 
     // Send email notification to Andrea
     try {
