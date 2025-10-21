@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FaHome, FaPalette, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark, FaUsers, FaBullhorn } from 'react-icons/fa';
+import { AdminAuthGuard } from './AdminAuthGuard';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -41,77 +42,79 @@ export function AdminLayout({
   };
 
   return (
-    <LayoutContainer>
-      <MobileOverlay 
-        isOpen={isMobileMenuOpen} 
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
-      
-      <Sidebar isOpen={isMobileMenuOpen}>
-        <Logo>
-          <Link href="/admin">
-            <LogoText>Admin Panel</LogoText>
-          </Link>
-          <MobileCloseButton onClick={() => setIsMobileMenuOpen(false)}>
-            <FaTimes />
-          </MobileCloseButton>
-        </Logo>
+    <AdminAuthGuard>
+      <LayoutContainer>
+        <MobileOverlay 
+          isOpen={isMobileMenuOpen} 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
         
-        <Nav>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            
-            return (
-              <NavItem key={item.id} isActive={isActive}>
-                <Link href={item.href} onClick={handleNavClick}>
-                  <NavLink>
-                    <Icon />
-                    <span>{item.label}</span>
-                  </NavLink>
-                </Link>
-              </NavItem>
-            );
-          })}
-        </Nav>
-      </Sidebar>
-      
-      <ContentWrapper>
-        <Header>
-          <HeaderLeft>
-            <MobileMenuButton onClick={() => setIsMobileMenuOpen(true)}>
-              <FaBars />
-            </MobileMenuButton>
-            <Breadcrumb>
-              {navItems.find(item => item.id === currentPage)?.label || 'Admin'}
-            </Breadcrumb>
-          </HeaderLeft>
-          <UserMenu>
-            <Link href="/">
-              <BackButton>← Back to Site</BackButton>
+        <Sidebar isOpen={isMobileMenuOpen}>
+          <Logo>
+            <Link href="/admin">
+              <LogoText>Admin Panel</LogoText>
             </Link>
-          </UserMenu>
-        </Header>
+            <MobileCloseButton onClick={() => setIsMobileMenuOpen(false)}>
+              <FaTimes />
+            </MobileCloseButton>
+          </Logo>
+          
+          <Nav>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPage === item.id;
+              
+              return (
+                <NavItem key={item.id} isActive={isActive}>
+                  <Link href={item.href} onClick={handleNavClick}>
+                    <NavLink>
+                      <Icon />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  </Link>
+                </NavItem>
+              );
+            })}
+          </Nav>
+        </Sidebar>
         
-        <MainContent rightSidebarOpen={rightSidebarOpen} rightSidebarWidth={rightSidebarWidth}>
-          <Content>
-            {children}
-          </Content>
+        <ContentWrapper>
+          <Header>
+            <HeaderLeft>
+              <MobileMenuButton onClick={() => setIsMobileMenuOpen(true)}>
+                <FaBars />
+              </MobileMenuButton>
+              <Breadcrumb>
+                {navItems.find(item => item.id === currentPage)?.label || 'Admin'}
+              </Breadcrumb>
+            </HeaderLeft>
+            <UserMenu>
+              <Link href="/">
+                <BackButton>← Back to Site</BackButton>
+              </Link>
+            </UserMenu>
+          </Header>
+          
+          <MainContent rightSidebarOpen={rightSidebarOpen} rightSidebarWidth={rightSidebarWidth}>
+            <Content>
+              {children}
+            </Content>
 
-          {statusBar && (
-            <StatusBarContainer rightSidebarOpen={rightSidebarOpen} rightSidebarWidth={rightSidebarWidth}>
-              {statusBar}
-            </StatusBarContainer>
+            {statusBar && (
+              <StatusBarContainer rightSidebarOpen={rightSidebarOpen} rightSidebarWidth={rightSidebarWidth}>
+                {statusBar}
+              </StatusBarContainer>
+            )}
+          </MainContent>
+
+          {rightSidebar && rightSidebarOpen && (
+            <RightSidebarContainer sidebarWidth={rightSidebarWidth}>
+              {rightSidebar}
+            </RightSidebarContainer>
           )}
-        </MainContent>
-
-        {rightSidebar && rightSidebarOpen && (
-          <RightSidebarContainer sidebarWidth={rightSidebarWidth}>
-            {rightSidebar}
-          </RightSidebarContainer>
-        )}
-      </ContentWrapper>
-    </LayoutContainer>
+        </ContentWrapper>
+      </LayoutContainer>
+    </AdminAuthGuard>
   );
 }
 

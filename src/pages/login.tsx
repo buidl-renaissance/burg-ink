@@ -26,6 +26,9 @@ export default function LoginPage() {
     password: { isValid: false, message: '' }
   });
   
+  // Get redirect URL from query params, default to admin portal
+  const redirectUrl = router.query.redirect as string || '/admin';
+  
   // Toast notifications
   const { toasts, success, error, warning, loading, removeToast } = useToast();
 
@@ -143,9 +146,9 @@ export default function LoginPage() {
         message: `Successfully signed in as ${data.user?.name || data.user?.email}`
       });
       
-      // Redirect to dashboard or home
+      // Redirect to the intended page or home
       setTimeout(() => {
-        router.push('/');
+        router.push(redirectUrl);
       }, 1000);
     } catch (err) {
       console.error('Login error:', err);

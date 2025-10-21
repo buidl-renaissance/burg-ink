@@ -8,14 +8,15 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    const { token } = router.query;
+    const { token, redirect } = router.query;
 
     if (token && typeof token === 'string') {
       // Store the token in localStorage
       localStorage.setItem('authToken', token);
       
-      // Redirect to home page or dashboard
-      router.push('/');
+      // Redirect to the intended page or admin portal
+      const redirectUrl = (redirect as string) || '/admin';
+      router.push(redirectUrl);
     } else {
       // No token found, redirect to login
       router.push('/login');

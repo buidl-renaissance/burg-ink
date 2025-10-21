@@ -9,6 +9,7 @@ import { StyleSheetManager, ThemeProvider } from 'styled-components';
 import isPropValid from '@emotion/is-prop-valid';
 // import { Navbar } from '@/components/NavBar';
 import { theme } from '@/styles/theme';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Default metadata for the application
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 export default function MyApp({ Component, pageProps }: AppProps) {
   const pageMetadata = pageProps.metadata || metadata;
   return (
-    <>
+    <AuthProvider>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
         <link rel="icon" href="/favicon.ico" />
@@ -50,6 +51,6 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         </ThemeProvider>
       </StyleSheetManager>
       <Analytics />
-    </>
+    </AuthProvider>
   );
 }

@@ -13,6 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Get redirect URL from query params, default to admin portal
+    const redirectUrl = req.query.redirect as string || '/admin';
+    
+    // Store redirect URL in state parameter for Google OAuth
+    const state = Buffer.from(JSON.stringify({ redirect: redirectUrl })).toString('base64');
+    
     // Generate the authorization URL
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
@@ -21,7 +27,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/drive.readonly'
       ],
-      prompt: 'consent'
+      prompt: 'consent',
+      state: state
     });
 
     // Redirect to Google OAuth

@@ -23,6 +23,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Parse state parameter to get redirect URL, default to admin portal
+    let redirectUrl = '/admin';
+    if (state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        redirectUrl = stateData.redirect || '/admin';
+      } catch (error) {
+        console.error('Error parsing state parameter:', error);
+      }
+    }
+    
     // Exchange authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
@@ -77,9 +88,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       name: user.name
     });
 
-    // Redirect to frontend with token
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback?token=${encodeURIComponent(token)}`;
-    res.redirect(redirectUrl);
+    // Redirect to frontend with token and redirect URL
+    const frontendUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(redirectUrl)}`;
+    res.redirect(frontendUrl);
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
