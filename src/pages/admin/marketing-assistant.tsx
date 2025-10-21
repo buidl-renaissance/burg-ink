@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { FaComments, FaLightbulb, FaDownload, FaShare, FaPalette, FaChartLine, FaCopy, FaTimes, FaCheck, FaTrash, FaSpinner, FaBolt, FaShareAlt, FaUser, FaLock } from 'react-icons/fa';
@@ -162,21 +162,180 @@ export default function MarketingAssistant() {
     onboarding_complete: false
   });
 
+  // Track initialization state
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Local storage keys
+  const CONVERSATIONS_CACHE_KEY = 'marketing_assistant_conversations';
+  const CURRENT_CONVERSATION_KEY = 'marketing_assistant_current_conversation';
+  const CACHE_TIMESTAMP_KEY = 'marketing_assistant_cache_timestamp';
+  const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Local storage helper functions
+  const saveConversationsToCache = (conversations: ConversationThread[]) => {
+    try {
+      localStorage.setItem(CONVERSATIONS_CACHE_KEY, JSON.stringify(conversations));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+      console.log('💾 Cached conversations to local storage');
+    } catch (error) {
+      console.warn('Failed to cache conversations:', error);
+    }
+  };
+
+  const loadConversationsFromCache = (): ConversationThread[] | null => {
+    try {
+      const cached = localStorage.getItem(CONVERSATIONS_CACHE_KEY);
+      const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+      
+      if (!cached || !timestamp) return null;
+      
+      const cacheAge = Date.now() - parseInt(timestamp);
+      if (cacheAge > CACHE_EXPIRY_MS) {
+        console.log('🗑️ Cache expired, clearing...');
+        localStorage.removeItem(CONVERSATIONS_CACHE_KEY);
+        localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+        localStorage.removeItem(CURRENT_CONVERSATION_KEY);
+        return null;
+      }
+      
+      const conversations = JSON.parse(cached);
+      console.log('📦 Loaded conversations from cache:', conversations.length);
+      
+      // Return conversations as-is (they should already be in the correct format)
+      return conversations as ConversationThread[];
+    } catch (error) {
+      console.warn('Failed to load conversations from cache:', error);
+      return null;
+    }
+  };
+
+  const saveCurrentConversationToCache = (conversationId: number) => {
+    try {
+      localStorage.setItem(CURRENT_CONVERSATION_KEY, conversationId.toString());
+      console.log('💾 Cached current conversation:', conversationId);
+    } catch (error) {
+      console.warn('Failed to cache current conversation:', error);
+    }
+  };
+
+  const loadCurrentConversationFromCache = (): number | null => {
+    try {
+      const cached = localStorage.getItem(CURRENT_CONVERSATION_KEY);
+      return cached ? parseInt(cached) : null;
+    } catch (error) {
+      console.warn('Failed to load current conversation from cache:', error);
+      return null;
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Load conversations and initial message on mount
-  useEffect(() => {
-    loadConversations();
-    loadInitialMessage();
-  }, []);
+  const loadConversation = useCallback(async (conversationId: number) => {
+    try {
+      console.log('Loading conversation:', conversationId);
+      const conversation = conversationState.conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        console.log('Found conversation:', conversation.title, 'Messages:', conversation.messages.length);
+        // Load the conversation and ensure timestamps are Date objects
+        const messagesWithDates = conversation.messages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(messagesWithDates);
+        setArtistProfile(conversation.artistProfile);
+        setConversationStage(conversation.conversationStage as 'intro' | 'summary' | 'complete');
+        setConversationState(prev => ({
+          ...prev,
+          currentConversationId: conversationId
+        }));
+        
+        // Save to cache
+        saveCurrentConversationToCache(conversationId);
+        
+        // Mark as active
+        const token = localStorage.getItem('authToken');
+        await fetch(`/api/marketing-assistant/conversations?id=${conversationId}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            isActive: true
+          })
+        });
+        console.log('Conversation loaded successfully');
+      } else {
+        console.log('Conversation not found:', conversationId);
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }, [conversationState.conversations]);
 
-  const loadInitialMessage = async () => {
+  // Initialize data on mount
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        console.log('Starting initialization...');
+        
+        // Load conversations first
+        await loadConversations();
+        
+        // Then load initial message
+        await loadInitialMessage();
+        
+        // Mark as initialized
+        setIsInitialized(true);
+        console.log('Initialization complete');
+      } catch (error) {
+        console.error('Error initializing marketing assistant data:', error);
+        setIsInitialized(true); // Still mark as initialized even if there's an error
+      }
+    };
+
+    initializeData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - this should only run once on mount
+
+  // Auto-load conversation after initialization is complete
+  useEffect(() => {
+    if (isInitialized && 
+        !conversationState.isLoadingConversations && 
+        conversationState.conversations.length > 0 && 
+        !conversationState.currentConversationId) {
+      
+      console.log('Auto-loading conversation after initialization...');
+      
+      // First, try to load the cached current conversation
+      const cachedCurrentConversationId = loadCurrentConversationFromCache();
+      if (cachedCurrentConversationId) {
+        const cachedConversation = conversationState.conversations.find(c => c.id === cachedCurrentConversationId);
+        if (cachedConversation) {
+          console.log('🎯 Loading cached current conversation:', cachedConversation.id, cachedConversation.title);
+          loadConversation(cachedCurrentConversationId);
+          return;
+        }
+      }
+      
+      // Fallback to most recent conversation
+      const lastConversation = conversationState.conversations
+        .sort((a, b) => new Date(b.lastMessageAt || b.updatedAt || b.createdAt).getTime() - new Date(a.lastMessageAt || a.updatedAt || a.createdAt).getTime())[0];
+      
+      if (lastConversation) {
+        console.log('📋 Auto-loading most recent conversation:', lastConversation.id, lastConversation.title);
+        loadConversation(lastConversation.id);
+      }
+    }
+  }, [isInitialized, conversationState.conversations, conversationState.currentConversationId, conversationState.isLoadingConversations, loadConversation]);
+
+  const loadInitialMessage = async (): Promise<void> => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/marketing-assistant/initial-message', {
@@ -199,9 +358,12 @@ export default function MarketingAssistant() {
             timestamp: new Date()
           }]);
         }
+      } else {
+        throw new Error(`Failed to load initial message: ${response.status}`);
       }
     } catch (error) {
       console.error('Error loading initial message:', error);
+      throw error;
     }
   };
 
@@ -433,9 +595,39 @@ export default function MarketingAssistant() {
   };
 
   // Conversation management functions
-  const loadConversations = async () => {
+  const loadConversations = async (): Promise<void> => {
     setConversationState(prev => ({ ...prev, isLoadingConversations: true }));
     
+    try {
+      // Try to load from cache first
+      const cachedConversations = loadConversationsFromCache();
+      
+      if (cachedConversations && cachedConversations.length > 0) {
+        console.log('🚀 Using cached conversations for instant load');
+        // Use cached conversations directly (they're already in the correct format)
+        const conversationsWithDates = cachedConversations;
+        
+        setConversationState(prev => ({
+          ...prev,
+          conversations: conversationsWithDates,
+          isLoadingConversations: false
+        }));
+        
+        // Load fresh data in background
+        loadConversationsFromAPI();
+        return;
+      }
+      
+      // No cache available, load from API
+      await loadConversationsFromAPI();
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      setConversationState(prev => ({ ...prev, isLoadingConversations: false }));
+      throw error;
+    }
+  };
+
+  const loadConversationsFromAPI = async (): Promise<void> => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/marketing-assistant/conversations', {
@@ -443,8 +635,11 @@ export default function MarketingAssistant() {
           ...(token && { 'Authorization': `Bearer ${token}` }),
         },
       });
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📡 Loaded conversations from API:', data.conversations.length);
+        
         // Ensure dates are properly converted
         const conversationsWithDates = data.conversations.map((conv: ConversationThread) => ({
           ...conv,
@@ -452,51 +647,22 @@ export default function MarketingAssistant() {
           createdAt: conv.createdAt ? new Date(conv.createdAt) : new Date(),
           updatedAt: conv.updatedAt ? new Date(conv.updatedAt) : new Date()
         }));
+        
+        // Save to cache
+        saveConversationsToCache(conversationsWithDates);
+        
         setConversationState(prev => ({
           ...prev,
           conversations: conversationsWithDates,
           isLoadingConversations: false
         }));
+      } else {
+        throw new Error(`Failed to load conversations: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      console.error('Error loading conversations from API:', error);
       setConversationState(prev => ({ ...prev, isLoadingConversations: false }));
-    }
-  };
-
-  const loadConversation = async (conversationId: number) => {
-    try {
-      const conversation = conversationState.conversations.find(c => c.id === conversationId);
-      if (conversation) {
-        // Load the conversation and ensure timestamps are Date objects
-        const messagesWithDates = conversation.messages.map(msg => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-        setMessages(messagesWithDates);
-        setArtistProfile(conversation.artistProfile);
-        setConversationStage(conversation.conversationStage as 'intro' | 'summary' | 'complete');
-        setConversationState(prev => ({
-          ...prev,
-          currentConversationId: conversationId
-        }));
-        
-        // Mark as active
-        const token = localStorage.getItem('authToken');
-        await fetch('/api/marketing-assistant/conversations', {
-          method: 'PUT',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
-          body: JSON.stringify({
-            id: conversationId,
-            isActive: true
-          })
-        });
-      }
-    } catch (error) {
-      console.error('Error loading conversation:', error);
+      throw error;
     }
   };
 
@@ -1070,7 +1236,6 @@ export default function MarketingAssistant() {
 }
 
 const Container = styled.div`
-  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
 
@@ -1324,6 +1489,11 @@ const SidebarSection = styled.div`
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   @media (max-width: 768px) {
     padding: 1rem;
