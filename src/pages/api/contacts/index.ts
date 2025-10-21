@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '../../../../db';
-import { contacts, contactTags, contactNotes, inquiries } from '../../../../db/schema';
-import { eq, desc, and, like, or, sql } from 'drizzle-orm';
+import { contacts, contactNotes } from '../../../../db/schema';
+import { eq, and, like, or, sql } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check if user has admin or artist permissions
-    if (!['admin', 'artist'].includes(currentUser.role)) {
+    if (!['admin', 'artist'].includes((currentUser as any).role)) {
       return res.status(403).json({ error: 'Admin or artist access required' });
     }
 
@@ -72,9 +72,9 @@ async function handleGetContacts(req: NextApiRequest, res: NextApiResponse) {
   }
   
   if (tags) {
-    const tagList = tags.split(',');
+    const tagList = (tags as string).split(',');
     // Filter contacts that have any of the specified tags
-    const tagConditions = tagList.map(tag => 
+    const tagConditions = tagList.map((tag: string) => 
       sql`json_extract(${contacts.tags}, '$') LIKE ${`%"${tag.trim()}"%`}`
     );
     conditions.push(or(...tagConditions));
@@ -84,8 +84,8 @@ async function handleGetContacts(req: NextApiRequest, res: NextApiResponse) {
 
   // Determine sort order
   const orderBy = sortOrder === 'asc' 
-    ? sql`${contacts[sortBy as keyof typeof contacts]} ASC`
-    : sql`${contacts[sortBy as keyof typeof contacts]} DESC`;
+    ? sql`${contacts[sortBy as keyof typeof contacts] || contacts.created_at} ASC`
+    : sql`${contacts[sortBy as keyof typeof contacts] || contacts.created_at} DESC`;
 
   // Get contacts with pagination
   const contactList = await db
@@ -149,7 +149,9 @@ async function handleGetContacts(req: NextApiRequest, res: NextApiResponse) {
       leads: leads.count,
       customers: customers.count,
       stage_distribution: stageDistribution.reduce((acc, item) => {
-        acc[item.stage] = item.count;
+        if (item.stage) {
+          acc[item.stage] = item.count;
+        }
         return acc;
       }, {} as Record<string, number>)
     }

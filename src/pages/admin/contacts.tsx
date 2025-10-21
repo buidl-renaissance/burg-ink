@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaEye, FaDownload, FaUpload, FaTag, FaEnvelope, FaPhone, FaBuilding } from 'react-icons/fa';
+import { ContactForm, ContactFormRef } from '@/components/ContactForm';
+import { FaSearch, FaPlus, FaEdit, FaTrash, FaEye, FaDownload, FaUpload, FaTag, FaEnvelope, FaPhone, FaBuilding, FaTimes, FaCheck } from 'react-icons/fa';
 
 interface Contact {
   id: number;
@@ -418,6 +419,9 @@ export default function AdminContacts() {
     leads: 0,
     customers: 0
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createFormRef = useRef<ContactFormRef>(null);
+  const editFormRef = useRef<ContactFormRef>(null);
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -462,7 +466,7 @@ export default function AdminContacts() {
     fetchTags();
   }, [fetchContacts, fetchTags]);
 
-  const handleCreateContact = async (contactData: Partial<Contact>) => {
+  const handleCreateContact = async (contactData: Contact) => {
     try {
       const response = await fetch('/api/contacts', {
         method: 'POST',
@@ -482,9 +486,23 @@ export default function AdminContacts() {
     }
   };
 
-  const handleUpdateContact = async (contactId: number, contactData: Partial<Contact>) => {
+  const handleCreateSubmit = () => {
+    if (createFormRef.current) {
+      createFormRef.current.submitForm();
+    }
+  };
+
+  const handleEditSubmit = () => {
+    if (editFormRef.current) {
+      editFormRef.current.submitForm();
+    }
+  };
+
+  const handleUpdateContact = async (contactData: Contact) => {
+    if (!selectedContact?.id) return;
+    
     try {
-      const response = await fetch(`/api/contacts/${contactId}`, {
+      const response = await fetch(`/api/contacts/${selectedContact.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(contactData)
@@ -750,92 +768,195 @@ export default function AdminContacts() {
 
         {/* Contact Detail Modal */}
         {showContactModal && selectedContact && (
-          <ContactDetailModal 
-            contact={selectedContact}
-            onClose={() => {
-              setShowContactModal(false);
-              setSelectedContact(null);
-            }}
-            onUpdate={handleUpdateContact}
-            tags={tags}
-          />
+          <ModalOverlay>
+            <ModalContainer>
+              <ModalHeader>
+                <ModalTitle>Edit Contact</ModalTitle>
+                <CloseButton onClick={() => {
+                  setShowContactModal(false);
+                  setSelectedContact(null);
+                }}>
+                  <FaTimes />
+                </CloseButton>
+              </ModalHeader>
+              <ModalContent>
+                <ContactForm
+                  ref={editFormRef}
+                  contact={selectedContact}
+                  onSuccess={handleUpdateContact}
+                  onSubmittingChange={setIsSubmitting}
+                  hideSubmitButton
+                  tags={tags}
+                  isModal
+                />
+              </ModalContent>
+              <ModalFooter>
+                <CancelButton onClick={() => {
+                  setShowContactModal(false);
+                  setSelectedContact(null);
+                }}>
+                  <FaTimes /> Cancel
+                </CancelButton>
+                <SubmitButton onClick={handleEditSubmit} disabled={isSubmitting}>
+                  <FaCheck /> {isSubmitting ? 'Updating...' : 'Update Contact'}
+                </SubmitButton>
+              </ModalFooter>
+            </ModalContainer>
+          </ModalOverlay>
         )}
 
         {/* Create Contact Modal */}
         {showCreateModal && (
-          <CreateContactModal 
-            onClose={() => setShowCreateModal(false)}
-            onSuccess={handleCreateContact}
-            tags={tags}
-          />
+          <ModalOverlay>
+            <ModalContainer>
+              <ModalHeader>
+                <ModalTitle>Create New Contact</ModalTitle>
+                <CloseButton onClick={() => setShowCreateModal(false)}>
+                  <FaTimes />
+                </CloseButton>
+              </ModalHeader>
+              <ModalContent>
+                <ContactForm
+                  ref={createFormRef}
+                  onSuccess={handleCreateContact}
+                  onSubmittingChange={setIsSubmitting}
+                  hideSubmitButton
+                  tags={tags}
+                  isModal
+                />
+              </ModalContent>
+              <ModalFooter>
+                <CancelButton onClick={() => setShowCreateModal(false)}>
+                  <FaTimes /> Cancel
+                </CancelButton>
+                <SubmitButton onClick={handleCreateSubmit} disabled={isSubmitting}>
+                  <FaCheck /> {isSubmitting ? 'Creating...' : 'Create Contact'}
+                </SubmitButton>
+              </ModalFooter>
+            </ModalContainer>
+          </ModalOverlay>
         )}
       </Container>
     </AdminLayout>
   );
 }
 
-// Modal Components (simplified for now)
-const ContactDetailModal = ({ contact, onClose, onUpdate, tags }: any) => (
-  <div style={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '1rem'
-  }}>
-    <div style={{
-      background: 'white',
-      borderRadius: '8px',
-      padding: '2rem',
-      maxWidth: '800px',
-      width: '100%',
-      maxHeight: '90vh',
-      overflow: 'auto'
-    }}>
-      <h2 style={{ margin: '0 0 1rem 0' }}>Contact Details</h2>
-      <div style={{ marginBottom: '2rem' }}>
-        <p><strong>Name:</strong> {contact.first_name} {contact.last_name}</p>
-        <p><strong>Email:</strong> {contact.email}</p>
-        {contact.phone && <p><strong>Phone:</strong> {contact.phone}</p>}
-        {contact.company && <p><strong>Company:</strong> {contact.company}</p>}
-        <p><strong>Stage:</strong> {contact.lifecycle_stage}</p>
-        <p><strong>Source:</strong> {contact.source}</p>
-      </div>
-      <button onClick={onClose}>Close</button>
-    </div>
-  </div>
-);
+// Modal Components
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
 
-const CreateContactModal = ({ onClose, onSuccess, tags }: any) => (
-  <div style={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '1rem'
-  }}>
-    <div style={{
-      background: 'white',
-      borderRadius: '8px',
-      padding: '2rem',
-      maxWidth: '500px',
-      width: '100%'
-    }}>
-      <h2 style={{ margin: '0 0 1rem 0' }}>Create New Contact</h2>
-      <p>Contact creation form would go here...</p>
-      <button onClick={onClose}>Close</button>
-    </div>
-  </div>
-);
+const ModalContainer = styled.div`
+  background: white;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #e9ecef;
+    color: #333;
+  }
+`;
+
+const ModalContent = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+`;
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+`;
+
+const CancelButton = styled.button`
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #e5e7eb;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const SubmitButton = styled.button`
+  background: #96885f;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #7a6f4d;
+  }
+
+  &:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+  }
+`;
