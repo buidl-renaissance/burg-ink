@@ -528,6 +528,93 @@ export const contactCustomFields = sqliteTable("contact_custom_fields", {
   orderIdx: index("custom_field_order_idx").on(table.display_order),
 }));
 
+// Content Management Conversations table
+export const contentManagementConversations = sqliteTable("content_management_conversations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id),
+  title: text("title").notNull(), // User-defined or auto-generated title
+  messages: text("messages").notNull(), // JSON string of conversation messages
+  context: text("context"), // JSON string of current page/context information
+  is_active: integer("is_active").default(1), // 0 or 1 - whether this is the current active conversation
+  tags: text("tags"), // JSON string of user tags for organization
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  last_message_at: text("last_message_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  userIdx: index("content_conversation_user_idx").on(table.user_id),
+  activeIdx: index("content_conversation_active_idx").on(table.is_active),
+  lastMessageIdx: index("content_conversation_last_message_idx").on(table.last_message_at),
+}));
+
+// Content Change Suggestions table
+export const contentChangeSuggestions = sqliteTable("content_change_suggestions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  conversation_id: integer("conversation_id").references(() => contentManagementConversations.id),
+  user_id: integer("user_id").references(() => users.id),
+  content_type: text("content_type").notNull(), // 'artwork', 'tattoo', 'event', 'hardcoded', 'settings'
+  target_id: integer("target_id"), // ID of the content being changed (if applicable)
+  target_path: text("target_path"), // File path for hardcoded content
+  field_name: text("field_name"), // Specific field being changed
+  current_value: text("current_value"), // Current content value
+  suggested_value: text("suggested_value").notNull(), // AI-suggested new value
+  change_type: text("change_type").notNull(), // 'create', 'update', 'delete'
+  reasoning: text("reasoning"), // AI explanation for the suggestion
+  confidence_score: text("confidence_score"), // 0.0 to 1.0 as text
+  status: text("status").default("pending"), // 'pending', 'approved', 'rejected', 'applied'
+  applied_at: text("applied_at"), // When the change was applied
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  conversationIdx: index("suggestion_conversation_idx").on(table.conversation_id),
+  userIdx: index("suggestion_user_idx").on(table.user_id),
+  statusIdx: index("suggestion_status_idx").on(table.status),
+  contentTypeIdx: index("suggestion_content_type_idx").on(table.content_type),
+}));
+
+// Hardcoded Content Registry table
+export const hardcodedContentRegistry = sqliteTable("hardcoded_content_registry", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  content_id: text("content_id").notNull().unique(), // Unique identifier for the content section
+  file_path: text("file_path").notNull(), // Path to the file containing the content
+  line_number: integer("line_number"), // Line number where content starts
+  content_type: text("content_type").notNull(), // 'text', 'html', 'jsx', 'component'
+  section_type: text("section_type").notNull(), // 'hero', 'navigation', 'footer', 'sidebar', etc.
+  current_value: text("current_value").notNull(), // Current content value
+  description: text("description"), // Human-readable description of what this content is
+  is_editable: integer("is_editable").default(1), // Boolean flag
+  last_modified: text("last_modified"), // When this content was last changed
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  contentIdIdx: uniqueIndex("hardcoded_content_id_idx").on(table.content_id),
+  filePathIdx: index("hardcoded_file_path_idx").on(table.file_path),
+  sectionTypeIdx: index("hardcoded_section_type_idx").on(table.section_type),
+  editableIdx: index("hardcoded_editable_idx").on(table.is_editable),
+}));
+
+// Content Audit Log table
+export const contentAuditLog = sqliteTable("content_audit_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  user_id: integer("user_id").references(() => users.id),
+  action: text("action").notNull(), // 'create', 'update', 'delete', 'approve', 'reject'
+  content_type: text("content_type").notNull(), // Type of content being changed
+  target_id: integer("target_id"), // ID of the content being changed
+  target_path: text("target_path"), // File path for hardcoded content
+  field_name: text("field_name"), // Specific field being changed
+  old_value: text("old_value"), // Previous value
+  new_value: text("new_value"), // New value
+  suggestion_id: integer("suggestion_id").references(() => contentChangeSuggestions.id),
+  conversation_id: integer("conversation_id").references(() => contentManagementConversations.id),
+  metadata: text("metadata"), // JSON string for additional context
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  userIdx: index("audit_user_idx").on(table.user_id),
+  actionIdx: index("audit_action_idx").on(table.action),
+  contentTypeIdx: index("audit_content_type_idx").on(table.content_type),
+  createdAtIdx: index("audit_created_at_idx").on(table.created_at),
+  suggestionIdx: index("audit_suggestion_idx").on(table.suggestion_id),
+}));
+
 // Email Campaigns table for email marketing
 export const emailCampaigns = sqliteTable("email_campaigns", {
   id: integer("id").primaryKey({ autoIncrement: true }),
