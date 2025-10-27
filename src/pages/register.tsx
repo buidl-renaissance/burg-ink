@@ -8,8 +8,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useToast } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/common/ToastContainer';
-import { SecurityBadge, SecurityFeatures } from '@/components/auth/SecurityBadge';
-import { TrustIndicators, SocialProof, PrivacyReassurance } from '@/components/auth/TrustIndicators';
 import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { AuthNavBar } from '@/components/auth/AuthNavBar';
 
@@ -243,14 +241,9 @@ export default function RegisterPage() {
         <RegisterCard>
           <Logo>
             <h1>Burg Ink</h1>
-            <p>Contemporary Art Gallery</p>
           </Logo>
           
-          <SecurityBadge variant="compact" />
-          
           <RegisterForm onSubmit={handleRegister}>
-            <FormTitle>Create Account</FormTitle>
-            <Subtitle>Join our community of artists and art lovers</Subtitle>
             
             <FormGroup>
               <Label htmlFor="name">Full Name</Label>
@@ -391,9 +384,6 @@ export default function RegisterPage() {
             )}
             Continue with Google
           </GoogleButton>
-          
-          <SocialProof />
-          <PrivacyReassurance />
           
           <LoginLink>
             Already have an account? <Link href="/login">Sign in</Link>

@@ -13,8 +13,11 @@ interface User {
   cid: string;
   name: string;
   email: string;
+  role: string;
+  status: string;
   bio?: string;
   profile_picture?: string;
+  is_verified: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -248,6 +251,192 @@ const DetailValue = styled.span`
   }
 `;
 
+const EditForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const FormLabel = styled.label`
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+`;
+
+const FormInput = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const FormSelect = styled.select`
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const FormTextarea = styled.textarea`
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-height: 80px;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    box-shadow: 0 0 0 3px rgba(150, 136, 95, 0.1);
+  }
+`;
+
+const FormActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+const FormButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  ${props => props.variant === 'primary' ? `
+    background: #96885f;
+    color: white;
+    
+    &:hover {
+      background: #7a6f4f;
+    }
+  ` : `
+    background: #6c757d;
+    color: white;
+    
+    &:hover {
+      background: #5a6268;
+    }
+  `}
+`;
+
+const EditUserForm: React.FC<{ user: User; onSave: (user: User) => void; onCancel: () => void }> = ({ user, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    bio: user.bio || '',
+    is_verified: user.is_verified,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ ...user, ...formData });
+  };
+
+  return (
+    <EditForm onSubmit={handleSubmit}>
+      <FormGroup>
+        <FormLabel>Name</FormLabel>
+        <FormInput
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
+      </FormGroup>
+
+      <FormGroup>
+        <FormLabel>Email</FormLabel>
+        <FormInput
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+        />
+      </FormGroup>
+
+      <FormGroup>
+        <FormLabel>Role</FormLabel>
+        <FormSelect
+          value={formData.role}
+          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+        >
+          <option value="user">User</option>
+          <option value="artist">Artist</option>
+          <option value="admin">Admin</option>
+        </FormSelect>
+      </FormGroup>
+
+      <FormGroup>
+        <FormLabel>Status</FormLabel>
+        <FormSelect
+          value={formData.status}
+          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
+        </FormSelect>
+      </FormGroup>
+
+      <FormGroup>
+        <FormLabel>Bio</FormLabel>
+        <FormTextarea
+          value={formData.bio}
+          onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+          placeholder="User bio..."
+        />
+      </FormGroup>
+
+      <FormGroup>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            type="checkbox"
+            checked={formData.is_verified}
+            onChange={(e) => setFormData({ ...formData, is_verified: e.target.checked })}
+          />
+          <FormLabel style={{ margin: 0 }}>Email Verified</FormLabel>
+        </label>
+      </FormGroup>
+
+      <FormActions>
+        <FormButton type="button" onClick={onCancel}>
+          Cancel
+        </FormButton>
+        <FormButton type="submit" variant="primary">
+          Save Changes
+        </FormButton>
+      </FormActions>
+    </EditForm>
+  );
+};
+
 export const getServerSideProps: GetServerSideProps = async () => {
   return {
     props: {
@@ -263,6 +452,8 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -271,40 +462,31 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockUsers: User[] = [
-        {
-          id: 1,
-          cid: 'user_001',
-          name: 'John Doe',
-          email: 'john@example.com',
-          bio: 'Artist and designer',
-          profile_picture: '/api/placeholder/150/150',
-          created_at: '2024-01-15T10:30:00Z',
-          updated_at: '2024-01-15T10:30:00Z',
+      
+      // Get the auth token from localStorage
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        {
-          id: 2,
-          cid: 'user_002',
-          name: 'Jane Smith',
-          email: 'jane@example.com',
-          bio: 'Digital artist',
-          created_at: '2024-01-20T14:20:00Z',
-          updated_at: '2024-01-20T14:20:00Z',
-        },
-        {
-          id: 3,
-          cid: 'user_003',
-          name: 'Mike Johnson',
-          email: 'mike@example.com',
-          created_at: '2024-01-25T09:15:00Z',
-          updated_at: '2024-01-25T09:15:00Z',
-        },
-      ];
-
-      setUsers(mockUsers);
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch users: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      setUsers(data.users || []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      // Set empty array on error
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -322,8 +504,39 @@ export default function AdminUsers() {
   };
 
   const handleEditUser = (user: User) => {
-    // Implement edit functionality
-    console.log('Edit user:', user);
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (updatedUser: User) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`/api/admin/users/${updatedUser.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedUser),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update user: ${response.status} - ${errorText}`);
+      }
+
+      // Refresh the users list
+      await fetchUsers();
+      setShowEditModal(false);
+      setEditingUser(null);
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      alert('Failed to update user. Please try again.');
+    }
   };
 
   const handleDeleteUser = async (userId: number) => {
@@ -381,6 +594,8 @@ export default function AdminUsers() {
               <tr>
                 <Th>User</Th>
                 <Th>Email</Th>
+                <Th>Role</Th>
+                <Th>Status</Th>
                 <Th>Joined</Th>
                 <Th>Actions</Th>
               </tr>
@@ -388,13 +603,13 @@ export default function AdminUsers() {
             <tbody>
               {loading ? (
                 <tr>
-                  <Td colSpan={5} style={{ display: 'table-cell' }}>
+                  <Td colSpan={6} style={{ display: 'table-cell' }}>
                     <LoadingMessage>Loading users...</LoadingMessage>
                   </Td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <Td colSpan={5} style={{ display: 'table-cell' }}>
+                  <Td colSpan={6} style={{ display: 'table-cell' }}>
                     <EmptyMessage>No users found</EmptyMessage>
                   </Td>
                 </tr>
@@ -417,6 +632,30 @@ export default function AdminUsers() {
                       </UserCell>
                     </Td>
                     <Td>{user.email}</Td>
+                    <Td>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        backgroundColor: user.role === 'admin' ? '#dc3545' : user.role === 'artist' ? '#28a745' : '#6c757d',
+                        color: 'white'
+                      }}>
+                        {user.role}
+                      </span>
+                    </Td>
+                    <Td>
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        backgroundColor: user.status === 'active' ? '#28a745' : user.status === 'inactive' ? '#ffc107' : '#dc3545',
+                        color: user.status === 'active' ? 'white' : '#333'
+                      }}>
+                        {user.status}
+                      </span>
+                    </Td>
                     <Td>{formatDate(user.created_at)}</Td>
                     <Td>
                       <ActionButtons>
@@ -460,6 +699,18 @@ export default function AdminUsers() {
               <DetailValue>{selectedUser.cid}</DetailValue>
             </DetailRow>
             <DetailRow>
+              <DetailLabel>Role:</DetailLabel>
+              <DetailValue>{selectedUser.role}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Status:</DetailLabel>
+              <DetailValue>{selectedUser.status}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+              <DetailLabel>Verified:</DetailLabel>
+              <DetailValue>{selectedUser.is_verified ? 'Yes' : 'No'}</DetailValue>
+            </DetailRow>
+            <DetailRow>
               <DetailLabel>Bio:</DetailLabel>
               <DetailValue>{selectedUser.bio || 'No bio provided'}</DetailValue>
             </DetailRow>
@@ -471,6 +722,16 @@ export default function AdminUsers() {
               <DetailLabel>Last Updated:</DetailLabel>
               <DetailValue>{new Date(selectedUser.updated_at).toLocaleString()}</DetailValue>
             </DetailRow>
+          </Modal>
+        )}
+
+        {showEditModal && editingUser && (
+          <Modal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            title="Edit User"
+          >
+            <EditUserForm user={editingUser} onSave={handleUpdateUser} onCancel={() => setShowEditModal(false)} />
           </Modal>
         )}
       </Container>

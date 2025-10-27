@@ -5,10 +5,7 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { FaGoogle, FaEye, FaEyeSlash, FaCheck, FaTimes } from 'react-icons/fa';
 import Head from 'next/head';
-import { useToast } from '@/hooks/useToast';
-import { ToastContainer } from '@/components/common/ToastContainer';
-import { SecurityBadge, SecurityFeatures } from '@/components/auth/SecurityBadge';
-import { TrustIndicators, SocialProof } from '@/components/auth/TrustIndicators';
+import Link from 'next/link';
 import { AuthNavBar } from '@/components/auth/AuthNavBar';
 
 export default function LoginPage() {
@@ -25,12 +22,11 @@ export default function LoginPage() {
     email: { isValid: false, message: '' },
     password: { isValid: false, message: '' }
   });
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
   
   // Get redirect URL from query params, default to admin portal
   const redirectUrl = router.query.redirect as string || '/admin';
-  
-  // Toast notifications
-  const { toasts, success, error, warning, loading, removeToast } = useToast();
 
   // Auto-focus email field on mount
   useEffect(() => {
@@ -61,30 +57,25 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      loading({
-        title: 'Connecting to Google',
-        message: 'Redirecting to Google authentication...'
-      });
+      setFormError('');
+      setFormSuccess('Redirecting to Google authentication...');
       
       // Redirect to Google OAuth
       const googleAuthUrl = `/api/auth/google`;
       window.location.href = googleAuthUrl;
     } catch (err) {
       console.error('Google login error:', err);
-      error({
-        title: 'Google login failed',
-        message: 'Unable to connect to Google. Please try again or use email login.',
-        action: {
-          label: 'Try Again',
-          onClick: handleGoogleLogin
-        }
-      });
+      setFormError('Unable to connect to Google. Please try again or use email login.');
       setIsLoading(false);
     }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous messages
+    setFormError('');
+    setFormSuccess('');
     
     // Validate form before submission
     const emailValidation = validateEmail(formData.email);
@@ -96,19 +87,13 @@ export default function LoginPage() {
     });
     
     if (!emailValidation.isValid || !passwordValidation.isValid || !formData.email || !formData.password) {
-      warning({
-        title: 'Please check your inputs',
-        message: 'Make sure your email is valid and password is entered correctly.'
-      });
+      setFormError('Please check your inputs. Make sure your email is valid and password is entered correctly.');
       return;
     }
     
     try {
       setIsLoading(true);
-      loading({
-        title: 'Signing you in',
-        message: 'Please wait while we verify your credentials...'
-      });
+      setFormSuccess('Signing you in...');
       
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -122,7 +107,6 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
         let errorMessage = 'Login failed';
         
         if (response.status === 401) {
@@ -141,10 +125,7 @@ export default function LoginPage() {
       // Store the token
       localStorage.setItem('authToken', data.token);
       
-      success({
-        title: 'Welcome back!',
-        message: `Successfully signed in as ${data.user?.name || data.user?.email}`
-      });
+      setFormSuccess(`Welcome back! Successfully signed in as ${data.user?.name || data.user?.email}`);
       
       // Redirect to the intended page or home
       setTimeout(() => {
@@ -152,17 +133,7 @@ export default function LoginPage() {
       }, 1000);
     } catch (err) {
       console.error('Login error:', err);
-      error({
-        title: 'Login failed',
-        message: err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.',
-        action: {
-          label: 'Try Again',
-          onClick: () => {
-            setFormData({ email: '', password: '' });
-            if (emailRef.current) emailRef.current.focus();
-          }
-        }
-      });
+      setFormError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +158,7 @@ export default function LoginPage() {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
-      handleEmailLogin(e as any);
+      handleEmailLogin(e as React.FormEvent);
     }
   };
 
@@ -198,22 +169,17 @@ export default function LoginPage() {
         <meta name="description" content="Login to your Burg Ink account" />
       </Head>
       
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
-      
       <AuthNavBar showBackButton={true} backHref="/" backLabel="Back to Home" />
       
       <LoginContainer>
         <LoginCard>
           <Logo>
             <h1>Burg Ink</h1>
-            <p>Contemporary Art Gallery</p>
           </Logo>
           
-          <SecurityBadge variant="compact" />
-          
           <LoginForm onSubmit={handleEmailLogin}>
-            <FormTitle>Welcome Back</FormTitle>
-            <Subtitle>Sign in to your account</Subtitle>
+            {formError && <ErrorMessage>{formError}</ErrorMessage>}
+            {formSuccess && <SuccessMessage>{formSuccess}</SuccessMessage>}
             
             <FormGroup>
               <Label htmlFor="email">Email Address</Label>
@@ -294,7 +260,7 @@ export default function LoginPage() {
             </LoginButton>
             
             <ForgotPasswordLink>
-              <a href="/forgot-password">Forgot your password?</a>
+              <Link href="/forgot-password">Forgot your password?</Link>
             </ForgotPasswordLink>
           </LoginForm>
           
@@ -311,11 +277,9 @@ export default function LoginPage() {
             Continue with Google
           </GoogleButton>
           
-          <TrustIndicators userCount={2500} />
-          
           <SignupLink>
             Don&apos;t have an account?{' '}
-            <a href="/register">Sign up</a>
+            <Link href="/register">Sign up</Link>
           </SignupLink>
         </LoginCard>
       </LoginContainer>
@@ -359,7 +323,7 @@ const LoginCard = styled.div`
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   
   &:hover {
- IMG: transform: translateY(-2px);
+    transform: translateY(-2px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
   }
   
@@ -390,21 +354,6 @@ const Logo = styled.div`
 
 const LoginForm = styled.form`
   margin-bottom: 1.5rem;
-`;
-
-const FormTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.5rem 0;
-  text-align: center;
-`;
-
-const Subtitle = styled.p`
-  color: #666;
-  text-align: center;
-  margin: 0 0 1.5rem 0;
-  font-size: 0.9rem;
 `;
 
 const FormGroup = styled.div`
@@ -705,6 +654,31 @@ const ErrorMessage = styled.div`
   margin-bottom: 1rem;
   font-size: 0.9rem;
   border: 1px solid #feb2b2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: slideIn 0.3s ease-out;
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const SuccessMessage = styled.div`
+  background-color: #f0f9ff;
+  color: #0369a1;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #bae6fd;
   display: flex;
   align-items: center;
   gap: 0.5rem;

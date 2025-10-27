@@ -3,17 +3,15 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
-import { FaPalette, FaUsers, FaCalendar, FaEnvelope, FaImages } from 'react-icons/fa';
+import { FaPalette, FaImages, FaTint, FaEnvelope } from 'react-icons/fa';
 import Link from 'next/link';
 import { GetServerSideProps } from 'next';
 
 interface DashboardStats {
   totalArtworks: number;
-  totalUsers: number;
-  totalEvents: number;
-  totalEmails: number;
+  totalTattoos: number;
   totalMedia: number;
-  totalViews: number;
+  totalInquiries: number;
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -28,36 +26,47 @@ export const getServerSideProps: GetServerSideProps = async () => {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalArtworks: 0,
-    totalUsers: 0,
-    totalEvents: 0,
-    totalEmails: 0,
+    totalTattoos: 0,
     totalMedia: 0,
-    totalViews: 0,
+    totalInquiries: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you would fetch actual stats from your API
-    // For now, we'll simulate loading some data
     const fetchStats = async () => {
       try {
         setLoading(true);
         
-        // Fetch media stats
-        const mediaResponse = await fetch('/api/media/stats');
-        const mediaStats = mediaResponse.ok ? await mediaResponse.json() : { total: 0 };
+        // Get the auth token from localStorage
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
         
-        // Mock data for other stats - replace with actual API calls
-        setStats({
-          totalArtworks: 25,
-          totalUsers: 150,
-          totalEvents: 8,
-          totalEmails: 45,
-          totalMedia: mediaStats.total,
-          totalViews: 1250,
+        const response = await fetch('/api/admin/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', response.status, errorText);
+          throw new Error(`Failed to fetch admin dashboard stats: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        setStats(data);
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
+        // Set default values on error
+        setStats({
+          totalArtworks: 0,
+          totalTattoos: 0,
+          totalMedia: 0,
+          totalInquiries: 0,
+        });
       } finally {
         setLoading(false);
       }
@@ -174,6 +183,13 @@ export default function AdminDashboard() {
             color="#96885f"
           />
           <StatCard
+            title="Total Tattoos"
+            value={stats.totalTattoos}
+            icon={FaTint}
+            href="/admin/tattoos"
+            color="#e91e63"
+          />
+          <StatCard
             title="Total Media"
             value={stats.totalMedia}
             icon={FaImages}
@@ -181,24 +197,10 @@ export default function AdminDashboard() {
             color="#17a2b8"
           />
           <StatCard
-            title="Total Users"
-            value={stats.totalUsers}
-            icon={FaUsers}
-            href="/admin/users"
-            color="#007bff"
-          />
-          <StatCard
-            title="Total Events"
-            value={stats.totalEvents}
-            icon={FaCalendar}
-            href="/admin/events"
-            color="#28a745"
-          />
-          <StatCard
-            title="Total Emails"
-            value={stats.totalEmails}
+            title="Total Inquiries"
+            value={stats.totalInquiries}
             icon={FaEnvelope}
-            href="/admin/emails"
+            href="/admin/inquiries"
             color="#ffc107"
           />
         </StatsGrid>
@@ -211,10 +213,20 @@ export default function AdminDashboard() {
               <ActionTitle>Manage Artwork</ActionTitle>
               <ActionDescription>Add, edit, or remove artwork from your gallery</ActionDescription>
             </ActionCard>
+            <ActionCard href="/admin/tattoos">
+              <ActionIcon>💉</ActionIcon>
+              <ActionTitle>Manage Tattoos</ActionTitle>
+              <ActionDescription>Add, edit, or remove tattoo designs and portfolios</ActionDescription>
+            </ActionCard>
             <ActionCard href="/admin/media">
               <ActionIcon>🖼️</ActionIcon>
               <ActionTitle>Manage Media</ActionTitle>
               <ActionDescription>View and manage media files and assets</ActionDescription>
+            </ActionCard>
+            <ActionCard href="/admin/inquiries">
+              <ActionIcon>📬</ActionIcon>
+              <ActionTitle>Manage Inquiries</ActionTitle>
+              <ActionDescription>View and respond to customer inquiries</ActionDescription>
             </ActionCard>
             <ActionCard href="/admin/users">
               <ActionIcon>👥</ActionIcon>

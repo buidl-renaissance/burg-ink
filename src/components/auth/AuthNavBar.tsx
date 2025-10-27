@@ -20,7 +20,6 @@ export const AuthNavBar: React.FC<AuthNavBarProps> = ({
         <LogoSection>
           <LogoLink href="/">
             <LogoText>Burg Ink</LogoText>
-            <LogoSubtext>Contemporary Art Gallery</LogoSubtext>
           </LogoLink>
         </LogoSection>
         
