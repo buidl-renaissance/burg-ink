@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
+// Shared throttle across all instances to prevent excessive status requests
+let lastFetchTime = 0;
+
 export interface MediaStatus {
   id: string;
   status: 'pending' | 'processing' | 'failed' | null;
@@ -47,6 +50,16 @@ export function useMediaProcessing({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchStatus = useCallback(async () => {
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime;
+    
+    // If less than 1 second has passed, skip this request
+    if (timeSinceLastFetch < 1000) {
+      return null;
+    }
+    
+    lastFetchTime = now;
+    
     try {
       const response = await fetch(`/api/media/${mediaId}/status`);
       
