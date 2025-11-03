@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
  * Each function can be used independently or as part of a larger workflow.
  * 
  * CONCURRENCY SETTINGS:
- * - All functions are configured with a concurrency limit of 6
+ * - All functions are configured with a concurrency limit of 5
  * - This prevents overwhelming the system while maintaining good performance
  * - Can be adjusted based on server capacity and requirements
  * 
@@ -75,7 +75,7 @@ import { eq } from "drizzle-orm";
  * BENEFITS:
  * - Each step can be processed independently
  * - Better error isolation (one file failing doesn't stop others)
- * - Parallel processing for better performance (max 6 concurrent)
+ * - Parallel processing for better performance (max 5 concurrent)
  * - Automatic AI analysis triggering
  * - Reusable functions for different sources (not just Google Drive)
  * - Better monitoring and debugging per step
@@ -114,7 +114,7 @@ export const verifyUser = inngest.createFunction(
   { 
     id: "verify-user",
     name: "Verify User",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "user.verify" },
   async ({ event, step }) => {
@@ -141,7 +141,7 @@ export const listGoogleDriveFiles = inngest.createFunction(
   { 
     id: "list-google-drive-files",
     name: "List Google Drive Files",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "google.drive.list-files" },
   async ({ event, step }) => {
@@ -169,7 +169,7 @@ export const processSingleFile = inngest.createFunction(
   { 
     id: "process-single-file",
     name: "Process Single File",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "file.process" },
   async ({ event, step }) => {
@@ -331,7 +331,7 @@ export const analyzeMedia = inngest.createFunction(
   { 
     id: "analyze-media",
     name: "Analyze Media",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "media.analyze" },
   async ({ event, step }) => {
@@ -394,7 +394,7 @@ export const updateUserSyncSettings = inngest.createFunction(
   { 
     id: "update-user-sync-settings",
     name: "Update User Sync Settings",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "user.update-sync-settings" },
   async ({ event, step }) => {
@@ -423,7 +423,7 @@ export const processGoogleImages = inngest.createFunction(
   { 
     id: "process-google-images",
     name: "Process Google Images",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "google.images.process" },
   async ({ event, step }) => {
@@ -689,7 +689,7 @@ export const processGoogleImagesParallel = inngest.createFunction(
   { 
     id: "process-google-images-parallel",
     name: "Process Google Images (Parallel)",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "google.images.process.parallel" },
   async ({ event, step }) => {
@@ -756,7 +756,7 @@ export const analyzeMediaBatch = inngest.createFunction(
   { 
     id: "analyze-media-batch",
     name: "Analyze Media Batch",
-    concurrency: 6
+    concurrency: 5
   },
   { event: "media.analyze.batch" },
   async ({ event, step }) => {
@@ -790,7 +790,7 @@ export const analyzeMediaBatch = inngest.createFunction(
       message: 'Media batch analysis initiated',
       mediaRecordsFound: mediaRecords.length,
       analysisJobsTriggered: analysisPromises.length,
-      note: 'Individual analysis will happen in parallel with concurrency limit of 6'
+      note: 'Individual analysis will happen in parallel with concurrency limit of 5'
     };
   }
 );

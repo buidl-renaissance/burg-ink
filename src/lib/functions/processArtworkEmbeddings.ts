@@ -7,7 +7,7 @@ import { artwork as artworkTable } from "../../../db/schema";
 
 // Function to create and store artwork embeddings
 export const createArtworkEmbeddings = inngest.createFunction(
-  { id: "artwork.embeddings.create", name: "Artwork Embeddings Create", concurrency: 6 },
+  { id: "artwork.embeddings.create", name: "Artwork Embeddings Create", concurrency: 5 },
   { event: "artwork.embeddings.create" },
   async ({ event, step }) => {
     const { artwork } = event.data as { artwork: Artwork };
