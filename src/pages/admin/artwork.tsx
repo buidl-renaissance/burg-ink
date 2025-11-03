@@ -380,7 +380,7 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
               <Table>
                 <thead>
                   <tr>
-                    <Th width="40px"></Th>
+                    <Th style={{ width: '40px' }}></Th>
                     <Th>Image</Th>
                     <Th>Title</Th>
                     <Th>Artist</Th>
