@@ -2,8 +2,9 @@ import { Inngest } from "inngest";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ 
+  id: "burg-ink-app",
   name: "Burg Ink App",
-  id: "burg-ink-app"
+  eventKey: process.env.INNGEST_EVENT_KEY,
 });
 
 // Utility function to trigger Google images processing (parallel - recommended)
