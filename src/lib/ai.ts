@@ -112,7 +112,9 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
               - What artistic style is it (if any)?
               - What colors dominate the image?
               - What mood does it convey?
-              - Generate relevant tags for categorization`
+              - Generate relevant tags for categorization
+              
+              Return only valid JSON with no additional text.`
             },
             {
               type: "image_url",
@@ -123,7 +125,9 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
           ],
         },
       ],
+      response_format: { type: "json_object" },
       max_tokens: 1000,
+      temperature: 0.3,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -131,14 +135,17 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
       throw new Error('No response from OpenAI');
     }
 
-    // Parse the JSON response, handling potential code block wrapping
-    const jsonContent = content.includes('```json') 
-      ? content.split('```json')[1].split('```')[0].trim()
-      : content.includes('```')
-        ? content.split('```')[1].trim() 
-        : content.trim();
-
-    const analysis = JSON.parse(jsonContent) as ImageAnalysis;
+    // Try to parse the JSON response
+    let analysis: ImageAnalysis;
+    try {
+      // Clean and parse the JSON response (remove markdown code blocks if present)
+      const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+      analysis = JSON.parse(cleanContent) as ImageAnalysis;
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response as JSON:', content);
+      console.error('Parse error:', parseError);
+      throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 100)}`);
+    }
     
     return {
       description: analysis.description || '',
@@ -187,7 +194,7 @@ export async function analyzeMediaImage(imageUrl: string): Promise<MediaAnalysis
           content: [
             {
               type: "text",
-              text: "Analyze this image and provide tags, title, description, and alt text.",
+              text: "Analyze this image and provide tags, title, description, and alt text. Return only valid JSON with no additional text.",
             },
             {
               type: "image_url",
@@ -199,6 +206,7 @@ export async function analyzeMediaImage(imageUrl: string): Promise<MediaAnalysis
           ],
         },
       ],
+      response_format: { type: "json_object" },
       max_tokens: 1000,
       temperature: 0.3,
     });
@@ -208,13 +216,21 @@ export async function analyzeMediaImage(imageUrl: string): Promise<MediaAnalysis
       throw new Error('No content received from OpenAI');
     }
 
-    // Clean and parse the JSON response (remove markdown code blocks if present)
-    const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
-    const analysis = JSON.parse(cleanContent) as MediaAnalysis;
+    // Try to parse the JSON response
+    let analysis: MediaAnalysis;
+    try {
+      // Clean and parse the JSON response (remove markdown code blocks if present)
+      const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+      analysis = JSON.parse(cleanContent) as MediaAnalysis;
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response as JSON:', content);
+      console.error('Parse error:', parseError);
+      throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 100)}`);
+    }
     
     // Validate the response structure
     if (!analysis.tags || !analysis.title || !analysis.description || !analysis.altText) {
-      throw new Error('Invalid response structure from OpenAI');
+      throw new Error('Invalid response structure from OpenAI - missing required fields');
     }
 
     return analysis;
@@ -267,7 +283,7 @@ export async function analyzeTattooImage(imageUrl: string): Promise<TattooAnalys
           content: [
             {
               type: "text",
-              text: "Analyze this tattoo image and provide title, description, category, placement, size, and style details.",
+              text: "Analyze this tattoo image and provide title, description, category, placement, size, and style details. Return only valid JSON with no additional text.",
             },
             {
               type: "image_url",
@@ -279,6 +295,7 @@ export async function analyzeTattooImage(imageUrl: string): Promise<TattooAnalys
           ],
         },
       ],
+      response_format: { type: "json_object" },
       max_tokens: 1000,
       temperature: 0.3,
     });
@@ -288,19 +305,32 @@ export async function analyzeTattooImage(imageUrl: string): Promise<TattooAnalys
       throw new Error('No content received from OpenAI');
     }
 
-    // Clean and parse the JSON response (remove markdown code blocks if present)
-    const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
-    const analysis = JSON.parse(cleanContent) as TattooAnalysis;
+    // Try to parse the JSON response
+    let analysis: TattooAnalysis;
+    try {
+      // Clean and parse the JSON response (remove markdown code blocks if present)
+      const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+      analysis = JSON.parse(cleanContent) as TattooAnalysis;
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response as JSON:', content);
+      console.error('Parse error:', parseError);
+      throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 100)}`);
+    }
     
     // Validate the response structure
     if (!analysis.title || !analysis.description || !analysis.category || 
         !analysis.placement || !analysis.size || !analysis.style) {
-      throw new Error('Invalid response structure from OpenAI');
+      throw new Error('Invalid response structure from OpenAI - missing required fields');
     }
 
     return analysis;
   } catch (error) {
     console.error('Error analyzing tattoo image with OpenAI:', error);
+    
+    // If it's an OpenAI API error, provide more context
+    if (error && typeof error === 'object' && 'message' in error) {
+      console.error('OpenAI error details:', (error as Error).message);
+    }
     
     // Return fallback values if analysis fails
     return {
@@ -570,7 +600,7 @@ export async function classifyMediaImage(imageUrl: string): Promise<MediaClassif
           content: [
             {
               type: "text",
-              text: "Analyze this image and classify it as tattoo, artwork, or unknown with confidence scores and detailed reasoning.",
+              text: "Analyze this image and classify it as tattoo, artwork, or unknown with confidence scores and detailed reasoning. Return only valid JSON with no additional text.",
             },
             {
               type: "image_url",
@@ -582,6 +612,7 @@ export async function classifyMediaImage(imageUrl: string): Promise<MediaClassif
           ],
         },
       ],
+      response_format: { type: "json_object" },
       max_tokens: 1200,
       temperature: 0.2, // Lower temperature for more consistent classification
     });
@@ -591,14 +622,22 @@ export async function classifyMediaImage(imageUrl: string): Promise<MediaClassif
       throw new Error('No content received from OpenAI');
     }
 
-    // Clean and parse the JSON response (remove markdown code blocks if present)
-    const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
-    const classification = JSON.parse(cleanContent) as MediaClassification;
+    // Try to parse the JSON response
+    let classification: MediaClassification;
+    try {
+      // Clean and parse the JSON response (remove markdown code blocks if present)
+      const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+      classification = JSON.parse(cleanContent) as MediaClassification;
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response as JSON:', content);
+      console.error('Parse error:', parseError);
+      throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 100)}`);
+    }
     
     // Validate the response structure
     if (!classification.detectedType || typeof classification.confidence !== 'number' || 
         !classification.detections || !classification.suggestedTags) {
-      throw new Error('Invalid response structure from OpenAI');
+      throw new Error('Invalid response structure from OpenAI - missing required fields');
     }
 
     // Ensure confidence is between 0 and 1
