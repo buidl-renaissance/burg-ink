@@ -76,7 +76,7 @@ const GalleryTitle = styled.h2`
 
 const GalleryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   
   @media (max-width: 768px) {
