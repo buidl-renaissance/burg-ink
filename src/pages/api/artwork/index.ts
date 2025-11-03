@@ -11,6 +11,7 @@ export default async function handler(
         const { artist_id, category, is_for_sale, limit, offset, published } = req.query;
         
         // Determine which function to use based on the 'published' parameter
+        // Note: Results are now ordered by sort_order ASC, created_at DESC
         let artworks;
         if (published === 'true') {
           // Get only published artwork from the main artist

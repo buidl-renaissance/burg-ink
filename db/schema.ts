@@ -48,6 +48,7 @@ export const artwork = sqliteTable("artwork", {
   meta: text("meta"), // JSON string for additional metadata
   data: text("data"), // JSON string for additional data
   embedding: blob("embedding"), // Float32Array vector as binary
+  sort_order: integer("sort_order").default(0), // Manual sorting order
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   deleted_at: text("deleted_at"),
@@ -55,6 +56,7 @@ export const artwork = sqliteTable("artwork", {
   slugIdx: uniqueIndex("artwork_slug_idx").on(table.slug),
   artistIdx: index("artwork_artist_idx").on(table.artist_id),
   typeIdx: index("artwork_type_idx").on(table.type),
+  sortOrderIdx: index("artwork_sort_order_idx").on(table.sort_order),
 }));
 
 // Tattoos table
@@ -72,6 +74,7 @@ export const tattoos = sqliteTable("tattoos", {
   meta: text("meta"), // JSON string for additional metadata
   data: text("data"), // JSON string for additional data
   embedding: blob("embedding"), // Float32Array vector as binary
+  sort_order: integer("sort_order").default(0), // Manual sorting order
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   deleted_at: text("deleted_at"),
@@ -79,6 +82,7 @@ export const tattoos = sqliteTable("tattoos", {
   slugIdx: uniqueIndex("tattoos_slug_idx").on(table.slug),
   artistIdx: index("tattoos_artist_idx").on(table.artist_id),
   categoryIdx: index("tattoos_category_idx").on(table.category),
+  sortOrderIdx: index("tattoos_sort_order_idx").on(table.sort_order),
 }));
 
 // Content table for artwork media

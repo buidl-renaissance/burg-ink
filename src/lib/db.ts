@@ -12,7 +12,7 @@ export async function getAllArtwork() {
     .from(artwork)
     .leftJoin(artists, eq(artwork.artist_id, artists.id))
     .where(isNull(artwork.deleted_at))
-    .orderBy(desc(artwork.created_at));
+    .orderBy(asc(artwork.sort_order), desc(artwork.created_at));
   
   return result.map(row => {
     let parsedMeta = {};
@@ -60,7 +60,7 @@ export async function getPublishedArtworkFromArtist(artistId?: string) {
         isNull(artwork.deleted_at)
       )
     )
-    .orderBy(desc(artwork.created_at));
+    .orderBy(asc(artwork.sort_order), desc(artwork.created_at));
   
   return result.map(row => {
     let parsedMeta: Record<string, unknown> = {};
@@ -234,7 +234,7 @@ export async function getAllTattoos() {
     .from(tattoos)
     .leftJoin(artists, eq(tattoos.artist_id, artists.id))
     .where(isNull(tattoos.deleted_at))
-    .orderBy(desc(tattoos.created_at));
+    .orderBy(asc(tattoos.sort_order), desc(tattoos.created_at));
   
   return result.map(row => {
     let parsedMeta = {};
@@ -314,4 +314,32 @@ export async function getTattooBySlug(slug: string) {
       deleted_at: row.artists.deleted_at,
     } : undefined,
   };
+}
+
+// Batch update artwork sort order
+export async function updateArtworkOrder(updates: { id: number; sort_order: number }[]) {
+  const results = [];
+  for (const update of updates) {
+    const result = await db
+      .update(artwork)
+      .set({ sort_order: update.sort_order })
+      .where(eq(artwork.id, update.id))
+      .returning();
+    results.push(result[0]);
+  }
+  return results;
+}
+
+// Batch update tattoo sort order
+export async function updateTattooOrder(updates: { id: number; sort_order: number }[]) {
+  const results = [];
+  for (const update of updates) {
+    const result = await db
+      .update(tattoos)
+      .set({ sort_order: update.sort_order })
+      .where(eq(tattoos.id, update.id))
+      .returning();
+    results.push(result[0]);
+  }
+  return results;
 }

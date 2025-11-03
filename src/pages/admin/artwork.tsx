@@ -6,13 +6,30 @@ import styled from 'styled-components';
 import { Artwork } from '@/utils/interfaces';
 import { AdminLayout } from '@/components/AdminLayout';
 import { StatusDropdown } from '@/components/StatusDropdown';
-import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye, FaDownload, FaGripVertical } from 'react-icons/fa';
 import Image from 'next/image';
 import { ImportArtworkModal } from '@/components/ImportArtworkModal';
 import { Artist } from '@/utils/interfaces';
 import { getArtist } from '@/lib/db';
 import { GetServerSideProps } from 'next';
 import { TableContainer, Table, Th, Td, ActionButton, ActionButtons, ImageCell, TitleCell, LoadingState, ErrorState, EmptyState } from '@/components/AdminTableStyles';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const AdminContainer = styled.div`
   max-width: 1400px;
@@ -71,6 +88,121 @@ const AddButton = styled.button`
   }
 `;
 
+const DragHandle = styled.div`
+  cursor: grab;
+  color: #999;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  
+  &:active {
+    cursor: grabbing;
+  }
+  
+  &:hover {
+    color: #666;
+  }
+`;
+
+const SortableRow = styled.tr<{ $isDragging?: boolean }>`
+  opacity: ${props => props.$isDragging ? 0.5 : 1};
+  background: ${props => props.$isDragging ? '#f0f0f0' : 'transparent'};
+`;
+
+// Sortable row component
+function SortableArtworkRow({ 
+  artwork, 
+  onEdit, 
+  onView, 
+  onDelete, 
+  onError 
+}: { 
+  artwork: Artwork; 
+  onEdit: (artwork: Artwork) => void;
+  onView: (artwork: Artwork) => void;
+  onDelete: (id: number) => void;
+  onError: (error: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: artwork.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <SortableRow ref={setNodeRef} style={style} $isDragging={isDragging}>
+      <Td width="40px">
+        <DragHandle {...attributes} {...listeners}>
+          <FaGripVertical />
+        </DragHandle>
+      </Td>
+      <Td width="80px">
+        <ImageCell>
+          {artwork.image && (
+            <Image
+              src={artwork.image}
+              alt={artwork.title}
+              fill
+              style={{ objectFit: 'cover' }}
+            />
+          )}
+        </ImageCell>
+      </Td>
+      <Td>
+        <TitleCell>
+          <strong>{artwork.title}</strong>
+          {artwork.description && (
+            <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
+              {artwork.description.substring(0, 50)}...
+            </div>
+          )}
+        </TitleCell>
+      </Td>
+      <Td>{artwork.artist?.name || 'Unknown'}</Td>
+      <Td>{artwork.data?.category || 'Uncategorized'}</Td>
+      <Td>
+        <StatusDropdown
+          artwork={artwork}
+          onError={onError}
+        />
+      </Td>
+      <Td>
+        <ActionButtons>
+          <ActionButton
+            className="view"
+            onClick={() => onView(artwork)}
+            title="View"
+          >
+            <FaEye />
+          </ActionButton>
+          <ActionButton
+            className="edit"
+            onClick={() => onEdit(artwork)}
+            title="Edit"
+          >
+            <FaEdit />
+          </ActionButton>
+          <ActionButton
+            className="delete"
+            onClick={() => onDelete(artwork.id)}
+            title="Delete"
+          >
+            <FaTrash />
+          </ActionButton>
+        </ActionButtons>
+      </Td>
+    </SortableRow>
+  );
+}
+
 export const getServerSideProps: GetServerSideProps = async () => {
   const artist = await getArtist(process.env.NEXT_PUBLIC_ARTIST_ID || '');
   return {
@@ -89,6 +221,13 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
   const [error, setError] = useState<string | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     fetchArtworks();
   }, []);
@@ -106,6 +245,45 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = artworks.findIndex((a) => a.id === active.id);
+    const newIndex = artworks.findIndex((a) => a.id === over.id);
+
+    // Update local state immediately for smooth UX
+    const reorderedArtworks = arrayMove(artworks, oldIndex, newIndex);
+    setArtworks(reorderedArtworks);
+
+    // Prepare updates with new sort_order values
+    const updates = reorderedArtworks.map((artwork, index) => ({
+      id: artwork.id,
+      sort_order: index,
+    }));
+
+    try {
+      const response = await fetch('/api/artwork/reorder', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ updates }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update order');
+      }
+    } catch (err) {
+      // Revert on error
+      setError(err instanceof Error ? err.message : 'Failed to update order');
+      fetchArtworks(); // Refetch to reset order
     }
   };
 
@@ -194,79 +372,42 @@ export default function AdminArtworkPage({ artist }: { artist: Artist }) {
               <p>Get started by adding your first artwork.</p>
             </EmptyState>
           ) : (
-            <Table>
-              <thead>
-                <tr>
-                  <Th>Image</Th>
-                  <Th>Title</Th>
-                  <Th>Artist</Th>
-                  <Th>Category</Th>
-                  <Th>Status</Th>
-                  <Th>Actions</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {artworks.map((artwork) => (
-                  <tr key={artwork.id}>
-                    <Td width="80px">
-                      <ImageCell>
-                        {artwork.image && (
-                          <Image
-                            src={artwork.image}
-                            alt={artwork.title}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                          />
-                        )}
-                      </ImageCell>
-                    </Td>
-                    <Td>
-                      <TitleCell>
-                        <strong>{artwork.title}</strong>
-                        {artwork.description && (
-                          <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
-                            {artwork.description.substring(0, 50)}...
-                          </div>
-                        )}
-                      </TitleCell>
-                    </Td>
-                    <Td>{artwork.artist?.name || 'Unknown'}</Td>
-                    <Td>{artwork.data?.category || 'Uncategorized'}</Td>
-                    <Td>
-                      <StatusDropdown
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <Table>
+                <thead>
+                  <tr>
+                    <Th width="40px"></Th>
+                    <Th>Image</Th>
+                    <Th>Title</Th>
+                    <Th>Artist</Th>
+                    <Th>Category</Th>
+                    <Th>Status</Th>
+                    <Th>Actions</Th>
+                  </tr>
+                </thead>
+                <SortableContext
+                  items={artworks.map((a) => a.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <tbody>
+                    {artworks.map((artwork) => (
+                      <SortableArtworkRow
+                        key={artwork.id}
                         artwork={artwork}
+                        onEdit={handleEdit}
+                        onView={handleView}
+                        onDelete={handleDelete}
                         onError={setError}
                       />
-                    </Td>
-                    <Td>
-                      <ActionButtons>
-                        <ActionButton
-                          className="view"
-                          onClick={() => handleView(artwork)}
-                          title="View"
-                        >
-                          <FaEye />
-                        </ActionButton>
-                        <ActionButton
-                          className="edit"
-                          onClick={() => handleEdit(artwork)}
-                          title="Edit"
-                        >
-                          <FaEdit />
-                        </ActionButton>
-                        <ActionButton
-                          className="delete"
-                          onClick={() => handleDelete(artwork.id)}
-                          title="Delete"
-                        >
-                          <FaTrash />
-                        </ActionButton>
-                      </ActionButtons>
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+                    ))}
+                  </tbody>
+                </SortableContext>
+              </Table>
+            </DndContext>
           )}
         </TableContainer>
 
