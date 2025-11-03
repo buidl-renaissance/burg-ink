@@ -6,7 +6,7 @@ import { AdminLayout } from '@/components/AdminLayout';
 import { UploadMedia } from '@/components/UploadMedia';
 import { MediaProcessingIndicator } from '@/components/MediaProcessingIndicator';
 import { useMediaProcessing } from '@/hooks/useMediaProcessing';
-import { FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaList, FaTimes, FaPlus } from 'react-icons/fa';
+import { FaEye, FaTrash, FaDownload, FaSpinner, FaTh, FaList, FaTimes, FaPlus, FaFilter } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 
 // Styled Components
@@ -15,6 +15,7 @@ const Container = styled.div`
   margin: 0 auto;
   position: relative;
   padding-bottom: 5rem;
+  min-height: calc(100vh - 200px);
 `;
 
 const Header = styled.div`
@@ -175,6 +176,7 @@ const ToolbarLeft = styled.div`
 const SearchInput = styled.input`
   flex: 1;
   min-width: 200px;
+  max-width: 400px;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -199,37 +201,7 @@ const SearchInput = styled.input`
   @media (max-width: 768px) {
     width: 100%;
     min-width: auto;
-  }
-`;
-
-const FilterDropdown = styled.select`
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  background: #f9fafb;
-  color: #333;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1.25rem;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: #96885f;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #96885f;
-    background: white;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.65rem 2rem 0.65rem 0.85rem;
-    font-size: 0.9rem;
+    max-width: none;
   }
 `;
 
@@ -242,6 +214,152 @@ const ToolbarRight = styled.div`
     width: 100%;
     justify-content: space-between;
   }
+`;
+
+const FilterButton = styled.button<{ $hasActiveFilters?: boolean }>`
+  padding: 0.75rem 1rem;
+  border: 1px solid ${props => props.$hasActiveFilters ? '#96885f' : '#d1d5db'};
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: ${props => props.$hasActiveFilters ? '#f9f7f4' : '#f9fafb'};
+  color: ${props => props.$hasActiveFilters ? '#96885f' : '#333'};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
+
+  &:hover {
+    border-color: #96885f;
+    background: #f9f7f4;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+  }
+
+  svg {
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+  }
+`;
+
+const FilterBadge = styled.span<{ $isHovered?: boolean }>`
+  background: ${props => props.$isHovered ? '#d32f2f' : '#96885f'};
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 10px;
+  min-width: 1.25rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: ${props => props.$isHovered ? 'pointer' : 'default'};
+  
+  &:hover {
+    background: #b71c1c;
+  }
+`;
+
+const FilterDropdownPanel = styled.div<{ $isOpen: boolean }>`
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 1.25rem;
+  min-width: 280px;
+  z-index: 1000;
+  display: ${props => props.$isOpen ? 'block' : 'none'};
+
+  @media (max-width: 768px) {
+    left: auto;
+    right: 0;
+    min-width: 260px;
+  }
+`;
+
+const FilterSection = styled.div`
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const FilterLabel = styled.label`
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+`;
+
+const FilterSelect = styled.select`
+  width: 100%;
+  padding: 0.65rem 2rem 0.65rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #f9fafb;
+  color: #333;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #96885f;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #96885f;
+    background: white;
+  }
+`;
+
+const FilterActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+`;
+
+const FilterActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: ${props => props.$variant === 'primary' ? 'none' : '1px solid #d1d5db'};
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: ${props => props.$variant === 'primary' ? '#96885f' : 'white'};
+  color: ${props => props.$variant === 'primary' ? 'white' : '#6b7280'};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.$variant === 'primary' ? '#7d7250' : '#f3f4f6'};
+  }
+`;
+
+const FilterContainer = styled.div`
+  position: relative;
 `;
 
 const UploadButton = styled.button`
@@ -269,27 +387,45 @@ const UploadButton = styled.button`
   }
 `;
 
-const ViewToggleButton = styled.button<{ active?: boolean }>`
-  padding: 0.75rem;
-  border: 1px solid ${props => props.active ? '#1a1a1a' : '#d1d5db'};
+const ViewToggleGroup = styled.div`
+  display: flex;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
+  overflow: hidden;
+  background: white;
+`;
+
+const ViewToggleButton = styled.button<{ active?: boolean }>`
+  padding: 0.75rem 1rem;
+  border: none;
+  border-right: 1px solid #d1d5db;
   background: ${props => props.active ? '#1a1a1a' : 'white'};
   color: ${props => props.active ? 'white' : '#6c757d'};
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   transition: all 0.2s ease;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  min-width: 44px;
+
+  &:last-child {
+    border-right: none;
+  }
 
   &:hover {
-    background: ${props => props.active ? '#1a1a1a' : '#f9fafb'};
-    border-color: #1a1a1a;
+    background: ${props => props.active ? '#1a1a1a' : '#f3f4f6'};
+  }
+
+  svg {
+    font-size: 1rem;
   }
 
   @media (max-width: 768px) {
-    padding: 0.65rem;
-    font-size: 1rem;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+    min-width: 40px;
   }
 `;
 
@@ -1022,6 +1158,7 @@ export default function AdminMedia() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -1034,11 +1171,66 @@ export default function AdminMedia() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [filterButtonHovered, setFilterButtonHovered] = useState(false);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to page 1 when debounced search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     fetchMedia();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, sourceFilter, dateFilter, typeFilter, confidenceFilter]);
+  }, [currentPage, sourceFilter, dateFilter, typeFilter, confidenceFilter, debouncedSearchTerm]);
+
+  // Close filter dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setFilterDropdownOpen(false);
+      }
+    };
+
+    if (filterDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [filterDropdownOpen]);
+
+  // Count active filters
+  const countActiveFilters = () => {
+    let count = 0;
+    if (sourceFilter !== 'all') count++;
+    if (typeFilter !== 'all') count++;
+    if (confidenceFilter !== 'all') count++;
+    if (dateFilter !== 'all') count++;
+    return count;
+  };
+
+  // Reset all filters
+  const resetFilters = (closeDropdown: boolean = true) => {
+    setSourceFilter('all');
+    setTypeFilter('all');
+    setConfidenceFilter('all');
+    setDateFilter('all');
+    if (closeDropdown) {
+      setFilterDropdownOpen(false);
+    }
+  };
 
   const fetchMedia = async () => {
     try {
@@ -1054,6 +1246,7 @@ export default function AdminMedia() {
         confidence_min: confidenceFilter === 'high' ? '0.8' : 
                        confidenceFilter === 'medium' ? '0.6' : 
                        confidenceFilter === 'low' ? '0.3' : '',
+        search: debouncedSearchTerm.trim(),
       });
 
       const token = localStorage.getItem('authToken');
@@ -1492,60 +1685,115 @@ export default function AdminMedia() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <FilterDropdown
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-            >
-              <option value="all">All media types</option>
-              <option value="local">Images</option>
-              <option value="gdrive">Videos</option>
-            </FilterDropdown>
-            <FilterDropdown
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="all">All types</option>
-              <option value="tattoo">Tattoos</option>
-              <option value="artwork">Artwork</option>
-              <option value="unknown">Unknown</option>
-            </FilterDropdown>
-            <FilterDropdown
-              value={confidenceFilter}
-              onChange={(e) => setConfidenceFilter(e.target.value)}
-            >
-              <option value="all">All confidence</option>
-              <option value="high">High (80%+)</option>
-              <option value="medium">Medium (60-80%)</option>
-              <option value="low">Low (30-60%)</option>
-              <option value="none">No classification</option>
-            </FilterDropdown>
-            <FilterDropdown
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            >
-              <option value="all">All dates</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </FilterDropdown>
+            
+            <FilterContainer ref={filterDropdownRef}>
+              <FilterButton 
+                onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+                onMouseEnter={() => setFilterButtonHovered(true)}
+                onMouseLeave={() => setFilterButtonHovered(false)}
+                $hasActiveFilters={countActiveFilters() > 0}
+              >
+                <FaFilter />
+                Filters
+                {countActiveFilters() > 0 && (
+                  <FilterBadge 
+                    $isHovered={filterButtonHovered}
+                    onClick={(e) => {
+                      if (filterButtonHovered) {
+                        e.stopPropagation();
+                        resetFilters(false);
+                      }
+                    }}
+                    title={filterButtonHovered ? "Clear all filters" : `${countActiveFilters()} active filter${countActiveFilters() > 1 ? 's' : ''}`}
+                  >
+                    {filterButtonHovered ? '×' : countActiveFilters()}
+                  </FilterBadge>
+                )}
+              </FilterButton>
+              
+              <FilterDropdownPanel $isOpen={filterDropdownOpen}>
+                <FilterSection>
+                  <FilterLabel>Media Source</FilterLabel>
+                  <FilterSelect
+                    value={sourceFilter}
+                    onChange={(e) => setSourceFilter(e.target.value)}
+                  >
+                    <option value="all">All Sources</option>
+                    <option value="local">Local Upload</option>
+                    <option value="gdrive">Google Drive</option>
+                  </FilterSelect>
+                </FilterSection>
+
+                <FilterSection>
+                  <FilterLabel>Detected Type</FilterLabel>
+                  <FilterSelect
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="tattoo">Tattoos</option>
+                    <option value="artwork">Artwork</option>
+                    <option value="unknown">Unknown</option>
+                  </FilterSelect>
+                </FilterSection>
+
+                <FilterSection>
+                  <FilterLabel>Confidence Level</FilterLabel>
+                  <FilterSelect
+                    value={confidenceFilter}
+                    onChange={(e) => setConfidenceFilter(e.target.value)}
+                  >
+                    <option value="all">All Confidence</option>
+                    <option value="high">High (80%+)</option>
+                    <option value="medium">Medium (60-80%)</option>
+                    <option value="low">Low (30-60%)</option>
+                    <option value="none">No Classification</option>
+                  </FilterSelect>
+                </FilterSection>
+
+                <FilterSection>
+                  <FilterLabel>Date Range</FilterLabel>
+                  <FilterSelect
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                  </FilterSelect>
+                </FilterSection>
+
+                <FilterActions>
+                  <FilterActionButton onClick={() => resetFilters()} $variant="secondary">
+                    Clear All
+                  </FilterActionButton>
+                  <FilterActionButton onClick={() => setFilterDropdownOpen(false)} $variant="primary">
+                    Apply
+                  </FilterActionButton>
+                </FilterActions>
+              </FilterDropdownPanel>
+            </FilterContainer>
           </ToolbarLeft>
 
           <ToolbarRight>
-            <ViewToggleButton
-              active={viewFormat === 'tile'}
-              onClick={() => setViewFormat('tile')}
-              title="Grid View"
-            >
-              <FaTh />
-            </ViewToggleButton>
-            <ViewToggleButton
-              active={viewFormat === 'list'}
-              onClick={() => setViewFormat('list')}
-              title="List View"
-            >
-              <FaList />
-            </ViewToggleButton>
+            <ViewToggleGroup>
+              <ViewToggleButton
+                active={viewFormat === 'tile'}
+                onClick={() => setViewFormat('tile')}
+                title="Grid View"
+              >
+                <FaTh />
+              </ViewToggleButton>
+              <ViewToggleButton
+                active={viewFormat === 'list'}
+                onClick={() => setViewFormat('list')}
+                title="List View"
+              >
+                <FaList />
+              </ViewToggleButton>
+            </ViewToggleGroup>
           </ToolbarRight>
         </Toolbar>
 

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../../../db';
 import { media } from '../../../../db/schema';
-import { eq, desc, asc, and, count, SQL } from 'drizzle-orm';
+import { eq, desc, asc, and, count, SQL, or, like } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
@@ -12,7 +12,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         limit = '20', 
         offset = '0',
         sort = 'updated_at',
-        order = 'desc'
+        order = 'desc',
+        search = '',
+        detected_type = 'all',
+        confidence_min = ''
       } = req.query;
 
       // Build where conditions - for now, get all media since we don't have user authentication
@@ -24,6 +27,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (source && source !== 'all') {
         whereConditions.push(eq(media.source, source as string));
+      }
+
+      // Add detected_type filter
+      if (detected_type && detected_type !== 'all') {
+        whereConditions.push(eq(media.detected_type, detected_type as string));
+      }
+
+      // Add confidence filter
+      if (confidence_min && parseFloat(confidence_min as string) > 0) {
+        // Note: Since confidence is stored as text, we'll need to filter this in-memory
+        // or convert it during the query. For now, we'll handle it post-query.
+      }
+
+      // Add search functionality
+      if (search && typeof search === 'string' && search.trim() !== '') {
+        const searchTerm = `%${search.trim()}%`;
+        whereConditions.push(
+          or(
+            like(media.title, searchTerm),
+            like(media.description, searchTerm),
+            like(media.filename, searchTerm),
+            like(media.alt_text, searchTerm),
+            like(media.tags, searchTerm)
+          )!
+        );
       }
 
       // Build order by with safe column access
@@ -69,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const totalCount = totalCountResult[0]?.count || 0;
 
       // Transform records to include parsed JSON
-      const transformedRecords = mediaRecords.map(record => ({
+      let transformedRecords = mediaRecords.map(record => ({
         id: record.id,
         source: record.source,
         source_id: record.source_id,
@@ -97,6 +125,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         created_at: record.created_at,
         user_id: record.user_id,
       }));
+
+      // Apply confidence filter post-query (since confidence is stored as text)
+      if (confidence_min && parseFloat(confidence_min as string) > 0) {
+        const minConfidence = parseFloat(confidence_min as string);
+        transformedRecords = transformedRecords.filter(record => {
+          if (!record.detection_confidence) return false;
+          return parseFloat(record.detection_confidence) >= minConfidence;
+        });
+      }
 
       res.status(200).json({
         media: transformedRecords,
