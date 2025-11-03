@@ -57,7 +57,7 @@ const GalleryContainer = styled.div`
   margin: 0 auto;
   
   @media (max-width: 768px) {
-    padding: 1rem 0.5rem;
+    padding: 1rem;
   }
 `;
 
@@ -76,11 +76,11 @@ const GalleryTitle = styled.h2`
 
 const GalleryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
   
   @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
 `;
