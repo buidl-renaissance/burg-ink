@@ -124,11 +124,9 @@ export function RelatedItemsCarousel({
 const CarouselSection = styled.section`
   max-width: 1400px;
   margin: 4rem auto 2rem;
-  padding: 0 2rem;
 
   @media (max-width: 768px) {
     margin: 3rem auto 1rem;
-    padding: 0 1rem;
   }
 `;
 
@@ -137,6 +135,11 @@ const CarouselHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 0 2rem;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
 `;
 
 const CarouselTitle = styled.h2`
@@ -204,6 +207,22 @@ const CarouselTrack = styled.div`
 
   @media (max-width: 768px) {
     gap: 1rem;
+  }
+
+  > *:first-child {
+    margin-left: 2rem;
+
+    @media (max-width: 768px) {
+      margin-left: 1rem;
+    }
+  }
+
+  > *:last-child {
+    margin-right: 2rem;
+
+    @media (max-width: 768px) {
+      margin-right: 1rem;
+    }
   }
 `;
 
