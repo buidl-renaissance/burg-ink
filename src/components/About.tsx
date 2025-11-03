@@ -161,12 +161,6 @@ const SubsectionHeading = styled.h3`
   }
 `;
 
-const ArtistStatementHeading = styled(SectionHeading)`
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  margin-top: 0;
-`;
-
 const List = styled.ul`
   list-style: none;
   padding: 0;
