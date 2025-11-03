@@ -93,8 +93,4 @@ export const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
   );
 };
 
-export const ArtworkCardClickableContainer = styled.div`
-  cursor: pointer;
-`;
-
 export default ArtworkCard;

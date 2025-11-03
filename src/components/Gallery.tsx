@@ -1,10 +1,10 @@
 'use client';
 
-import { FC, useState, useEffect } from 'react';
+import { FC, useState } from 'react';
 import styled from 'styled-components';
-import ArtworkModal from '@/components/ArtworkModal';
+import Link from 'next/link';
 import { Artwork } from '@/utils/interfaces';
-import { ArtworkCardClickableContainer, ArtworkCard } from '@/components/ArtworkCard';
+import { ArtworkCard } from '@/components/ArtworkCard';
 
 
 interface GalleryProps {
@@ -14,48 +14,11 @@ interface GalleryProps {
 
 const Gallery: FC<GalleryProps> = ({ title = null, artworks }) => {
   const [activeCategory, ] = useState('All');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [currentArtwork, setCurrentArtwork] = useState<Artwork | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    // Initial check
-    checkMobile();
-    
-    // Add event listener
-    window.addEventListener('resize', checkMobile);
-    
-    // Cleanup
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const filteredArtworks =
     activeCategory === 'All'
       ? artworks
       : artworks.filter((artwork) => artwork.data?.category === activeCategory);
-
-  const handleArtworkClick = (artwork: Artwork, index: number) => {
-    setCurrentArtwork(artwork);
-    setCurrentIndex(index);
-    setModalOpen(true);
-  };
-
-  const handleNavigate = (direction: 'prev' | 'next') => {
-    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex >= 0 && newIndex < filteredArtworks.length) {
-      setCurrentIndex(newIndex);
-      setCurrentArtwork(filteredArtworks[newIndex]);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
 
   return (
     <GalleryContainer>
@@ -72,21 +35,16 @@ const Gallery: FC<GalleryProps> = ({ title = null, artworks }) => {
         ))}
       </CategoryTabs> */}
       <GalleryGrid>
-        {filteredArtworks.map((artwork: Artwork, index: number) => (
-          <ArtworkCardClickableContainer key={index} onClick={() => handleArtworkClick(artwork, index)}>
+        {filteredArtworks.map((artwork: Artwork) => (
+          <Link 
+            key={artwork.id} 
+            href={`/artwork/${artwork.slug}`}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
             <ArtworkCard artwork={artwork} />
-          </ArtworkCardClickableContainer>
+          </Link>
         ))}
       </GalleryGrid>
-
-      <ArtworkModal
-        isOpen={modalOpen}
-        onClose={handleCloseModal}
-        currentArtwork={currentArtwork}
-        artworks={filteredArtworks}
-        currentIndex={currentIndex}
-        onNavigate={handleNavigate}
-      />
     </GalleryContainer>
   );
 };

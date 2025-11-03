@@ -1,15 +1,23 @@
 import styled from 'styled-components';
-import { getArtworkBySlug } from '@/lib/db';
+import { getArtworkBySlug, getPublishedArtworkFromArtist } from '@/lib/db';
 import { Artwork } from '@/utils/interfaces';
 import Head from 'next/head';
 import PageLayout from '@/components/PageLayout';
 import Image from 'next/image';
+import { RelatedItemsCarousel } from '@/components/RelatedItemsCarousel';
 
 interface ArtworkDetailPageProps {
   artwork: Artwork;
+  relatedArtworks: Array<{
+    id: number;
+    slug: string;
+    title: string;
+    image: string | null;
+    category?: string | null;
+  }>;
 }
 
-export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
+export default function ArtworkDetailPage({ artwork, relatedArtworks }: ArtworkDetailPageProps) {
   return (
     <PageLayout>
       <Head>
@@ -52,6 +60,13 @@ export default function ArtworkDetailPage({ artwork }: ArtworkDetailPageProps) {
           </MetaInfo>
         </ArtworkDetails>
       </ArtworkContainer>
+
+      <RelatedItemsCarousel
+        items={relatedArtworks}
+        currentItemId={artwork.id}
+        itemType="artwork"
+        title="More Artwork"
+      />
     </PageLayout>
   );
 }
@@ -99,9 +114,22 @@ export const getServerSideProps = async ({
         notFound: true,
       };
     }
+
+    // Fetch related artworks (limit to 12 items)
+    const allArtworks = await getPublishedArtworkFromArtist();
+    const relatedArtworks = allArtworks
+      .filter((item: Artwork) => item.id !== artwork.id)
+      .slice(0, 12)
+      .map((item: Artwork) => ({
+        id: item.id,
+        slug: item.slug,
+        title: item.title,
+        image: item.image,
+        category: item.data?.category as string | null || null,
+      }));
     
     const metadata = await getMetadata(artwork);
-    return { props: { artwork, metadata } };
+    return { props: { artwork, relatedArtworks, metadata } };
   } catch (error) {
     console.error('Failed to fetch artwork:', error);
     return {
@@ -116,6 +144,7 @@ const ArtworkContainer = styled.div`
   gap: 3rem;
   max-width: 1200px;
   margin: 0 auto;
+  align-items: start;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -128,11 +157,13 @@ const ImageContainer = styled.div`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-size: 0;
+  line-height: 0;
 
   img {
-    width: 100%;
-    height: auto;
     display: block;
+    max-width: 100%;
+    height: auto;
   }
 `;
 

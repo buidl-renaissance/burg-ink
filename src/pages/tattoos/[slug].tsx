@@ -1,8 +1,9 @@
 import styled from 'styled-components';
-import { getTattooBySlug } from '@/lib/db';
+import { getTattooBySlug, getAllTattoos } from '@/lib/db';
 import Head from 'next/head';
 import PageLayout from '@/components/PageLayout';
 import Image from 'next/image';
+import { RelatedItemsCarousel } from '@/components/RelatedItemsCarousel';
 
 interface Tattoo {
   id: number;
@@ -35,9 +36,16 @@ interface Tattoo {
 
 interface TattooDetailPageProps {
   tattoo: Tattoo;
+  relatedTattoos: Array<{
+    id: number;
+    slug: string;
+    title: string;
+    image: string | null;
+    category?: string | null;
+  }>;
 }
 
-export default function TattooDetailPage({ tattoo }: TattooDetailPageProps) {
+export default function TattooDetailPage({ tattoo, relatedTattoos }: TattooDetailPageProps) {
   return (
     <PageLayout>
       <Head>
@@ -87,6 +95,13 @@ export default function TattooDetailPage({ tattoo }: TattooDetailPageProps) {
           </MetaInfo>
         </TattooDetails>
       </TattooContainer>
+
+      <RelatedItemsCarousel
+        items={relatedTattoos}
+        currentItemId={tattoo.id}
+        itemType="tattoo"
+        title="More Tattoos"
+      />
     </PageLayout>
   );
 }
@@ -134,9 +149,22 @@ export const getServerSideProps = async ({
         notFound: true,
       };
     }
+
+    // Fetch related tattoos (limit to 12 items)
+    const allTattoos = await getAllTattoos();
+    const relatedTattoos = allTattoos
+      .filter((item: Tattoo) => item.id !== tattoo.id)
+      .slice(0, 12)
+      .map((item: Tattoo) => ({
+        id: item.id,
+        slug: item.slug,
+        title: item.title,
+        image: item.image,
+        category: item.category,
+      }));
     
     const metadata = await getMetadata(tattoo);
-    return { props: { tattoo, metadata } };
+    return { props: { tattoo, relatedTattoos, metadata } };
   } catch (error) {
     console.error('Failed to fetch tattoo:', error);
     return {
@@ -151,6 +179,7 @@ const TattooContainer = styled.div`
   gap: 3rem;
   max-width: 1200px;
   margin: 0 auto;
+  align-items: start;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -163,11 +192,13 @@ const ImageContainer = styled.div`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-size: 0;
+  line-height: 0;
 
   img {
-    width: 100%;
-    height: auto;
     display: block;
+    max-width: 100%;
+    height: auto;
   }
 `;
 
