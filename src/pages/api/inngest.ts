@@ -21,6 +21,7 @@ import { processMediaUpload } from "@/lib/functions/processMediaUpload";
 // Create the handler to serve your functions
 const handler = serve({
   client: inngest,
+  id: "burg-ink",
   signingKey: process.env.INNGEST_SIGNING_KEY,
   functions: [
     processGoogleImages,

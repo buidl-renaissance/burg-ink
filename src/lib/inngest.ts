@@ -2,8 +2,8 @@ import { Inngest } from "inngest";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ 
-  id: "burg-ink-app",
-  name: "Burg Ink App",
+  id: "burg-ink",
+  name: "Burg Ink Background Jobs",
   eventKey: process.env.INNGEST_EVENT_KEY,
 });
 
