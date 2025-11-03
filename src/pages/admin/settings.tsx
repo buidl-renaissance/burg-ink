@@ -597,9 +597,18 @@ export default function AdminSettings() {
       if (!action) return;
 
       try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          alert('Authentication token not found. Please log in again.');
+          return;
+        }
+
         const response = await fetch('/api/admin/users/bulk', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          },
           body: JSON.stringify({
             action,
             user_ids: selectedUsers,
@@ -669,9 +678,19 @@ export default function AdminSettings() {
     const handleSave = async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          alert('Authentication token not found. Please log in again.');
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(`/api/admin/users/${user.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          },
           body: JSON.stringify(formData)
         });
 
@@ -814,24 +833,34 @@ export default function AdminSettings() {
     const [formData, setFormData] = useState({
       name: '',
       email: '',
-      role: 'user'
+      role: 'user',
+      password: ''
     });
     const [loading, setLoading] = useState(false);
 
     const handleInvite = async () => {
-      if (!formData.name || !formData.email) {
-        alert('Name and email are required');
+      if (!formData.name || !formData.email || !formData.password) {
+        alert('Name, email, and password are required');
         return;
       }
 
       setLoading(true);
       try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          alert('Authentication token not found. Please log in again.');
+          return;
+        }
+
         const response = await fetch('/api/admin/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          },
           body: JSON.stringify({
             ...formData,
-            sendInvitation: true
+            sendInvitation: false
           })
         });
 
@@ -842,7 +871,7 @@ export default function AdminSettings() {
           alert(`Error: ${data.error}`);
         }
       } catch {
-        alert('Error sending invitation');
+        alert('Error creating user');
       } finally {
         setLoading(false);
       }
@@ -868,7 +897,7 @@ export default function AdminSettings() {
           maxWidth: '400px',
           width: '90%'
         }}>
-          <h2 style={{ margin: '0 0 1rem 0' }}>Invite User</h2>
+          <h2 style={{ margin: '0 0 1rem 0' }}>Create New User</h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
@@ -887,6 +916,16 @@ export default function AdminSettings() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="user@example.com"
+              />
+            </div>
+            
+            <div>
+              <Label>Password</Label>
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="Enter password"
               />
             </div>
             
@@ -931,7 +970,7 @@ export default function AdminSettings() {
                 opacity: loading ? 0.5 : 1
               }}
             >
-              {loading ? 'Sending...' : 'Send Invitation'}
+              {loading ? 'Creating...' : 'Create User'}
             </button>
           </div>
         </div>
@@ -943,12 +982,24 @@ export default function AdminSettings() {
   const fetchUsers = useCallback(async () => {
     setUsersLoading(true);
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('Authentication token not found');
+        setUsersLoading(false);
+        return;
+      }
+
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (roleFilter) params.append('role', roleFilter);
       if (statusFilter) params.append('status', statusFilter);
       
-      const response = await fetch(`/api/admin/users?${params.toString()}`);
+      const response = await fetch(`/api/admin/users?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await response.json();
       
       if (response.ok) {
@@ -1008,7 +1059,7 @@ export default function AdminSettings() {
               cursor: 'pointer'
             }}
           >
-            Invite User
+            Create User
           </button>
           {selectedUsers.length > 0 && (
             <BulkActions selectedUsers={selectedUsers} onUpdate={fetchUsers} />
@@ -1085,7 +1136,7 @@ export default function AdminSettings() {
           />
         )}
 
-        {/* Invite User Modal */}
+        {/* Create User Modal */}
         {showInviteModal && (
           <InviteUserModal 
             onClose={() => setShowInviteModal(false)}
