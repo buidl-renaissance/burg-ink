@@ -946,39 +946,6 @@ const StatusValue = styled.span<{ color: string }>`
   font-weight: 500;
 `;
 
-// Classification Badge Components
-const ClassificationBadge = styled.div<{ type: string; confidence: number }>`
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: white;
-  background: ${props => {
-    if (props.type === 'tattoo') {
-      return props.confidence >= 0.8 ? '#22c55e' : props.confidence >= 0.6 ? '#eab308' : '#6b7280';
-    } else if (props.type === 'artwork') {
-      return props.confidence >= 0.8 ? '#3b82f6' : props.confidence >= 0.6 ? '#8b5cf6' : '#6b7280';
-    }
-    return '#6b7280';
-  }};
-  z-index: 10;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-`;
-
-// const ClassificationBadgeList = styled.div`
-//   position: absolute;
-//   top: 0.5rem;
-//   left: 0.5rem;
-//   display: flex;
-//   flex-direction: column;
-//   gap: 0.25rem;
-//   z-index: 10;
-// `;
-
 const EntityLinkedBadge = styled.div`
   position: absolute;
   top: 0.5rem;
@@ -1178,21 +1145,6 @@ export default function AdminMedia() {
   };
 
   // Classification helper functions
-  const getClassificationBadge = (item: MediaItem) => {
-    if (!item.detected_type || !item.detection_confidence) return null;
-    
-    const confidence = parseFloat(item.detection_confidence);
-    const type = item.detected_type;
-    
-    if (confidence < 0.5) return null; // Don't show low confidence classifications
-    
-    return (
-      <ClassificationBadge type={type} confidence={confidence}>
-        {type === 'tattoo' ? '💉' : type === 'artwork' ? '🎨' : '❓'} {type.charAt(0).toUpperCase() + type.slice(1)} {Math.round(confidence * 100)}%
-      </ClassificationBadge>
-    );
-  };
-
   const hasEntityLink = (item: MediaItem) => {
     return item.suggested_entity_id && item.suggested_entity_type;
   };
@@ -1258,9 +1210,99 @@ export default function AdminMedia() {
     console.log('Edit items:', Array.from(selectedItems));
   };
 
-  const handleDelete = () => {
-    // TODO: Implement delete functionality
-    console.log('Delete items:', Array.from(selectedItems));
+  const handleDeleteSingle = async (mediaId: string | number) => {
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to delete this media file? This action cannot be undone.');
+    if (!confirmed) return;
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch(`/api/media/${mediaId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete media');
+      }
+
+      const data = await response.json();
+      setUploadSuccess(data.message || 'Media deleted successfully');
+      
+      // Close sidebar if the deleted item was selected
+      if (selectedMedia && selectedMedia.id === mediaId) {
+        closeSidebar();
+      }
+      
+      // Refresh media list
+      await fetchMedia();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setUploadSuccess(null), 3000);
+    } catch (error) {
+      console.error('Error deleting media:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete media');
+      
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (selectedItems.size === 0) return;
+    
+    // Show confirmation dialog
+    const confirmed = confirm(`Are you sure you want to delete ${selectedItems.size} media file${selectedItems.size !== 1 ? 's' : ''}? This action cannot be undone.`);
+    if (!confirmed) return;
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch('/api/media/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          mediaIds: Array.from(selectedItems),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete media');
+      }
+
+      const data = await response.json();
+      setUploadSuccess(data.message || `Successfully deleted ${selectedItems.size} media file${selectedItems.size !== 1 ? 's' : ''}`);
+      
+      // Clear selection
+      setSelectedItems(new Set());
+      
+      // Refresh media list
+      await fetchMedia();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setUploadSuccess(null), 3000);
+    } catch (error) {
+      console.error('Error deleting media:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete media');
+      
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Component to handle real-time updates for a single media item
@@ -1335,7 +1377,7 @@ export default function AdminMedia() {
             <SidebarActionButton onClick={() => window.open(selectedMedia.spaces_url, '_blank')}>
               <FaDownload /> Download
             </SidebarActionButton>
-            <SidebarActionButton danger>
+            <SidebarActionButton danger onClick={() => handleDeleteSingle(selectedMedia.id)}>
               <FaTrash /> Delete
             </SidebarActionButton>
           </SidebarActions>
@@ -1577,7 +1619,6 @@ export default function AdminMedia() {
                             <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
                           </PlaceholderImage>
                         )}
-                        {getClassificationBadge(item)}
                         {getEntityLinkIcon(item)}
                         {isProcessing(item) ? (
                           <MediaProcessingIndicator processing overlay />
@@ -1672,7 +1713,6 @@ export default function AdminMedia() {
                             <span>{item.mime_type.split('/')[0].toUpperCase()}</span>
                           </PlaceholderThumbnail>
                         )}
-                        {getClassificationBadge(item)}
                         {getEntityLinkIcon(item)}
                         {isProcessing(item) && (
                           <MediaProcessingIndicator processing overlay />
@@ -1732,7 +1772,10 @@ export default function AdminMedia() {
                       <ActionButton onClick={() => window.open(item.spaces_url, '_blank')}>
                         <FaDownload />
                       </ActionButton>
-                      <ActionButton danger>
+                      <ActionButton danger onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSingle(item.id);
+                      }}>
                         <FaTrash />
                       </ActionButton>
                     </MediaActions>

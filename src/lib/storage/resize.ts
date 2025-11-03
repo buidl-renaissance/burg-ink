@@ -35,7 +35,7 @@ async function convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
       format: 'JPEG',
       quality: 0.95
     });
-    return Buffer.from(outputBuffer);
+    return Buffer.from(new Uint8Array(outputBuffer));
   } catch (error) {
     console.error('Error converting HEIC to JPEG:', error);
     throw new Error(`Failed to convert HEIC to JPEG: ${error instanceof Error ? error.message : 'Unknown error'}`);

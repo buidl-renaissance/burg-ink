@@ -47,7 +47,7 @@ async function convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
       format: 'JPEG',
       quality: 0.95
     });
-    return Buffer.from(outputBuffer);
+    return Buffer.from(new Uint8Array(outputBuffer));
   } catch (error) {
     console.error('Error converting HEIC to JPEG:', error);
     throw new Error(`Failed to convert HEIC to JPEG: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -72,7 +72,7 @@ export async function processImageSizes(imageBuffer: Buffer): Promise<ProcessedI
       // Try Sharp metadata as fallback, but catch errors
       try {
         const metadata = await sharp(imageBuffer).metadata();
-        const format = metadata.format;
+        const format = metadata.format as string;
         if (format === 'heic' || format === 'heif') {
           isHeic = true;
           processedBuffer = await convertHeicToJpeg(imageBuffer);
@@ -97,7 +97,7 @@ export async function processImageSizes(imageBuffer: Buffer): Promise<ProcessedI
     const originalHeight = metadata.height || 0;
 
     // Create Sharp instance for processing
-    let image = sharp(processedBuffer);
+    const image = sharp(processedBuffer);
     const format = originalFormat;
 
     // Generate medium size (800px width, maintaining aspect ratio)

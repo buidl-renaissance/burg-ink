@@ -39,10 +39,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         original_url: mediaRecord.original_url,
         medium_url: mediaRecord.medium_url,
         thumbnail_url: mediaRecord.thumbnail_url,
+        spaces_url: mediaRecord.original_url, // Alias for compatibility
         title: mediaRecord.title,
         description: mediaRecord.description,
         alt_text: mediaRecord.alt_text,
         tags: mediaRecord.tags ? JSON.parse(mediaRecord.tags) : [],
+        ai_analysis: mediaRecord.ai_analysis ? JSON.parse(mediaRecord.ai_analysis) : null,
+        // AI classification fields
+        detected_type: mediaRecord.detected_type,
+        detection_confidence: mediaRecord.detection_confidence,
+        detections: mediaRecord.detections ? JSON.parse(mediaRecord.detections) : null,
+        suggested_entity_id: mediaRecord.suggested_entity_id,
+        suggested_entity_type: mediaRecord.suggested_entity_type,
         filename: mediaRecord.filename,
         width: mediaRecord.width,
         height: mediaRecord.height,

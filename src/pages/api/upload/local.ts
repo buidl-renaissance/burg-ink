@@ -6,12 +6,43 @@ import { db } from '../../../../db';
 import { media } from '../../../../db/schema';
 import { inngest } from '@/lib/inngest';
 import { uploadFile, getFileKey } from '@/lib/storage/index';
+import convert from 'heic-convert';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+/**
+ * Check if a buffer is a HEIC/HEIF file
+ */
+function isHeicFile(buffer: Buffer): boolean {
+  if (buffer.length < 12) return false;
+  const signature = buffer.slice(4, 12).toString('ascii');
+  return signature.includes('heic') || 
+         signature.includes('heix') || 
+         signature.includes('hevc') ||
+         signature.includes('mif1');
+}
+
+/**
+ * Convert HEIC/HEIF buffer to JPEG
+ */
+async function convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
+  try {
+    console.log('Converting HEIC/HEIF to JPEG before upload...');
+    const outputBuffer = await convert({
+      buffer,
+      format: 'JPEG',
+      quality: 0.95
+    });
+    return Buffer.from(new Uint8Array(outputBuffer));
+  } catch (error) {
+    console.error('Error converting HEIC to JPEG:', error);
+    throw new Error(`Failed to convert HEIC to JPEG: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -42,30 +73,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Read the uploaded file
-    const originalBuffer = await fs.readFile(uploadedFile.filepath);
+    let fileBuffer = await fs.readFile(uploadedFile.filepath);
     const mediaId = uuidv4();
-    // Normalize HEIC/HEIF extensions to jpg for storage
-    let fileExtension = uploadedFile.originalFilename?.split('.').pop() || 'jpg';
-    const isHeic = fileExtension.toLowerCase() === 'heic' || 
-                   fileExtension.toLowerCase() === 'heif' ||
-                   uploadedFile.mimetype === 'image/heic' ||
-                   uploadedFile.mimetype === 'image/heif';
     
-    // Convert HEIC extension to jpg for storage (actual conversion happens in processing)
+    // Detect HEIC files and convert to JPEG BEFORE uploading to storage
+    let fileExtension = uploadedFile.originalFilename?.split('.').pop() || 'jpg';
+    let finalMimeType = uploadedFile.mimetype || 'image/jpeg';
+    const originalFilename = uploadedFile.originalFilename || 'image.jpg';
+    
+    const isHeicByExtension = fileExtension.toLowerCase() === 'heic' || 
+                               fileExtension.toLowerCase() === 'heif';
+    const isHeicByMimeType = uploadedFile.mimetype === 'image/heic' ||
+                             uploadedFile.mimetype === 'image/heif';
+    const isHeicBySignature = isHeicFile(fileBuffer);
+    
+    const isHeic = isHeicByExtension || isHeicByMimeType || isHeicBySignature;
+    
     if (isHeic) {
-      fileExtension = 'jpg';
+      console.log(`Detected HEIC file: ${originalFilename}, converting to JPEG before upload...`);
+      try {
+        // Convert HEIC to JPEG
+        fileBuffer = await convertHeicToJpeg(fileBuffer);
+        fileExtension = 'jpg';
+        finalMimeType = 'image/jpeg';
+        console.log(`Successfully converted HEIC to JPEG: ${originalFilename}`);
+      } catch (error) {
+        console.error('HEIC conversion failed:', error);
+        throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
 
-    // Upload original file to storage first to avoid payload size limits
-    // Note: If HEIC, we'll convert during processing; store original for now
-    const originalMimeType = isHeic ? 'image/heic' : (uploadedFile.mimetype || 'image/jpeg');
+    // Upload the processed file to storage (already JPEG if it was HEIC)
     const originalUpload = await uploadFile(
-      originalBuffer,
+      fileBuffer,
       getFileKey(mediaId, 'original', fileExtension),
-      originalMimeType
+      finalMimeType
     );
 
-    // Save initial record to database with original URL
+    // Save initial record to database with processed file info (JPEG if converted from HEIC)
     const mediaRecord = {
       id: mediaId,
       original_url: originalUpload.url,
@@ -76,22 +121,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       title: 'Processing...', // Temporary title
       description: 'Processing...', // Temporary description
       alt_text: 'Image being processed', // Temporary alt text
-      filename: uploadedFile.originalFilename || 'image.jpg',
-      mime_type: uploadedFile.mimetype || 'image/jpeg',
-      size: originalBuffer.length,
+      filename: originalFilename,
+      mime_type: finalMimeType, // Will be image/jpeg if converted from HEIC
+      size: fileBuffer.length, // Size of the processed buffer
       processing_status: 'pending',
     };
 
     await db.insert(media).values(mediaRecord);
 
-    // Trigger background processing job with storage URL instead of base64
+    // Trigger background processing job with storage URL
+    // Note: File is already JPEG if it was HEIC, so processMediaUpload doesn't need to convert
     await inngest.send({
       name: 'media/process',
       data: {
         mediaId,
         originalUrl: originalUpload.url,
-        filename: uploadedFile.originalFilename || 'image.jpg',
-        mimetype: uploadedFile.mimetype || 'image/jpeg',
+        filename: originalFilename,
+        mimetype: finalMimeType, // Will be image/jpeg if converted from HEIC
       },
     });
 
@@ -107,9 +153,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         mediumUrl: null,
         thumbnailUrl: null,
         processing: true,
-        filename: uploadedFile.originalFilename || 'image.jpg',
+        filename: originalFilename,
+        mimeType: finalMimeType, // Will show image/jpeg if converted from HEIC
+        wasConverted: isHeic, // Flag to indicate if HEIC was converted
       },
-      message: 'Upload received. Processing in background...',
+      message: isHeic 
+        ? 'HEIC file converted to JPEG and uploaded. Processing in background...'
+        : 'Upload received. Processing in background...',
     });
   } catch (error) {
     console.error('Upload error:', error);

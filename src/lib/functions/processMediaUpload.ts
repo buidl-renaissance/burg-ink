@@ -32,7 +32,7 @@ async function convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
       format: 'JPEG',
       quality: 0.95
     });
-    return Buffer.from(outputBuffer);
+    return Buffer.from(new Uint8Array(outputBuffer));
   } catch (error) {
     console.error('Error converting HEIC to JPEG:', error);
     throw new Error(`Failed to convert HEIC to JPEG: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -68,14 +68,14 @@ export const processMediaUpload = inngest.createFunction(
         throw new Error(`Failed to download original file: ${response.statusText}`);
       }
       const arrayBuffer = await response.arrayBuffer();
-      let buffer = Buffer.from(arrayBuffer);
+      const buffer = Buffer.from(new Uint8Array(arrayBuffer));
 
       // Extract dimensions from the original image
       console.log(`Extracting dimensions for ${mediaId}`);
       
       // Check and convert HEIC if needed for metadata extraction
       let isHeic = false;
-      let processedBuffer = buffer;
+      let processedBuffer: Buffer = buffer;
       
       if (isHeicFile(buffer)) {
         isHeic = true;
