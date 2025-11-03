@@ -68,7 +68,6 @@ export default function TattooDetailPage({ tattoo, relatedTattoos }: TattooDetai
 
         <TattooDetails>
           <TattooTitle>{tattoo.title}</TattooTitle>
-          {tattoo.artist && <ArtistName>by {tattoo.artist.name}</ArtistName>}
           {tattoo.description && <Description>{tattoo.description}</Description>}
 
           <MetaInfo>

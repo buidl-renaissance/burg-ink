@@ -40,7 +40,6 @@ export default function ArtworkDetailPage({ artwork, relatedArtworks }: ArtworkD
 
         <ArtworkDetails>
           <ArtworkTitle>{artwork.title}</ArtworkTitle>
-          {artwork.artist && <ArtistName>by {artwork.artist.name}</ArtistName>}
           <Description>{artwork.description}</Description>
 
           <MetaInfo>
