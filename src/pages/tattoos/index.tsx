@@ -2,11 +2,11 @@
 
 import { FC } from 'react';
 import styled from 'styled-components';
-import { ArtworkCard, ArtworkCardClickableContainer } from '@/components/ArtworkCard';
+import Link from 'next/link';
+import { ArtworkCard } from '@/components/ArtworkCard';
 import PageLayout, { PageContainer } from '../../components/PageLayout';
 import { getAllTattoos } from '@/lib/db';
 import { GetServerSideProps } from 'next';
-import { useRouter } from 'next/router';
 
 interface Tattoo {
   id: number;
@@ -38,20 +38,15 @@ interface TattoosPageProps {
 }
 
 const TattoosPage: FC<TattoosPageProps> = ({ tattoos }) => {
-  const router = useRouter();
-
-  const handleTattooClick = (tattoo: Tattoo) => {
-    router.push(`/tattoos/${tattoo.slug}`);
-  };
-
   return (
     <PageLayout title="Tattoo Gallery">
       <PageContainer>
         <TattooGrid>
           {tattoos.map((tattoo) => (
-            <ArtworkCardClickableContainer
+            <Link
               key={tattoo.id}
-              onClick={() => handleTattooClick(tattoo)}
+              href={`/tattoos/${tattoo.slug}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <ArtworkCard 
                 artwork={{
@@ -76,7 +71,7 @@ const TattoosPage: FC<TattoosPageProps> = ({ tattoos }) => {
                   meta: tattoo.meta,
                 }} 
               />
-            </ArtworkCardClickableContainer>
+            </Link>
           ))}
         </TattooGrid>
       </PageContainer>
