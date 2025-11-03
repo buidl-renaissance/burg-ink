@@ -40,6 +40,7 @@
     "false": "^0.0.4",
     "formidable": "^3.5.4",
     "google-auth-library": "^10.1.0",
+    "heic-convert": "^2.1.0",
     "inngest": "^3.39.2",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",

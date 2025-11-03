@@ -7,6 +7,37 @@ import { eq } from 'drizzle-orm';
 import { analyzeMediaImage, classifyMediaImage } from '@/lib/ai';
 import { WorkflowEngine } from '@/lib/workflows/engine';
 import sharp from 'sharp';
+import convert from 'heic-convert';
+
+/**
+ * Check if a buffer is a HEIC/HEIF file
+ */
+function isHeicFile(buffer: Buffer): boolean {
+  if (buffer.length < 12) return false;
+  const signature = buffer.slice(4, 12).toString('ascii');
+  return signature.includes('heic') || 
+         signature.includes('heix') || 
+         signature.includes('hevc') ||
+         signature.includes('mif1');
+}
+
+/**
+ * Convert HEIC/HEIF buffer to JPEG
+ */
+async function convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
+  try {
+    console.log('Converting HEIC/HEIF to JPEG...');
+    const outputBuffer = await convert({
+      buffer,
+      format: 'JPEG',
+      quality: 0.95
+    });
+    return Buffer.from(outputBuffer);
+  } catch (error) {
+    console.error('Error converting HEIC to JPEG:', error);
+    throw new Error(`Failed to convert HEIC to JPEG: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
 
 export const processMediaUpload = inngest.createFunction(
   { id: 'process-media-upload' },
@@ -37,20 +68,51 @@ export const processMediaUpload = inngest.createFunction(
         throw new Error(`Failed to download original file: ${response.statusText}`);
       }
       const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      let buffer = Buffer.from(arrayBuffer);
 
       // Extract dimensions from the original image
       console.log(`Extracting dimensions for ${mediaId}`);
-      const metadata = await sharp(buffer).metadata();
+      
+      // Check and convert HEIC if needed for metadata extraction
+      let isHeic = false;
+      let processedBuffer = buffer;
+      
+      if (isHeicFile(buffer)) {
+        isHeic = true;
+        processedBuffer = await convertHeicToJpeg(buffer);
+      } else {
+        // Try Sharp metadata extraction
+        try {
+          const testMetadata = await sharp(buffer).metadata();
+          const testFormat = (testMetadata.format as string) || '';
+          if (testFormat === 'heic' || testFormat === 'heif') {
+            isHeic = true;
+            processedBuffer = await convertHeicToJpeg(buffer);
+          }
+        } catch (sharpError) {
+          // If Sharp fails with HEIC error, try conversion
+          const errorMsg = sharpError instanceof Error ? sharpError.message : String(sharpError);
+          if (errorMsg.includes('heif') || errorMsg.includes('heic') || errorMsg.includes('11.6003')) {
+            console.log('Detected HEIC file from Sharp error, attempting conversion...');
+            isHeic = true;
+            processedBuffer = await convertHeicToJpeg(buffer);
+          } else {
+            throw sharpError;
+          }
+        }
+      }
+      
+      // Now get metadata from the processed buffer
+      const metadata = await sharp(processedBuffer).metadata();
       const dimensions = {
         width: metadata.width || null,
         height: metadata.height || null,
       };
-      const format = (metadata.format as string) || 'unknown';
-      const isHeic = format === 'heic' || format === 'heif';
+      const format = isHeic ? 'heic' : ((metadata.format as string) || 'unknown');
       console.log(`Original dimensions: ${dimensions.width}x${dimensions.height}, format: ${format}${isHeic ? ' (will convert to JPEG)' : ''}`);
 
       // Generate resized versions (HEIC will be converted to JPEG during processing)
+      // Note: Use original buffer, not processed, because generateResizedVersions has its own HEIC handling
       console.log(`Generating resized versions for ${mediaId}`);
       const { medium, thumb } = await generateResizedVersions(buffer);
 
