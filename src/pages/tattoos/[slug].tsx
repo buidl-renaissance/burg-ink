@@ -180,11 +180,12 @@ const TattooContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   align-items: start;
+  padding-top: 2rem;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 2rem;
-    padding: 0 1rem;
+    padding: 2rem 1rem 0;
   }
 `;
 
