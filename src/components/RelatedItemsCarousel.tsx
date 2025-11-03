@@ -203,26 +203,11 @@ const CarouselContainer = styled.div`
 const CarouselTrack = styled.div`
   display: flex;
   gap: 1.5rem;
-  padding: 0.5rem 0;
+  padding: 0.5rem 2rem 0.5rem 2rem;
 
   @media (max-width: 768px) {
     gap: 1rem;
-  }
-
-  > *:first-child {
-    margin-left: 2rem;
-
-    @media (max-width: 768px) {
-      margin-left: 1rem;
-    }
-  }
-
-  > *:last-child {
-    margin-right: 2rem;
-
-    @media (max-width: 768px) {
-      margin-right: 1rem;
-    }
+    padding: 0.5rem 1rem;
   }
 `;
 
