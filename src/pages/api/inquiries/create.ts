@@ -197,8 +197,8 @@ Newsletter Signup: ${newsletterSignup === 'true' ? 'Yes' : 'No'}
       });
 
       const emailResult = await resend.emails.send({
-        from: 'Burg Ink <noreply@burg-ink.com>',
-        to: ['andrea@burg-ink.com'], // Replace with Andrea's actual email
+        from: 'Burg Ink <noreply@andreaburg.com>',
+        to: ['Aburg@andreaburg.com'], // Replace with Andrea's actual email
         subject: emailTemplate.subject,
         html: emailTemplate.html,
       });
@@ -207,8 +207,8 @@ Newsletter Signup: ${newsletterSignup === 'true' ? 'Yes' : 'No'}
       await db.insert(emails).values({
         resend_id: emailResult.data?.id || null,
         subject: emailTemplate.subject,
-        from: 'Burg Ink <noreply@burg-ink.com>',
-        to: JSON.stringify(['andrea@burg-ink.com']),
+        from: 'Burg Ink <noreply@andreaburg.com>',
+        to: JSON.stringify(['Aburg@andreaburg.com']),
         html_content: emailTemplate.html,
         status: 'sent',
         sent_at: new Date().toISOString(),

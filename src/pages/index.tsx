@@ -280,7 +280,7 @@ export default function Index() {
         <ContactTitle>Contact</ContactTitle>
         <ContactText>
           For inquiries about commissions or available works, please email:
-          <ContactEmail href="mailto:andrea@andreaburg.com">andrea@andreaburg.com</ContactEmail>
+          <ContactEmail href="mailto:Aburg@andreaburg.com">Aburg@andreaburg.com</ContactEmail>
         </ContactText>
       </ContactSection>
     </StyledPage>
