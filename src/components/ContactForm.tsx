@@ -2,7 +2,7 @@
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import styled from 'styled-components';
-import { FaUser, FaEnvelope, FaPhone, FaBuilding, FaTag, FaStickyNote, FaImage } from 'react-icons/fa';
+import { FaUser, FaBuilding, FaTag, FaStickyNote } from 'react-icons/fa';
 
 interface Contact {
   id?: number;
@@ -15,7 +15,7 @@ interface Contact {
   source: string;
   lifecycle_stage: string;
   tags: string[];
-  custom_fields: Record<string, any>;
+  custom_fields: Record<string, unknown>;
   notes?: string;
   avatar_url?: string;
   is_active: number;
@@ -30,7 +30,7 @@ interface ContactTag {
 
 interface ContactFormProps {
   contact?: Contact;
-  onSuccess?: (contact: Contact) => void;
+  onSuccess?: (contact: Contact) => void | Promise<void>;
   onSubmittingChange?: (isSubmitting: boolean) => void;
   hideSubmitButton?: boolean;
   tags?: ContactTag[];
@@ -158,14 +158,14 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(({
       } else {
         setErrors({ submit: data.error || 'Failed to save contact' });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'Network error. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleInputChange = (field: keyof Contact, value: any) => {
+  const handleInputChange = (field: keyof Contact, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

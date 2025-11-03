@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
-import { generateMarketingResponse, generateMarketingSummary, MarketingMessage, ArtistProfile } from '@/lib/ai';
+import { generateMarketingResponse, generateMarketingSummary, MarketingMessage, ArtistProfile, MarketingResponse } from '@/lib/ai';
 import { 
   generateSocialPost, 
-  generateCaption, 
   generateHashtags, 
   generateArtistBio, 
   generateArtistStatement, 
@@ -68,7 +67,7 @@ async function getEntityData(entityId: number, entityType: string) {
 async function saveConversationToDatabase(
   userId: number,
   userMessage: string,
-  assistantResponse: any,
+  assistantResponse: MarketingResponse,
   conversationHistory: MarketingMessage[],
   currentProfile: Partial<ArtistProfile>,
   conversationId?: number
@@ -94,7 +93,7 @@ async function saveConversationToDatabase(
         .set({
           messages: JSON.stringify(messages),
           artist_profile: JSON.stringify(currentProfile),
-          conversation_stage: assistantResponse.stage || 'intro',
+          conversation_stage: (assistantResponse as unknown as { stage?: string })?.stage || 'intro',
           last_message_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -116,11 +115,11 @@ async function saveConversationToDatabase(
 
       await db.insert(marketingConversations).values({
         user_id: userId,
-        artist_id: (currentProfile as any).artistId || null,
+        artist_id: ('artistId' in currentProfile && typeof currentProfile.artistId === 'number') ? currentProfile.artistId : null,
         title,
         messages: JSON.stringify(messages),
         artist_profile: JSON.stringify(currentProfile),
-        conversation_stage: assistantResponse.stage || 'intro',
+        conversation_stage: (assistantResponse as unknown as { stage?: string })?.stage || 'intro',
         is_active: 1,
         last_message_at: new Date().toISOString()
       });

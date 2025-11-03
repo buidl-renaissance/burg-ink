@@ -96,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: eq(users.id, user.id)
     });
 
-    const profileSetupStatus = checkProfileSetupStatus(userProfile);
+    const profileSetupStatus = checkProfileSetupStatus(userProfile as { name: unknown; email: unknown; bio: unknown; profile_picture: unknown });
 
     const stats: DashboardStats = {
       artwork: {
@@ -140,7 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-function checkProfileSetupStatus(user: any) {
+function checkProfileSetupStatus(user: { name: unknown; email: unknown; bio: unknown; profile_picture: unknown }) {
   const requiredFields = [
     { field: 'name', label: 'Name' },
     { field: 'email', label: 'Email' },
@@ -152,7 +152,7 @@ function checkProfileSetupStatus(user: any) {
   let completedFields = 0;
 
   requiredFields.forEach(({ field, label }) => {
-    if (!user?.[field] || user[field].trim() === '') {
+    if (!user?.[field as keyof typeof user] || (user[field as keyof typeof user] as unknown as string)?.trim() === '') {
       missingFields.push(label);
     } else {
       completedFields++;

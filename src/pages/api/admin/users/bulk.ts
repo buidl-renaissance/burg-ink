@@ -11,8 +11,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Get full user data from database to check role
+    const userData = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: {
+        role: true
+      }
+    });
+
     // Check if user has admin permissions
-    if (currentUser.role !== 'admin') {
+    if (!userData || userData.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
 

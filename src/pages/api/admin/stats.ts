@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '../../../../db';
 import { artwork, tattoos, media, inquiries, users } from '../../../../db/schema';
-import { eq, count, isNull, and } from 'drizzle-orm';
+import { eq, count, isNull } from 'drizzle-orm';
 
 interface AdminDashboardStats {
   totalArtworks: number;

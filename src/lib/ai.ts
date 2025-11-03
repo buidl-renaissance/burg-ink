@@ -45,6 +45,13 @@ export interface ArtistProfile {
   uniqueValue?: string;
 }
 
+export interface OnboardingConfig {
+  profile_created: boolean;
+  goals_set: boolean;
+  preferences_configured: boolean;
+  onboarding_complete: boolean;
+}
+
 export interface MarketingResponse {
   message: string;
   profile?: Partial<ArtistProfile>;
@@ -311,16 +318,21 @@ export async function generateMarketingResponse(
   userMessage: string,
   conversationHistory: MarketingMessage[],
   currentProfile: Partial<ArtistProfile>,
-  onboardingConfig?: any
+  onboardingConfig: OnboardingConfig | null
 ): Promise<MarketingResponse> {
+  
   try {
     // Determine onboarding state based on current profile
-    const onboardingState = {
+    let onboardingState = {
       profile_created: !!(currentProfile.name && currentProfile.medium),
       goals_set: !!(currentProfile.goals && currentProfile.targetAudience),
       preferences_configured: !!(currentProfile.style && currentProfile.inspiration),
       onboarding_complete: !!(currentProfile.name && currentProfile.medium && currentProfile.goals && currentProfile.targetAudience && currentProfile.style)
     };
+
+    if (onboardingConfig) {
+      onboardingState = onboardingConfig;
+    }
 
     // Create dynamic system prompt based on onboarding state
     let systemPrompt = `You are an expert marketing assistant for artists. Your role is to help artists understand their work and develop effective marketing strategies.

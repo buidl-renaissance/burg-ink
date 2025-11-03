@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Modal } from '@/components/Modal';
-import { FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
 import { GetServerSideProps } from 'next';
 import { TableContainer, Table, Th, Td, ActionButton, LoadingMessage, EmptyMessage, ActionButtons } from '@/components/AdminTableStyles';
 
@@ -125,6 +125,55 @@ const StatLabel = styled.div`
   @media (max-width: 768px) {
     font-size: 0.7rem;
     letter-spacing: 0.02em;
+  }
+`;
+
+const HeaderSection = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+`;
+
+const PageTitle = styled.h1`
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+`;
+
+const CreateButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #96885f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #7a6f4f;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
   }
 `;
 
@@ -454,6 +503,7 @@ export default function AdminUsers() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -539,6 +589,42 @@ export default function AdminUsers() {
     }
   };
 
+  const handleCreateUser = async (userData: { name: string; email: string; role: string }) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...userData,
+          sendInvitation: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+
+      // Refresh the users list
+      await fetchUsers();
+      setShowCreateModal(false);
+      
+      // Show success message
+      alert(`User invitation sent successfully to ${userData.email}`);
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create user. Please try again.');
+    }
+  };
+
   const handleDeleteUser = async (userId: number) => {
     if (confirm('Are you sure you want to delete this user?')) {
       try {
@@ -558,6 +644,13 @@ export default function AdminUsers() {
   return (
     <AdminLayout currentPage="users">
       <Container>
+        <HeaderSection>
+          <PageTitle>Users</PageTitle>
+          <CreateButton onClick={() => setShowCreateModal(true)}>
+            <FaPlus />
+            Create User
+          </CreateButton>
+        </HeaderSection>
 
         <StatsContainer>
           <StatCard>
@@ -734,7 +827,85 @@ export default function AdminUsers() {
             <EditUserForm user={editingUser} onSave={handleUpdateUser} onCancel={() => setShowEditModal(false)} />
           </Modal>
         )}
+
+        {showCreateModal && (
+          <Modal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            title="Create New User"
+          >
+            <CreateUserForm onSave={handleCreateUser} onCancel={() => setShowCreateModal(false)} />
+          </Modal>
+        )}
       </Container>
     </AdminLayout>
   );
-} 
+}
+
+const CreateUserForm: React.FC<{ onSave: (userData: { name: string; email: string; role: string }) => void; onCancel: () => void }> = ({ onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'user',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email) {
+      alert('Name and email are required');
+      return;
+    }
+    onSave(formData);
+  };
+
+  return (
+    <EditForm onSubmit={handleSubmit}>
+      <FormGroup>
+        <FormLabel>Name *</FormLabel>
+        <FormInput
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          placeholder="Enter user's full name"
+        />
+      </FormGroup>
+
+      <FormGroup>
+        <FormLabel>Email *</FormLabel>
+        <FormInput
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+          placeholder="user@example.com"
+        />
+      </FormGroup>
+
+      <FormGroup>
+        <FormLabel>Role</FormLabel>
+        <FormSelect
+          value={formData.role}
+          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+        >
+          <option value="user">User</option>
+          <option value="artist">Artist</option>
+          <option value="admin">Admin</option>
+        </FormSelect>
+      </FormGroup>
+
+      <p style={{ color: '#666', fontSize: '0.9rem', margin: '1rem 0' }}>
+        An invitation email will be sent to the user with instructions to create their account.
+      </p>
+
+      <FormActions>
+        <FormButton type="button" onClick={onCancel}>
+          Cancel
+        </FormButton>
+        <FormButton type="submit" variant="primary">
+          Send Invitation
+        </FormButton>
+      </FormActions>
+    </EditForm>
+  );
+}; 

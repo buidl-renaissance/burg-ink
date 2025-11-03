@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        await response.json(); // Response may contain error details, but we use status codes instead
         let errorMessage = 'Failed to reset password';
         
         if (response.status === 400) {
@@ -156,7 +156,7 @@ export default function ResetPasswordPage() {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading && countdown === 0) {
-      handleSubmit(e as any);
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
 

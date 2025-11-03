@@ -46,24 +46,28 @@ export const processMediaUpload = inngest.createFunction(
         width: metadata.width || null,
         height: metadata.height || null,
       };
-      console.log(`Original dimensions: ${dimensions.width}x${dimensions.height}`);
+      const format = (metadata.format as string) || 'unknown';
+      const isHeic = format === 'heic' || format === 'heif';
+      console.log(`Original dimensions: ${dimensions.width}x${dimensions.height}, format: ${format}${isHeic ? ' (will convert to JPEG)' : ''}`);
 
-      // Generate resized versions
+      // Generate resized versions (HEIC will be converted to JPEG during processing)
       console.log(`Generating resized versions for ${mediaId}`);
       const { medium, thumb } = await generateResizedVersions(buffer);
 
       // Upload resized versions
+      // Note: If original was HEIC, resized versions are now JPEG
+      const processedMimeType = isHeic ? 'image/jpeg' : mimetype;
       console.log(`Uploading resized versions for ${mediaId}`);
       const [mediumUpload, thumbUpload] = await Promise.all([
         uploadFile(
           medium,
           getFileKey(mediaId, 'medium', fileExtension),
-          mimetype
+          processedMimeType
         ),
         uploadFile(
           thumb,
           getFileKey(mediaId, 'thumb', fileExtension),
-          mimetype
+          processedMimeType
         ),
       ]);
 

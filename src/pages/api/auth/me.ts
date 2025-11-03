@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getAuthorizedUser } from '@/lib/auth';
+import { getAuthorizedUserWithExpiry } from '@/lib/auth';
 import { db } from '../../../../db';
 import { users } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
@@ -10,11 +10,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const user = await getAuthorizedUser(req);
+    const authResult = await getAuthorizedUserWithExpiry(req);
 
-    if (!user) {
-      return res.status(401).json({ message: 'Unauthorized' });
+    if (!authResult.user) {
+      return res.status(401).json({ 
+        message: authResult.expired ? 'Token expired' : 'Unauthorized',
+        expired: authResult.expired 
+      });
     }
+
+    const user = authResult.user;
 
     // Get full user data from database
     const userData = await db.query.users.findFirst({

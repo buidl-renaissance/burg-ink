@@ -104,10 +104,20 @@ export function validateContent(
   return result;
 }
 
+interface PlatformRules {
+  caption?: { maxLength?: number; optimalLength?: number; hashtags?: { max: number; optimal: number } };
+  story?: { maxLength?: number };
+  bio?: { maxLength?: number; optimalLength?: number };
+  post?: { maxLength?: number; optimalLength?: number };
+  tweet?: { maxLength?: number; optimalLength?: number };
+  subject?: { maxLength?: number; optimalLength?: number };
+  body?: { maxLength?: number; optimalLength?: number };
+}
+
 function validateCharacterLength(
   content: string, 
   options: ContentValidationOptions, 
-  rules: any, 
+  rules: PlatformRules, 
   result: ValidationResult
 ): void {
   const length = content.length;
@@ -158,7 +168,7 @@ function validateCharacterLength(
 function validateHashtags(
   content: string, 
   options: ContentValidationOptions, 
-  rules: any, 
+  rules: PlatformRules, 
   result: ValidationResult
 ): void {
   const hashtags = content.match(/#\w+/g) || [];

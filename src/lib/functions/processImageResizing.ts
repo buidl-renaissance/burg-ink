@@ -131,11 +131,18 @@ export const processMediaResize = inngest.createFunction(
         thumbnail: thumbnailBuf,
       };
 
+      // Determine mime type - convert HEIC to JPEG if needed
+      let mimeType = mediaRecord.mime_type ?? 'image/jpeg';
+      const isHeic = mimeType === 'image/heic' || mimeType === 'image/heif';
+      if (isHeic) {
+        mimeType = 'image/jpeg'; // Converted to JPEG during processing
+      }
+      
       return await storageService.storeImageSizes(
         imageSizes,
         mediaRecord.filename ?? 'unknown',
         `${mediaRecord.id}-resized`,
-        mediaRecord.mime_type ?? 'image/jpeg'
+        mimeType
       );
     });
 
@@ -213,11 +220,18 @@ export const processNewUploadResize = inngest.createFunction(
         thumbnail: thumbnailBuf,
       };
 
+      // Determine mime type - convert HEIC to JPEG if needed
+      let processedMimeType = mimeType;
+      const isHeic = mimeType === 'image/heic' || mimeType === 'image/heif';
+      if (isHeic) {
+        processedMimeType = 'image/jpeg'; // Converted to JPEG during processing
+      }
+      
       return await storageService.storeImageSizes(
         imageSizes,
         originalName,
         fileId,
-        mimeType
+        processedMimeType
       );
     });
 

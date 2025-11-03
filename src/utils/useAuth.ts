@@ -6,6 +6,8 @@ interface User {
   name: string;
   email: string;
   profile_picture?: string;
+  bio?: string;
+  role?: string;
 }
 
 interface AuthState {
@@ -54,13 +56,22 @@ export const useAuth = () => {
           isAuthenticated: true,
         });
       } else {
-        // Token is invalid, remove it
+        // Token is invalid or expired, remove it
+        const errorData = await response.json().catch(() => ({ expired: false }));
         localStorage.removeItem('authToken');
         setAuthState({
           user: null,
           loading: false,
           isAuthenticated: false,
         });
+        
+        // Only redirect if we're not already on the login page
+        if (router.pathname !== '/login' && router.pathname !== '/register') {
+          const redirectPath = errorData.expired 
+            ? `/login?expired=true&redirect=${encodeURIComponent(router.asPath)}`
+            : `/login?redirect=${encodeURIComponent(router.asPath)}`;
+          router.push(redirectPath);
+        }
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -70,6 +81,11 @@ export const useAuth = () => {
         loading: false,
         isAuthenticated: false,
       });
+      
+      // Only redirect if we're not already on the login page
+      if (router.pathname !== '/login' && router.pathname !== '/register') {
+        router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`);
+      }
     }
   };
 

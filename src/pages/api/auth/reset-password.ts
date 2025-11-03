@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               break;
             }
           }
-        } catch (e) {
+        } catch {
           // Invalid JSON, skip
           continue;
         }

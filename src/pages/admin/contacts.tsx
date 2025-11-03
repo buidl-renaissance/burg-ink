@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { ContactForm, ContactFormRef } from '@/components/ContactForm';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaEye, FaDownload, FaUpload, FaTag, FaEnvelope, FaPhone, FaBuilding, FaTimes, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaDownload, FaBuilding, FaTimes, FaCheck, FaPhone } from 'react-icons/fa';
 
 interface Contact {
   id: number;
@@ -17,7 +17,7 @@ interface Contact {
   source: string;
   lifecycle_stage: string;
   tags: string[];
-  custom_fields: Record<string, any>;
+  custom_fields: Record<string, unknown>;
   notes?: string;
   avatar_url?: string;
   is_active: number;
@@ -466,7 +466,7 @@ export default function AdminContacts() {
     fetchTags();
   }, [fetchContacts, fetchTags]);
 
-  const handleCreateContact = async (contactData: Contact) => {
+  const handleCreateContact = async (contactData: { id?: number; first_name: string; last_name: string; email: string; phone?: string; company?: string; job_title?: string; source: string; lifecycle_stage: string; tags: string[]; custom_fields: Record<string, unknown>; notes?: string; avatar_url?: string; is_active: number }) => {
     try {
       const response = await fetch('/api/contacts', {
         method: 'POST',
@@ -481,7 +481,7 @@ export default function AdminContacts() {
         const data = await response.json();
         alert(`Error: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       alert('Error creating contact');
     }
   };
@@ -498,7 +498,7 @@ export default function AdminContacts() {
     }
   };
 
-  const handleUpdateContact = async (contactData: Contact) => {
+  const handleUpdateContact = async (contactData: { id?: number; first_name: string; last_name: string; email: string; phone?: string; company?: string; job_title?: string; source: string; lifecycle_stage: string; tags: string[]; custom_fields: Record<string, unknown>; notes?: string; avatar_url?: string; is_active: number }) => {
     if (!selectedContact?.id) return;
     
     try {
@@ -516,7 +516,7 @@ export default function AdminContacts() {
         const data = await response.json();
         alert(`Error: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       alert('Error updating contact');
     }
   };
@@ -534,9 +534,9 @@ export default function AdminContacts() {
           const data = await response.json();
           alert(`Error: ${data.error}`);
         }
-      } catch (error) {
-        alert('Error deleting contact');
-      }
+    } catch {
+      alert('Error deleting contact');
+    }
     }
   };
 
@@ -562,7 +562,7 @@ export default function AdminContacts() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }
-    } catch (error) {
+    } catch {
       alert('Error exporting contacts');
     }
   };

@@ -2,9 +2,9 @@
 
 import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { hasRole, hasPermission, hasAnyRole, UserRole } from '@/lib/rbac';
+import { hasRole, hasPermission, hasAnyRole, UserRole, User } from '@/lib/rbac';
 import styled from 'styled-components';
-import { FaLock, FaExclamationTriangle } from 'react-icons/fa';
+import { FaLock } from 'react-icons/fa';
 
 interface WithRoleProps {
   children: ReactNode;
@@ -20,7 +20,6 @@ export const WithRole: React.FC<WithRoleProps> = ({
   role,
   roles,
   permission,
-  fallback = <AccessDenied />,
   requireVerified = false,
 }) => {
   const { user, isAuthenticated } = useAuth();
@@ -35,17 +34,17 @@ export const WithRole: React.FC<WithRoleProps> = ({
   }
 
   // Check specific role
-  if (role && !hasRole(user, role)) {
+  if (role && user.role && !hasRole(user as User, role)) {
     return <AccessDenied title="Insufficient Permissions" message={`This feature requires ${role} access.`} />;
   }
 
   // Check any of multiple roles
-  if (roles && !hasAnyRole(user, roles)) {
+  if (roles && user.role && !hasAnyRole(user as User, roles)) {
     return <AccessDenied title="Insufficient Permissions" message={`This feature requires one of the following roles: ${roles.join(', ')}.`} />;
   }
 
   // Check specific permission
-  if (permission && !hasPermission(user, permission)) {
+  if (permission && user.role && !hasPermission(user as User, permission)) {
     return <AccessDenied title="Insufficient Permissions" message={`This feature requires ${permission} permission.`} />;
   }
 

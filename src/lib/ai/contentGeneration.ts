@@ -28,6 +28,7 @@ export interface ContentGenerationRequest {
     commonSubjects: string[];
     mostCommonStyle: string;
     mostCommonCategory: string;
+    portfolioDiversity?: number;
   };
   additionalContext?: string;
 }
@@ -66,22 +67,8 @@ const TONE_PROMPTS = {
   educational: "Use an informative, helpful tone that educates and adds value."
 };
 
-// CTA templates
-const CTA_TEMPLATES = [
-  "Book your appointment today!",
-  "View my full portfolio",
-  "DM me for inquiries",
-  "Follow for more art",
-  "Visit my studio",
-  "Check out my latest series",
-  "Contact me for commissions",
-  "See more on my website",
-  "Join my newsletter",
-  "Share your thoughts below"
-];
-
 export async function generateSocialPost(request: ContentGenerationRequest): Promise<GeneratedContent> {
-  const { contentType, platform, tone, entityData, artistData, portfolioInsights, additionalContext } = request;
+  const { platform, tone, entityData, artistData, portfolioInsights, additionalContext } = request;
   
   const characterLimit = PLATFORM_LIMITS[platform];
   const toneGuidance = TONE_PROMPTS[tone];
@@ -198,8 +185,7 @@ export async function generateCaption(request: ContentGenerationRequest): Promis
   // Remove hashtags from caption content but keep them separate
   return {
     ...result,
-    content: result.content.replace(/#\w+/g, '').trim(),
-    contentType: 'caption'
+    content: result.content.replace(/#\w+/g, '').trim()
   };
 }
 

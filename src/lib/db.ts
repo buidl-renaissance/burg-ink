@@ -11,6 +11,7 @@ export async function getAllArtwork() {
     .select()
     .from(artwork)
     .leftJoin(artists, eq(artwork.artist_id, artists.id))
+    .where(isNull(artwork.deleted_at))
     .orderBy(desc(artwork.created_at));
   
   return result.map(row => {

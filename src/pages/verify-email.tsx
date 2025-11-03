@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { FaEnvelope, FaCheckCircle, FaClock, FaArrowLeft, FaSpinner } from 'react-icons/fa';
@@ -19,7 +19,7 @@ export default function VerifyEmailPage() {
   const [isVerified, setIsVerified] = useState(false);
   
   // Toast notifications
-  const { toasts, success, error, warning, loading, removeToast } = useToast();
+  const { toasts, success, error, loading, removeToast } = useToast();
 
   // Countdown timer effect
   useEffect(() => {
@@ -30,24 +30,7 @@ export default function VerifyEmailPage() {
     return () => clearTimeout(timer);
   }, [resendCountdown]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    if (user?.is_verified) {
-      router.push('/');
-      return;
-    }
-
-    const { token } = router.query;
-    if (token && typeof token === 'string') {
-      handleVerification(token);
-    }
-  }, [router.query, isAuthenticated, user, router]);
-
-  const handleVerification = async (token: string) => {
+  const handleVerification = useCallback(async (token: string) => {
     try {
       setIsLoading(true);
       loading({
@@ -64,7 +47,7 @@ export default function VerifyEmailPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        await response.json(); // Response may contain error details, but we use status codes instead
         let errorMessage = 'Verification failed';
         
         if (response.status === 400) {
@@ -100,7 +83,24 @@ export default function VerifyEmailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router, loading, success, error]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    if (user?.is_verified) {
+      router.push('/');
+      return;
+    }
+
+    const { token } = router.query;
+    if (token && typeof token === 'string') {
+      handleVerification(token);
+    }
+  }, [router.query, isAuthenticated, user, router, handleVerification]);
 
   const resendVerification = async () => {
     try {
@@ -115,7 +115,7 @@ export default function VerifyEmailPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        await response.json(); // Response may contain error details, but we use status codes instead
         let errorMessage = 'Failed to send verification email';
         
         if (response.status === 429) {
@@ -191,7 +191,7 @@ export default function VerifyEmailPage() {
               {isVerified ? (
                 'Your email has been successfully verified. Redirecting to your dashboard...'
               ) : (
-                <>We've sent a verification link to <strong>{user?.email}</strong>. <br />
+                <>We&apos;ve sent a verification link to <strong>{user?.email}</strong>. <br />
                 Please check your email and click the link to verify your account.</>
               )}
             </Subtitle>
@@ -199,7 +199,7 @@ export default function VerifyEmailPage() {
             {!isVerified && (
               <>
                 <CheckEmailTip>
-                  💡 Don't see the email? Check your spam folder or try resending.
+                  💡 Don&apos;t see the email? Check your spam folder or try resending.
                 </CheckEmailTip>
                 
                 <ResendButton 

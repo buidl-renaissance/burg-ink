@@ -146,7 +146,7 @@ export default function RegisterPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        await response.json(); // Response may contain error details, but we use status codes instead
         let errorMessage = 'Registration failed';
         
         if (response.status === 409) {
@@ -222,7 +222,7 @@ export default function RegisterPage() {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
-      handleRegister(e as any);
+      handleRegister(e as unknown as React.FormEvent);
     }
   };
 
@@ -461,21 +461,6 @@ const Logo = styled.div`
 
 const RegisterForm = styled.form`
   margin-bottom: 1.5rem;
-`;
-
-const FormTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.5rem 0;
-  text-align: center;
-`;
-
-const Subtitle = styled.p`
-  color: #666;
-  text-align: center;
-  margin: 0 0 1.5rem 0;
-  font-size: 0.9rem;
 `;
 
 const FormGroup = styled.div`
@@ -761,31 +746,6 @@ const LoginLink = styled.p`
     
     &:hover {
       text-decoration: underline;
-    }
-  }
-`;
-
-const ErrorMessage = styled.div`
-  background-color: #fee;
-  color: #c33;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  border: 1px solid #fcc;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  animation: slideIn 0.3s ease-out;
-  
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
     }
   }
 `;

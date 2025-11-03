@@ -26,22 +26,40 @@ export async function processImageSizes(imageBuffer: Buffer): Promise<ProcessedI
   try {
     // Get original image metadata
     const metadata = await sharp(imageBuffer).metadata();
-    const format = metadata.format || 'jpeg';
+    const originalFormat = (metadata.format as string) || 'jpeg';
     const originalWidth = metadata.width || 0;
     const originalHeight = metadata.height || 0;
 
+    // Check if this is a HEIC/HEIF image and needs conversion
+    const isHeic = originalFormat === 'heic' || originalFormat === 'heif';
+    
     // Create Sharp instance for processing
-    const image = sharp(imageBuffer);
+    // If HEIC, convert to JPEG; otherwise use as-is
+    let image = sharp(imageBuffer);
+    if (isHeic) {
+      // Convert HEIC to JPEG for compatibility
+      image = image.jpeg({ quality: 95 });
+    }
+    
+    const format = isHeic ? 'jpeg' : originalFormat;
 
     // Generate medium size (800px width, maintaining aspect ratio)
-    const mediumBuffer = await image
+    let mediumProcessor = image
       .clone()
       .resize(800, null, {
         withoutEnlargement: true,
         fit: 'inside'
-      })
-      .jpeg({ quality: 85 })
-      .toBuffer();
+      });
+    
+    // Convert to JPEG output (always JPEG if HEIC was converted, or if original format is JPEG)
+    if (isHeic || format === 'jpeg') {
+      mediumProcessor = mediumProcessor.jpeg({ quality: 85 });
+    } else if (format === 'png') {
+      mediumProcessor = mediumProcessor.png();
+    } else if (format === 'webp') {
+      mediumProcessor = mediumProcessor.webp({ quality: 85 });
+    }
+    const mediumBuffer = await mediumProcessor.toBuffer();
 
     // Get medium dimensions
     const mediumMetadata = await sharp(mediumBuffer).metadata();
@@ -49,23 +67,38 @@ export async function processImageSizes(imageBuffer: Buffer): Promise<ProcessedI
     const mediumHeight = mediumMetadata.height || 0;
 
     // Generate thumbnail (200px width, maintaining aspect ratio)
-    const thumbnailBuffer = await image
+    let thumbnailProcessor = image
       .clone()
       .resize(200, null, {
         withoutEnlargement: true,
         fit: 'inside'
-      })
-      .jpeg({ quality: 80 })
-      .toBuffer();
+      });
+    
+    // Convert to JPEG output (always JPEG if HEIC was converted, or if original format is JPEG)
+    if (isHeic || format === 'jpeg') {
+      thumbnailProcessor = thumbnailProcessor.jpeg({ quality: 80 });
+    } else if (format === 'png') {
+      thumbnailProcessor = thumbnailProcessor.png();
+    } else if (format === 'webp') {
+      thumbnailProcessor = thumbnailProcessor.webp({ quality: 80 });
+    }
+    const thumbnailBuffer = await thumbnailProcessor.toBuffer();
 
     // Get thumbnail dimensions
     const thumbnailMetadata = await sharp(thumbnailBuffer).metadata();
     const thumbnailWidth = thumbnailMetadata.width || 0;
     const thumbnailHeight = thumbnailMetadata.height || 0;
 
+    // Convert original to JPEG if it was HEIC
+    let originalBuffer = imageBuffer;
+    if (isHeic) {
+      // Use a fresh Sharp instance to convert the original HEIC to JPEG
+      originalBuffer = await sharp(imageBuffer).jpeg({ quality: 95 }).toBuffer();
+    }
+    
     return {
       sizes: {
-        original: imageBuffer,
+        original: originalBuffer,
         medium: mediumBuffer,
         thumbnail: thumbnailBuffer,
       },
@@ -99,13 +132,16 @@ export async function resizeImage(
   quality: number = 85
 ): Promise<Buffer> {
   try {
-    return await sharp(imageBuffer)
+    let processor = sharp(imageBuffer)
       .resize(width, height, {
         withoutEnlargement: true,
         fit: 'inside'
-      })
-      .jpeg({ quality })
-      .toBuffer();
+      });
+    
+    // Convert to JPEG (necessary for HEIC, good default for others)
+    processor = processor.jpeg({ quality });
+    
+    return await processor.toBuffer();
   } catch (error) {
     console.error('Error resizing image:', error);
     throw new Error(`Failed to resize image: ${error instanceof Error ? error.message : 'Unknown error'}`);

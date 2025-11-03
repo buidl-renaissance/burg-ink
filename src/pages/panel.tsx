@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import styled from "styled-components";
 import { QRCodeSVG } from "qrcode.react";
-import { FaPalette, FaTint, FaImages, FaHandshake, FaEnvelope, FaUser, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaPalette, FaTint, FaImages, FaHandshake, FaEnvelope, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import Hero from "@/components/Hero";
 import { useAuth } from '@/utils/useAuth';
-import Link from 'next/link';
 
 interface DashboardStats {
   artwork: {
@@ -518,7 +517,7 @@ export default function Panel() {
       <DashboardContainer>
         <DashboardHeader>
           <DashboardTitle>Welcome back, {user?.name || 'User'}!</DashboardTitle>
-          <DashboardSubtitle>Here's an overview of your portfolio and activity</DashboardSubtitle>
+          <DashboardSubtitle>Here&apos;s an overview of your portfolio and activity</DashboardSubtitle>
         </DashboardHeader>
 
         {loading && (

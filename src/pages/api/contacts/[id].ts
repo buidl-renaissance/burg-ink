@@ -11,8 +11,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Get full user data from database to check role
+    const userData = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: {
+        role: true
+      }
+    });
+
     // Check if user has admin or artist permissions
-    if (!['admin', 'artist'].includes(currentUser.role)) {
+    if (!userData || !userData.role || !['admin', 'artist'].includes(userData.role)) {
       return res.status(403).json({ error: 'Admin or artist access required' });
     }
 
@@ -27,9 +35,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'GET':
         return handleGetContact(req, res, contactId);
       case 'PATCH':
-        return handleUpdateContact(req, res, contactId, currentUser.id);
+        return handleUpdateContact(req, res, contactId);
       case 'DELETE':
-        return handleDeleteContact(req, res, contactId, currentUser.id);
+        return handleDeleteContact(req, res, contactId);
       default:
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -85,7 +93,7 @@ async function handleGetContact(req: NextApiRequest, res: NextApiResponse, conta
   });
 }
 
-async function handleUpdateContact(req: NextApiRequest, res: NextApiResponse, contactId: number, currentUserId: number) {
+async function handleUpdateContact(req: NextApiRequest, res: NextApiResponse, contactId: number) {
   const { 
     first_name,
     last_name,
@@ -111,7 +119,7 @@ async function handleUpdateContact(req: NextApiRequest, res: NextApiResponse, co
     return res.status(404).json({ error: 'Contact not found' });
   }
 
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (first_name !== undefined) updateData.first_name = first_name;
   if (last_name !== undefined) updateData.last_name = last_name;
@@ -160,7 +168,7 @@ async function handleUpdateContact(req: NextApiRequest, res: NextApiResponse, co
   }
 }
 
-async function handleDeleteContact(req: NextApiRequest, res: NextApiResponse, contactId: number, currentUserId: number) {
+async function handleDeleteContact(req: NextApiRequest, res: NextApiResponse, contactId: number) {
   // Check if contact exists
   const contact = await db.query.contacts.findFirst({
     where: eq(contacts.id, contactId)

@@ -144,3 +144,74 @@ export const generateInquiryConfirmationEmail = (data: InquiryEmailData) => {
     `
   };
 };
+
+export interface UserInvitationEmailData {
+  name: string;
+  email: string;
+  role: string;
+  invitationLink: string;
+  invitedBy?: string;
+}
+
+export const generateUserInvitationEmail = (data: UserInvitationEmailData) => {
+  const { name, email, role, invitationLink, invitedBy } = data;
+  
+  return {
+    subject: `You've been invited to join Burg Ink`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <div style="background: linear-gradient(135deg, #96885f 0%, #7a6f4d 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">Burg Ink</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">You're Invited!</p>
+        </div>
+        
+        <div style="padding: 30px;">
+          <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 600;">Welcome to Burg Ink!</h2>
+          
+          <p style="color: #555; line-height: 1.6; font-size: 16px;">
+            Hi ${name || email},
+          </p>
+          
+          <p style="color: #555; line-height: 1.6; font-size: 16px;">
+            ${invitedBy ? `You've been invited by ${invitedBy} to` : 'You\'ve been invited to'} join the Burg Ink platform${role !== 'user' ? ` as a ${role}` : ''}.
+          </p>
+          
+          <p style="color: #555; line-height: 1.6; font-size: 16px;">
+            Click the button below to accept your invitation and create your account:
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${invitationLink}" style="display: inline-block; padding: 16px 32px; background: #96885f; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+              Accept Invitation
+            </a>
+          </div>
+          
+          <p style="color: #555; line-height: 1.6; font-size: 14px; text-align: center;">
+            Or copy and paste this link into your browser:<br>
+            <a href="${invitationLink}" style="color: #96885f; word-break: break-all;">${invitationLink}</a>
+          </p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #96885f;">
+            <h3 style="color: #333; margin-top: 0; font-size: 18px;">What's next?</h3>
+            <ul style="color: #555; line-height: 1.6; padding-left: 20px; margin: 0;">
+              <li>Click the invitation link above</li>
+              <li>Create your account password</li>
+              <li>Complete your profile</li>
+              <li>Start using the platform!</li>
+            </ul>
+          </div>
+          
+          <p style="color: #888; line-height: 1.6; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+            <strong>Note:</strong> This invitation link will expire in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+          </p>
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="color: #6c757d; font-size: 12px; margin: 0;">
+            © ${new Date().getFullYear()} Burg Ink. All rights reserved.
+          </p>
+        </div>
+      </div>
+    `
+  };
+};

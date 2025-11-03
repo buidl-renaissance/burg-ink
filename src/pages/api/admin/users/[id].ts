@@ -111,7 +111,7 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, userI
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (name !== undefined) updateData.name = name;
   if (email !== undefined) {

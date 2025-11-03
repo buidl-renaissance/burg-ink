@@ -3,7 +3,7 @@
 import styled from 'styled-components';
 import Link from 'next/link';
 import { useState } from 'react';
-import { FaHome, FaPalette, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark, FaUsers, FaBullhorn } from 'react-icons/fa';
+import { FaHome, FaPalette, FaEnvelope, FaCog, FaImages, FaBars, FaTimes, FaLightbulb, FaBookmark, FaUsers } from 'react-icons/fa';
 import { AdminAuthGuard } from './AdminAuthGuard';
 
 interface AdminLayoutProps {

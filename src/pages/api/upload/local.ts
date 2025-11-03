@@ -22,7 +22,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const form = formidable({
       maxFileSize: 100 * 1024 * 1024, // 100MB limit for videos
       filter: (part: Part) => {
-        return part.mimetype?.startsWith('image/') || part.mimetype?.startsWith('video/') || false;
+        // Accept all image types including HEIC/HEIF
+        const isImage = part.mimetype?.startsWith('image/') || false;
+        const isVideo = part.mimetype?.startsWith('video/') || false;
+        // Explicitly allow HEIC/HEIF MIME types
+        const isHeic = part.mimetype === 'image/heic' || 
+                      part.mimetype === 'image/heif' ||
+                      part.mimetype === 'image/heic-sequence' ||
+                      part.mimetype === 'image/heif-sequence';
+        return isImage || isVideo || isHeic;
       },
     });
 
@@ -36,13 +44,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Read the uploaded file
     const originalBuffer = await fs.readFile(uploadedFile.filepath);
     const mediaId = uuidv4();
-    const fileExtension = uploadedFile.originalFilename?.split('.').pop() || 'jpg';
+    // Normalize HEIC/HEIF extensions to jpg for storage
+    let fileExtension = uploadedFile.originalFilename?.split('.').pop() || 'jpg';
+    const isHeic = fileExtension.toLowerCase() === 'heic' || 
+                   fileExtension.toLowerCase() === 'heif' ||
+                   uploadedFile.mimetype === 'image/heic' ||
+                   uploadedFile.mimetype === 'image/heif';
+    
+    // Convert HEIC extension to jpg for storage (actual conversion happens in processing)
+    if (isHeic) {
+      fileExtension = 'jpg';
+    }
 
     // Upload original file to storage first to avoid payload size limits
+    // Note: If HEIC, we'll convert during processing; store original for now
+    const originalMimeType = isHeic ? 'image/heic' : (uploadedFile.mimetype || 'image/jpeg');
     const originalUpload = await uploadFile(
       originalBuffer,
       getFileKey(mediaId, 'original', fileExtension),
-      uploadedFile.mimetype || 'image/jpeg'
+      originalMimeType
     );
 
     // Save initial record to database with original URL

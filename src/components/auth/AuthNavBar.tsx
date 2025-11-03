@@ -85,14 +85,6 @@ const LogoText = styled.h1`
   line-height: 1;
 `;
 
-const LogoSubtext = styled.p`
-  font-size: 0.75rem;
-  color: #666;
-  margin: 0;
-  font-weight: 400;
-  line-height: 1;
-`;
-
 const BackSection = styled.div`
   display: flex;
   align-items: center;

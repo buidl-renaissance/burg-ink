@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '../../../../../db';
 import { contactNotes, contacts, users } from '../../../../../db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -11,8 +11,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Get full user data from database to check role
+    const userData = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: {
+        role: true
+      }
+    });
+
     // Check if user has admin or artist permissions
-    if (!['admin', 'artist'].includes(currentUser.role)) {
+    if (!userData || !userData.role || !['admin', 'artist'].includes(userData.role)) {
       return res.status(403).json({ error: 'Admin or artist access required' });
     }
 
@@ -57,7 +65,12 @@ async function handleGetNotes(req: NextApiRequest, res: NextApiResponse, contact
   const offset = (pageNum - 1) * limitNum;
 
   // Build query
-  let query = db
+  const conditions = [eq(contactNotes.contact_id, contactId)];
+  if (note_type) {
+    conditions.push(eq(contactNotes.note_type, note_type as string));
+  }
+
+  const notes = await db
     .select({
       id: contactNotes.id,
       content: contactNotes.content,
@@ -68,14 +81,7 @@ async function handleGetNotes(req: NextApiRequest, res: NextApiResponse, contact
     })
     .from(contactNotes)
     .leftJoin(users, eq(contactNotes.user_id, users.id))
-    .where(eq(contactNotes.contact_id, contactId));
-
-  // Add note type filter if specified
-  if (note_type) {
-    query = query.where(eq(contactNotes.note_type, note_type as string));
-  }
-
-  const notes = await query
+    .where(and(...conditions))
     .orderBy(desc(contactNotes.created_at))
     .limit(limitNum)
     .offset(offset);

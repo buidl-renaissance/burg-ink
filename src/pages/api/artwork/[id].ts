@@ -85,8 +85,20 @@ export default async function handler(
         break;
 
       case 'DELETE':
-        // TODO: Implement delete functionality
-        res.status(501).json({ error: 'Delete not implemented yet' });
+        // Soft delete by setting deleted_at timestamp
+        const deleteResult = await db
+          .update(artwork)
+          .set({
+            deleted_at: new Date().toISOString(),
+          })
+          .where(eq(artwork.id, artworkId))
+          .returning();
+        
+        if (deleteResult.length === 0) {
+          return res.status(404).json({ error: 'Artwork not found' });
+        }
+        
+        res.status(200).json({ message: 'Artwork deleted successfully' });
         break;
 
       default:

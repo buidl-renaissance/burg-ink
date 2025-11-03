@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '../../../../db';
-import { contacts } from '../../../../db/schema';
+import { contacts, users } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -11,8 +11,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Get full user data from database to check role
+    const userData = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: {
+        role: true
+      }
+    });
+
     // Check if user has admin or artist permissions
-    if (!['admin', 'artist'].includes(currentUser.role)) {
+    if (!userData || !userData.role || !['admin', 'artist'].includes(userData.role)) {
       return res.status(403).json({ error: 'Admin or artist access required' });
     }
 

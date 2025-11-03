@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const settingsMap = allSettings.reduce((acc, setting) => {
           acc[setting.key] = {
             value: setting.value,
-            description: setting.description
+            description: setting.description || undefined
           };
           return acc;
         }, {} as Record<string, { value: string; description?: string }>);
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Key is required for deletion' });
       }
 
-      const deletedSetting = await db.delete(websiteSettings)
+      await db.delete(websiteSettings)
         .where(eq(websiteSettings.key, key as string));
 
       return res.status(200).json({

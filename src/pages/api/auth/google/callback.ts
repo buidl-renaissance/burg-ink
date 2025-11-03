@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { code } = req.query;
+  const { code, state } = req.query;
 
   if (!code || typeof code !== 'string') {
     return res.status(400).json({ message: 'Authorization code is required' });
@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Parse state parameter to get redirect URL, default to admin portal
     let redirectUrl = '/admin';
-    if (state) {
+    if (state && typeof state === 'string') {
       try {
         const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
         redirectUrl = stateData.redirect || '/admin';

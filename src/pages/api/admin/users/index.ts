@@ -1,10 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '../../../../../db';
-import { users, userActivityLogs, userInvitations } from '../../../../../db/schema';
+import { users, userActivityLogs, userInvitations, emails } from '../../../../../db/schema';
 import { eq, desc, and, like, or, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { Resend } from 'resend';
+import { generateUserInvitationEmail } from '@/lib/emailTemplates';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -13,8 +15,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Check if user has admin permissions
-    if (currentUser.role !== 'admin') {
+    // Get full user data from database to check role
+    const currentUserData = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: {
+        role: true,
+      }
+    });
+
+    if (!currentUserData || currentUserData.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
@@ -158,6 +167,56 @@ async function handleCreateUser(req: NextApiRequest, res: NextApiResponse, curre
         token,
         expires_at: expiresAt.toISOString()
       }).returning();
+
+      // Get the admin user's name for the email
+      const adminUser = await db.query.users.findFirst({
+        where: eq(users.id, currentUserId),
+        columns: { name: true }
+      });
+
+      // Generate invitation link
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const invitationLink = `${baseUrl}/register?token=${token}`;
+
+      // Send invitation email
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const emailTemplate = generateUserInvitationEmail({
+          name,
+          email,
+          role,
+          invitationLink,
+          invitedBy: adminUser?.name
+        });
+
+        const emailResult = await resend.emails.send({
+          from: 'Burg Ink <noreply@burg-ink.com>',
+          to: [email],
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+        });
+
+        // Log the email in the database
+        await db.insert(emails).values({
+          resend_id: emailResult.data?.id || null,
+          subject: emailTemplate.subject,
+          from: 'Burg Ink <noreply@burg-ink.com>',
+          to: JSON.stringify([email]),
+          html_content: emailTemplate.html,
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          metadata: JSON.stringify({
+            invitation_id: invitation.id,
+            user_email: email,
+            role: role
+          })
+        });
+
+        console.log('Invitation email sent successfully:', emailResult);
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError);
+        // Don't fail the request if email fails, but log it
+      }
 
       // Log activity
       await db.insert(userActivityLogs).values({

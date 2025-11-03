@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        await response.json(); // Response may contain error details, but we use status codes instead
         let errorMessage = 'Failed to send reset email';
         
         if (response.status === 429) {
@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading && countdown === 0) {
-      handleSubmit(e as any);
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
 
@@ -147,7 +147,7 @@ export default function ForgotPasswordPage() {
           
           <ForgotPasswordForm onSubmit={handleSubmit}>
             <FormTitle>Forgot Password?</FormTitle>
-            <Subtitle>Enter your email address and we'll send you a secure link to reset your password.</Subtitle>
+            <Subtitle>Enter your email address and we&apos;ll send you a secure link to reset your password.</Subtitle>
             
             <FormGroup>
               <Label htmlFor="email">Email Address</Label>

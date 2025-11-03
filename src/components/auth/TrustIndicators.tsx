@@ -54,7 +54,7 @@ export const SocialProof: React.FC = () => {
         Join thousands of artists who have grown their audience with our platform
       </SocialProofText>
       <TestimonialQuote>
-        "Burg Ink helped me connect with art lovers worldwide. My sales increased by 300%!"
+        &quot;Burg Ink helped me connect with art lovers worldwide. My sales increased by 300%!&quot;
       </TestimonialQuote>
       <TestimonialAuthor>- Sarah M., Digital Artist</TestimonialAuthor>
     </SocialProofContainer>
@@ -65,7 +65,7 @@ export const PrivacyReassurance: React.FC = () => {
   return (
     <PrivacyContainer>
       <PrivacyText>
-        🔒 We'll never share your email or personal information with third parties.
+        🔒 We&apos;ll never share your email or personal information with third parties.
         <PrivacyLink href="/privacy">Learn more</PrivacyLink>
       </PrivacyText>
     </PrivacyContainer>

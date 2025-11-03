@@ -409,8 +409,7 @@ export function getCTAForPlatform(
  * Gets hashtag strategy for content type
  */
 export function getHashtagStrategy(
-  platform: string, 
-  contentType: string
+  platform: string
 ): HashtagStrategy | null {
   return HASHTAG_STRATEGIES.find(strategy => 
     strategy.platform === platform

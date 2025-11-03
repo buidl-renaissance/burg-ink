@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getAuthorizedUser } from '@/lib/auth';
 import { db } from '../../../../../db';
 import { contacts, contactNotes, inquiries, users } from '../../../../../db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -11,8 +11,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Get full user data from database to check role
+    const userData = await db.query.users.findFirst({
+      where: eq(users.id, currentUser.id),
+      columns: {
+        role: true
+      }
+    });
+
     // Check if user has admin or artist permissions
-    if (!['admin', 'artist'].includes(currentUser.role)) {
+    if (!userData || !userData.role || !['admin', 'artist'].includes(userData.role)) {
       return res.status(403).json({ error: 'Admin or artist access required' });
     }
 
@@ -74,7 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Combine and sort timeline events
     const timeline = [...notes, ...inquiryTimeline]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort((a, b) => {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bTime - aTime;
+      })
       .slice(offset, offset + limitNum);
 
     // Get total count
@@ -86,11 +98,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       total_inquiries: inquiryTimeline.length,
       last_activity: timeline.length > 0 ? timeline[0].created_at : null,
       note_types: notes.reduce((acc, note) => {
-        acc[note.note_type] = (acc[note.note_type] || 0) + 1;
+        if (note.note_type) {
+          acc[note.note_type] = (acc[note.note_type] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>),
       inquiry_types: inquiryTimeline.reduce((acc, inquiry) => {
-        acc[inquiry.inquiry_type] = (acc[inquiry.inquiry_type] || 0) + 1;
+        if (inquiry.inquiry_type) {
+          acc[inquiry.inquiry_type] = (acc[inquiry.inquiry_type] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>)
     };
@@ -101,20 +117,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: `${contact.first_name} ${contact.last_name}`,
         email: contact.email
       },
-      timeline: timeline.map(event => ({
-        id: event.id,
-        type: event.type,
-        content: event.content,
-        note_type: event.note_type,
-        created_at: event.created_at,
-        user_name: event.user_name,
-        user_email: event.user_email,
+      timeline: timeline.map(event => {
+        const baseEvent = {
+          id: event.id,
+          type: event.type,
+          content: event.content,
+          note_type: event.note_type,
+          created_at: event.created_at,
+          user_name: event.user_name,
+          user_email: event.user_email
+        };
+        
         // Additional fields for inquiries
-        ...(event.type === 'inquiry' && {
-          inquiry_type: (event as any).inquiry_type,
-          status: (event as any).status
-        })
-      })),
+        if (event.type === 'inquiry' && 'inquiry_type' in event && 'status' in event) {
+          return {
+            ...baseEvent,
+            inquiry_type: event.inquiry_type,
+            status: event.status
+          };
+        }
+        
+        return baseEvent;
+      }),
       pagination: {
         page: pageNum,
         limit: limitNum,
