@@ -129,7 +129,7 @@ const BioParagraph = styled.p`
   }
 `;
 
-const SkillsSection = styled.section`
+const Section = styled.section`
   margin-bottom: 4rem;
   
   @media (max-width: 768px) {
@@ -137,7 +137,7 @@ const SkillsSection = styled.section`
   }
 `;
 
-const SkillsHeading = styled.h2`
+const SectionHeading = styled.h2`
   font-size: 2rem;
   margin-bottom: 1.5rem;
   color: #333;
@@ -148,189 +148,96 @@ const SkillsHeading = styled.h2`
   }
 `;
 
-const SkillsList = styled.ul`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+const SubsectionHeading = styled.h3`
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+  color: #96885f;
+  
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+  }
+`;
+
+const ArtistStatementHeading = styled(SectionHeading)`
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  margin-top: 0;
+`;
+
+const List = styled.ul`
   list-style: none;
   padding: 0;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-    gap: 0.8rem;
-  }
+  margin: 0;
 `;
 
-const SkillItem = styled.li`
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
-    border-radius: 6px;
-    
-    &:hover {
-      transform: translateY(-3px);
-    }
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0.8rem;
-  }
-`;
-
-const SkillTitle = styled.h3`
-  font-size: 1.3rem;
-  margin-bottom: 0.5rem;
-  margin-top: 0;
-  color: #96885f;
-  
-  @media (max-width: 768px) {
-    font-size: 1.1rem;
-    margin-bottom: 0.3rem;
-  }
-`;
-
-const SkillDescription = styled.p`
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #555;
-  
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-`;
-
-const ExperienceSection = styled.section`
-  margin-bottom: 4rem;
-  
-  @media (max-width: 768px) {
-    margin-bottom: 3rem;
-  }
-`;
-
-const ExperienceHeading = styled.h2`
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: #333;
-  
-  @media (max-width: 768px) {
-    font-size: 1.6rem;
-    margin-bottom: 1rem;
-  }
-`;
-
-const Timeline = styled.div`
+const ListItem = styled.li`
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 0.8rem;
+  color: #444;
+  padding-left: 1.5rem;
   position: relative;
-  max-width: 800px;
-  margin: 0 auto;
-
-  &::after {
-    content: '';
+  
+  &::before {
+    content: '•';
+    color: #96885f;
+    font-weight: bold;
     position: absolute;
-    width: 2px;
-    background-color: #96885f;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    margin-left: -1px;
-
-    @media (max-width: 767px) {
-      left: 31px;
-    }
-  }
-`;
-
-const TimelineItem = styled.div`
-  padding: 10px 40px;
-  position: relative;
-  width: 50%;
-  box-sizing: border-box;
-
-  &:nth-child(odd) {
     left: 0;
   }
-
-  &:nth-child(even) {
-    left: 50%;
-  }
-
-  @media (max-width: 767px) {
-    width: 100%;
-    padding-left: 70px;
-    padding-right: 15px;
-
-    &:nth-child(odd),
-    &:nth-child(even) {
-      left: 0;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    padding-left: 60px;
-    padding-right: 10px;
-  }
-`;
-
-const TimelineContent = styled.div`
-  padding: 20px;
-  background-color: white;
-  position: relative;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  
-  @media (max-width: 768px) {
-    padding: 15px;
-    border-radius: 6px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 12px;
-  }
-`;
-
-const TimelineDate = styled.div`
-  font-weight: bold;
-  color: #96885f;
-  margin-bottom: 0.5rem;
-  
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
-  }
-`;
-
-const TimelineTitle = styled.h3`
-  margin: 0 0 10px 0;
-  font-size: 1.2rem;
   
   @media (max-width: 768px) {
     font-size: 1rem;
-    margin-bottom: 8px;
+    line-height: 1.6;
+    margin-bottom: 0.6rem;
+    padding-left: 1.2rem;
   }
 `;
 
-const TimelineText = styled.p`
-  margin: 0;
-  line-height: 1.6;
-  color: #555;
+const DescriptionItem = styled.div`
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #444;
   
   @media (max-width: 768px) {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+`;
+
+const BulletList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 1.5rem 0;
+  
+  @media (max-width: 768px) {
+    margin: 0.4rem 0 1rem 0;
+  }
+`;
+
+const BulletItem = styled.li`
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 0.5rem;
+  color: #444;
+  padding-left: 1.5rem;
+  position: relative;
+  
+  &::before {
+    content: '—';
+    color: #96885f;
+    position: absolute;
+    left: 0;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 0.4rem;
+    padding-left: 1.2rem;
   }
 `;
 
@@ -427,86 +334,135 @@ const About: FC<AboutProps> = ({ showTitle = true }) => {
           </ArtistBio>
         </ArtistSection>
 
-        <SkillsSection>
-          <SkillsHeading>Specialties</SkillsHeading>
-          <SkillsList>
-            <SkillItem>
-              <SkillTitle>Tattoo Art</SkillTitle>
-              <SkillDescription>
-                Over a decade of experience creating custom tattoos with precision, patience, and care, specializing in nature-inspired designs that honor the individual&apos;s story and connection to the Earth.
-              </SkillDescription>
-            </SkillItem>
-            <SkillItem>
-              <SkillTitle>Painting & Printmaking</SkillTitle>
-              <SkillDescription>
-                Creating works infused with intention, ceremony, and resonance that serve as vessels to honor the sacred connection between all beings.
-              </SkillDescription>
-            </SkillItem>
-            <SkillItem>
-              <SkillTitle>Energy Healing</SkillTitle>
-              <SkillDescription>
-                Certified Reiki practitioner and trained in Peruvian shamanic traditions, offering healing work that supports transformation and spiritual connection.
-              </SkillDescription>
-            </SkillItem>
-            {/* <SkillItem>
-              <SkillTitle>Community & Conservation</SkillTitle>
-              <SkillDescription>
-                Organizing Arts for the Earth fundraisers, guiding whitewater rafting trips, and participating in Indigenous ceremonies across the Americas.
-              </SkillDescription>
-            </SkillItem> */}
-          </SkillsList>
-        </SkillsSection>
+        <Section>
+          <SectionHeading>Education & Training</SectionHeading>
+          <List>
+            <ListItem>Drum Camp Support, Lone Star Sundance Ceremony — 9-day Indigenous ceremony, 2023, 2025</ListItem>
+            <ListItem>Peruvian Andes Shamanic Training — 15-month intensive study in Andean spiritual practices for healing, 2024</ListItem>
+            <ListItem>Vision Quester Participant (Hanblecheya Ceremony) — 4-day and 4-night prayerful isolation, 2024</ListItem>
+            <ListItem>Moon Dance Ceremony Participant — 5-day prayer ceremony honoring feminine energy, 2024</ListItem>
+            <ListItem>Fire Keeper & Community Support, Colombia Sundance Ceremony — 9-day Indigenous ceremony, 2024</ListItem>
+            <ListItem>Animal Reiki Certification, 2024</ListItem>
+            <ListItem>Usui/Holy Fire Reiki Levels 1 & 2, 2021</ListItem>
+            <ListItem>Inipi Ceremony Participant — ongoing monthly sweat lodge ceremonies, 2021–Present</ListItem>
+            <ListItem>Ayahuasca Ceremonies — 18 plant medicine ceremonies, Costa Rica, 2020–2022</ListItem>
+            <ListItem>Spiritual Coaching Training — intuitive channeling and esoteric healing practices, 2019–2021</ListItem>
+            <ListItem>Bachelor of Fine Arts in Illustration — College for Creative Studies, Detroit, MI, 2016</ListItem>
+          </List>
+        </Section>
 
-        <ExperienceSection>
-          <ExperienceHeading>Experience & Education</ExperienceHeading>
-          <Timeline>
-            <TimelineItem>
-              <TimelineContent>
-                <TimelineDate>Present</TimelineDate>
-                <TimelineTitle>Multidisciplinary Artist & Tattooist</TimelineTitle>
-                <TimelineText>
-                  Creating work as a living ceremony through tattooing, painting, printmaking, and energy healing in Metro Detroit.
-                </TimelineText>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineContent>
-                <TimelineDate>2023 - Present</TimelineDate>
-                <TimelineTitle>Arts for the Earth Organizer</TimelineTitle>
-                <TimelineText>
-                  Organizing community fundraisers supporting nonprofits that protect land and water, connecting art with environmental conservation.
-                </TimelineText>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineContent>
-                <TimelineDate>2022 - 2023</TimelineDate>
-                <TimelineTitle>Peruvian Shamanic Training</TimelineTitle>
-                <TimelineText>
-                  Completed 15-month training in Peruvian shamanic traditions, deepening connection to spiritual practices and healing arts.
-                </TimelineText>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineContent>
-                <TimelineDate>2018 - 2020</TimelineDate>
-                <TimelineTitle>Conservation Crew Member</TimelineTitle>
-                <TimelineText>
-                  Served on conservation crews restoring trails in Colorado, contributing to land stewardship and environmental protection.
-                </TimelineText>
-              </TimelineContent>
-            </TimelineItem>
-            <TimelineItem>
-              <TimelineContent>
-                <TimelineDate>2013 - 2017</TimelineDate>
-                <TimelineTitle>BFA Illustration, College for Creative Studies</TimelineTitle>
-                <TimelineText>
-                  Graduated with a Bachelor&apos;s degree in Illustration, developing technical skills and artistic vision that inform all creative work.
-                </TimelineText>
-              </TimelineContent>
-            </TimelineItem>
-          </Timeline>
-        </ExperienceSection>
+        <Section>
+          <SectionHeading>Exhibitions & Projects</SectionHeading>
+          
+          <SubsectionHeading>Group Exhibitions</SubsectionHeading>
+          <List>
+            <ListItem>Murals in the Market, Detroit MI — 2025</ListItem>
+            <ListItem>Arts For the Earth Fundraiser, Detroit MI — 2025</ListItem>
+            <ListItem>A Window Into, Laventana, Detroit MI — 2025</ListItem>
+            <ListItem>Lincoln Street Art Park, Detroit MI — 2025</ListItem>
+            <ListItem>ArtClvb Studio Deals, Detroit, MI — 2024</ListItem>
+            <ListItem>Raven Cafe, Port Huron, MI — 2024</ListItem>
+            <ListItem>Eastern Market After Dark, Detroit, MI — 2023</ListItem>
+            <ListItem>Dirty Show, Detroit, MI — 2023, 2016</ListItem>
+            <ListItem>Build Your Block (Community Fundraiser), Detroit, MI — 2020</ListItem>
+            <ListItem>Iconic Tattoo Holiday Show, Detroit, MI — 2019</ListItem>
+            <ListItem>Raw Detroit, St. Andrew&apos;s Hall, Detroit, MI — 2018</ListItem>
+            <ListItem>The Printer&apos;s Devil, Scarab Club, Detroit, MI — 2016</ListItem>
+            <ListItem>Student Exhibition, CCS, Detroit, MI — 2016</ListItem>
+          </List>
+
+          <SubsectionHeading>Murals & Public Art</SubsectionHeading>
+          <List>
+            <ListItem>Moon Lodge - Lone Star Sundance Ceremony, Lampasas, TX — 2025</ListItem>
+            <ListItem>Commissioned Midnight Temple Trailer, Detroit, MI — 2024</ListItem>
+            <ListItem>Mural at Tangent Gallery, Detroit, MI — 2024</ListItem>
+            <ListItem>Commissioned Mural (5 acrylic woodcut paintings, 3&apos;x5&apos; each), Peterboro, Detroit, MI — 2022</ListItem>
+          </List>
+
+          <SubsectionHeading>Live Art & Body Painting</SubsectionHeading>
+          <List>
+            <ListItem>Black Water Tattoo Convention, Port Huron, MI — 2025</ListItem>
+            <ListItem>Spotlite, Willis Show Bar, Lincoln Factory, Eastern Market, Detroit, MI — 2024-2025</ListItem>
+            <ListItem>Youth Face painting, Richmond, MI — 2011, 2023-2025</ListItem>
+            <ListItem>Dia De Los Muertos, TV Lounge, Detroit, MI — 2024</ListItem>
+            <ListItem>Community Block Party, SitonitDetroit, Detroit, MI — 2024</ListItem>
+            <ListItem>Spoons, Detroit, MI — 2024</ListItem>
+          </List>
+
+          <SubsectionHeading>Tattoo Conventions</SubsectionHeading>
+          <DescriptionItem>Tattooed and showcased original art and designs at 11 events, Detroit & Chicago — 2018–2025</DescriptionItem>
+        </Section>
+
+        <Section>
+          <SectionHeading>Charity & Fundraising Projects</SectionHeading>
+          <BulletList>
+            <BulletItem>
+              <strong>Arts for the Earth, Detroit, MI — 2025</strong>
+              <br />
+              Curated and created a fundraising event supporting local business&apos; and artist raising $2,800 for water protection groups
+            </BulletItem>
+            <BulletItem>
+              <strong>Palestine Fundraiser Tattooing, Vamanos, Detroit, MI — 2024</strong>
+              <br />
+              Raised over $10,000
+            </BulletItem>
+            <BulletItem>
+              <strong>Tattoo raffles supporting tree-planting initiatives</strong>
+              <br />
+              Raised $1,200, planting over 500 trees — 2020
+            </BulletItem>
+            <BulletItem>Long-term donor to Greenpeace and World Wildlife Fund — 8 years</BulletItem>
+            <BulletItem>Sponsored three wolves at a Colorado sanctuary and volunteered — 2022</BulletItem>
+            <BulletItem>Youth art volunteer — canvas creation and face painting at multiple events</BulletItem>
+          </BulletList>
+        </Section>
+
+        <Section>
+          <SectionHeading>Creative & Spiritual Travel Experiences</SectionHeading>
+          <BulletList>
+            <BulletItem>
+              <strong>Colombia — 2024:</strong> 4-week cultural and ceremonial immersion, connecting ancestral traditions to art
+            </BulletItem>
+            <BulletItem>
+              <strong>Costa Rica — 2020:</strong> 3-week exploration with rainforest conservationist; plant medicine and ecological learning
+            </BulletItem>
+            <BulletItem>
+              <strong>Indonesia, Vietnam, Thailand — 2019:</strong> 6-week exploration of sacred spaces, cultural practices, and wildlife sanctuaries
+            </BulletItem>
+            <BulletItem>
+              <strong>United States Sacred Sites Road Trip — 2017:</strong> 6-week journey exploring sacred sites for meditation and connection with the Earth
+            </BulletItem>
+          </BulletList>
+        </Section>
+
+        <Section>
+          <SectionHeading>Professional Experience</SectionHeading>
+          <BulletList>
+            <BulletItem>
+              <strong>Tattoo Artist</strong>, 313 Ink Collective, Dharma Tattoo Collective, Iconic Tattoo, Stained Glass Tattoo, Detroit, MI — 2015–Present
+            </BulletItem>
+            <BulletItem>
+              <strong>Tattoo Convention Artist</strong> — Toledo, OH; Grand Rapids, MI; Port Huron, MI — 2020–2025
+            </BulletItem>
+            <BulletItem>
+              <strong>Whitewater Rafting Guide</strong>, American Adventure Expeditions, Buena Vista, CO — 2022
+            </BulletItem>
+            <BulletItem>
+              <strong>Conservationist & Mountain Trail Builder</strong>, Rocky Mountain Youth Corps, CO — 2013
+            </BulletItem>
+          </BulletList>
+        </Section>
+
+        <Section>
+          <SectionHeading>Honors & Awards</SectionHeading>
+          <List>
+            <ListItem>College for Creative Studies Scholarship — 2012</ListItem>
+            <ListItem>Dean&apos;s List — College for Creative Studies 2012, Lansing Community College 2009–2011</ListItem>
+            <ListItem>Student Spotlight Award, Lansing Community College — 2011</ListItem>
+            <ListItem>Summa Cum Laude, Lansing Community College — 2011</ListItem>
+            <ListItem>Gold Key Scholastic Art & Writing Awards for Photography — 2008</ListItem>
+          </List>
+        </Section>
 
         <ContactSection>
           <ContactHeading>Work With Me</ContactHeading>
