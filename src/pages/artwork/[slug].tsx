@@ -182,13 +182,6 @@ const ArtworkTitle = styled.h1`
   }
 `;
 
-const ArtistName = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  color: #96885f;
-  font-weight: 500;
-`;
-
 const Description = styled.p`
   font-size: 1.1rem;
   line-height: 1.6;
