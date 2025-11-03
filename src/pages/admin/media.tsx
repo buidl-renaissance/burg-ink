@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { AdminLayout } from '@/components/AdminLayout';
 import { UploadMedia } from '@/components/UploadMedia';
@@ -1132,6 +1132,20 @@ export default function AdminMedia() {
     setTimeout(() => setUploadSuccess(null), 3000);
   };
 
+  // Debounced refresh function - only refresh once every 1 second
+  const fetchMediaRef = useRef(fetchMedia);
+  fetchMediaRef.current = fetchMedia;
+  
+  const debouncedRefreshRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedRefreshMedia = useCallback(() => {
+    if (debouncedRefreshRef.current) {
+      clearTimeout(debouncedRefreshRef.current);
+    }
+    debouncedRefreshRef.current = setTimeout(() => {
+      fetchMediaRef.current();
+    }, 1000);
+  }, []);
+
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -1259,12 +1273,12 @@ export default function AdminMedia() {
       enabled: shouldTrack,
       pollInterval: 2000,
       onComplete: () => {
-        // Refresh the media list when processing completes
-        fetchMedia();
+        // Refresh the media list when processing completes (debounced)
+        debouncedRefreshMedia();
       },
       onError: () => {
-        // Refresh on error too
-        fetchMedia();
+        // Refresh on error too (debounced)
+        debouncedRefreshMedia();
       },
     });
 
