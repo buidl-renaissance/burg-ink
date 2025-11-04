@@ -6,6 +6,7 @@ import { MediaSelector } from './MediaSelector';
 import { getArtist } from '@/utils/api';
 import { Artist } from '@/utils/interfaces';
 import { ArtistSearch } from './ArtistSearch';
+import { RelationshipManager } from './RelationshipManager';
 import Image from 'next/image';
 
 export interface Tattoo {
@@ -393,6 +394,11 @@ export const TattooForm = forwardRef<TattooFormRef, TattooFormProps>(
           )}
         </form>
       )}
+
+      <RelationshipManager
+        entityType="tattoo"
+        entityId={tattoo?.id}
+      />
     </FormWrapper>
   );
 });

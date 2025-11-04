@@ -581,3 +581,23 @@ export const campaignRecipients = sqliteTable("campaign_recipients", {
   emailIdx: index("recipient_email_idx").on(table.email),
   statusIdx: index("recipient_status_idx").on(table.status),
 }));
+
+// Work Relationships table for linking different types of works together
+export const workRelationships = sqliteTable("work_relationships", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  source_entity_type: text("source_entity_type").notNull(), // 'artwork' | 'tattoo'
+  source_entity_id: integer("source_entity_id").notNull(),
+  target_entity_type: text("target_entity_type").notNull(), // 'artwork' | 'tattoo'
+  target_entity_id: integer("target_entity_id").notNull(),
+  relationship_type: text("relationship_type").default("related"), // 'related' | 'variant' | 'series'
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  sourceIdx: index("work_rel_source_idx").on(table.source_entity_type, table.source_entity_id),
+  targetIdx: index("work_rel_target_idx").on(table.target_entity_type, table.target_entity_id),
+  uniqueRelationship: uniqueIndex("work_rel_unique_idx").on(
+    table.source_entity_type, 
+    table.source_entity_id, 
+    table.target_entity_type, 
+    table.target_entity_id
+  ),
+}));

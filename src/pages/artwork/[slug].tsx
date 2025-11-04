@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { getArtworkBySlug, getPublishedArtworkFromArtist } from '@/lib/db';
+import { getArtworkBySlug, getPublishedArtworkFromArtist, getLinkedWorks, LinkedWork } from '@/lib/db';
 import { Artwork } from '@/utils/interfaces';
 import Head from 'next/head';
 import PageLayout from '@/components/PageLayout';
@@ -8,16 +8,11 @@ import { RelatedItemsCarousel } from '@/components/RelatedItemsCarousel';
 
 interface ArtworkDetailPageProps {
   artwork: Artwork;
-  relatedArtworks: Array<{
-    id: number;
-    slug: string;
-    title: string;
-    image: string | null;
-    category?: string | null;
-  }>;
+  relatedWorks: LinkedWork[];
+  otherArtworks: LinkedWork[];
 }
 
-export default function ArtworkDetailPage({ artwork, relatedArtworks }: ArtworkDetailPageProps) {
+export default function ArtworkDetailPage({ artwork, relatedWorks, otherArtworks }: ArtworkDetailPageProps) {
   return (
     <PageLayout>
       <Head>
@@ -60,12 +55,21 @@ export default function ArtworkDetailPage({ artwork, relatedArtworks }: ArtworkD
         </ArtworkDetails>
       </ArtworkContainer>
 
-      <RelatedItemsCarousel
-        items={relatedArtworks}
-        currentItemId={artwork.id}
-        itemType="artwork"
-        title="More Artwork"
-      />
+      {relatedWorks.length > 0 && (
+        <RelatedItemsCarousel
+          items={relatedWorks}
+          currentItemId={artwork.id}
+          title="Related Works"
+        />
+      )}
+
+      {otherArtworks.length > 0 && (
+        <RelatedItemsCarousel
+          items={otherArtworks}
+          currentItemId={artwork.id}
+          title="More Artwork"
+        />
+      )}
     </PageLayout>
   );
 }
@@ -114,21 +118,31 @@ export const getServerSideProps = async ({
       };
     }
 
-    // Fetch related artworks (limit to 12 items)
+    // Fetch linked works (manually linked items)
+    let relatedWorks: LinkedWork[] = [];
+    try {
+      relatedWorks = await getLinkedWorks('artwork', artwork.id);
+    } catch (error) {
+      console.error('Failed to fetch linked works:', error);
+    }
+
+    // Fetch other artworks for discovery (excluding current and linked works)
     const allArtworks = await getPublishedArtworkFromArtist();
-    const relatedArtworks = allArtworks
-      .filter((item: Artwork) => item.id !== artwork.id)
+    const linkedIds = new Set(relatedWorks.filter(w => w.type === 'artwork').map(w => w.id));
+    const otherArtworks: LinkedWork[] = allArtworks
+      .filter((item: Artwork) => item.id !== artwork.id && !linkedIds.has(item.id))
       .slice(0, 12)
       .map((item: Artwork) => ({
         id: item.id,
         slug: item.slug,
         title: item.title,
         image: item.image,
+        type: 'artwork' as const,
         category: item.data?.category as string | null || null,
       }));
     
     const metadata = await getMetadata(artwork);
-    return { props: { artwork, relatedArtworks, metadata } };
+    return { props: { artwork, relatedWorks, otherArtworks, metadata } };
   } catch (error) {
     console.error('Failed to fetch artwork:', error);
     return {

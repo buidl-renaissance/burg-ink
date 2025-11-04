@@ -30,8 +30,8 @@ export default function EditArtworkPage() {
       if (!response.ok) {
         throw new Error('Failed to fetch artwork');
       }
-      const data = await response.json();
-      setArtwork(data);
+      const result = await response.json();
+      setArtwork(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load artwork');
     } finally {

@@ -343,3 +343,226 @@ export async function updateTattooOrder(updates: { id: number; sort_order: numbe
   }
   return results;
 }
+
+// ============================================
+// Work Relationships Functions
+// ============================================
+
+export interface LinkedWork {
+  id: number;
+  slug: string;
+  title: string;
+  image: string | null;
+  type: 'artwork' | 'tattoo';
+  category?: string | null;
+  relationship_type?: string;
+}
+
+// Get all linked works for a given entity (artwork or tattoo)
+export async function getLinkedWorks(
+  entityType: 'artwork' | 'tattoo', 
+  entityId: number
+): Promise<LinkedWork[]> {
+  const { workRelationships } = await import('../../db/schema');
+  const { or } = await import('drizzle-orm');
+  
+  // Get relationships where this entity is either source or target
+  const relationships = await db
+    .select()
+    .from(workRelationships)
+    .where(
+      or(
+        and(
+          eq(workRelationships.source_entity_type, entityType),
+          eq(workRelationships.source_entity_id, entityId)
+        ),
+        and(
+          eq(workRelationships.target_entity_type, entityType),
+          eq(workRelationships.target_entity_id, entityId)
+        )
+      )
+    );
+  
+  const linkedWorks: LinkedWork[] = [];
+  
+  // For each relationship, fetch the linked entity
+  for (const rel of relationships) {
+    // Determine which side is the "other" work
+    const isSource = rel.source_entity_type === entityType && rel.source_entity_id === entityId;
+    const linkedType = isSource ? rel.target_entity_type : rel.source_entity_type;
+    const linkedId = isSource ? rel.target_entity_id : rel.source_entity_id;
+    
+    try {
+      if (linkedType === 'artwork') {
+        const artworkData = await db
+          .select({
+            id: artwork.id,
+            slug: artwork.slug,
+            title: artwork.title,
+            image: artwork.image,
+            category: artwork.category,
+          })
+          .from(artwork)
+          .where(and(eq(artwork.id, linkedId), isNull(artwork.deleted_at)))
+          .limit(1);
+        
+        if (artworkData.length > 0) {
+          linkedWorks.push({
+            ...artworkData[0],
+            type: 'artwork',
+            relationship_type: rel.relationship_type || 'related',
+          });
+        }
+      } else if (linkedType === 'tattoo') {
+        const tattooData = await db
+          .select({
+            id: tattoos.id,
+            slug: tattoos.slug,
+            title: tattoos.title,
+            image: tattoos.image,
+            category: tattoos.category,
+          })
+          .from(tattoos)
+          .where(and(eq(tattoos.id, linkedId), isNull(tattoos.deleted_at)))
+          .limit(1);
+        
+        if (tattooData.length > 0) {
+          linkedWorks.push({
+            ...tattooData[0],
+            type: 'tattoo',
+            relationship_type: rel.relationship_type || 'related',
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching linked ${linkedType} ${linkedId}:`, error);
+    }
+  }
+  
+  return linkedWorks;
+}
+
+// Create a work relationship (bidirectional - creates both directions)
+export async function createWorkRelationship(
+  sourceType: 'artwork' | 'tattoo',
+  sourceId: number,
+  targetType: 'artwork' | 'tattoo',
+  targetId: number,
+  relationshipType: string = 'related'
+) {
+  const { workRelationships } = await import('../../db/schema');
+  
+  // Create the forward relationship
+  const forwardResult = await db
+    .insert(workRelationships)
+    .values({
+      source_entity_type: sourceType,
+      source_entity_id: sourceId,
+      target_entity_type: targetType,
+      target_entity_id: targetId,
+      relationship_type: relationshipType,
+    })
+    .returning();
+  
+  return forwardResult[0];
+}
+
+// Delete a work relationship (removes the specific relationship)
+export async function deleteWorkRelationship(relationshipId: number) {
+  const { workRelationships } = await import('../../db/schema');
+  
+  const result = await db
+    .delete(workRelationships)
+    .where(eq(workRelationships.id, relationshipId))
+    .returning();
+  
+  return result[0];
+}
+
+// Delete a work relationship by entities (removes both directions)
+export async function deleteWorkRelationshipByEntities(
+  sourceType: 'artwork' | 'tattoo',
+  sourceId: number,
+  targetType: 'artwork' | 'tattoo',
+  targetId: number
+) {
+  const { workRelationships } = await import('../../db/schema');
+  const { or } = await import('drizzle-orm');
+  
+  // Delete both directions of the relationship
+  const result = await db
+    .delete(workRelationships)
+    .where(
+      or(
+        and(
+          eq(workRelationships.source_entity_type, sourceType),
+          eq(workRelationships.source_entity_id, sourceId),
+          eq(workRelationships.target_entity_type, targetType),
+          eq(workRelationships.target_entity_id, targetId)
+        ),
+        and(
+          eq(workRelationships.source_entity_type, targetType),
+          eq(workRelationships.source_entity_id, targetId),
+          eq(workRelationships.target_entity_type, sourceType),
+          eq(workRelationships.target_entity_id, sourceId)
+        )
+      )
+    )
+    .returning();
+  
+  return result;
+}
+
+// Search for works across artwork and tattoos
+export async function searchWorks(query: string, limit: number = 20): Promise<LinkedWork[]> {
+  const { like } = await import('drizzle-orm');
+  const searchPattern = `%${query}%`;
+  
+  const results: LinkedWork[] = [];
+  
+  // Search artwork
+  try {
+    const artworkResults = await db
+      .select({
+        id: artwork.id,
+        slug: artwork.slug,
+        title: artwork.title,
+        image: artwork.image,
+        category: artwork.category,
+      })
+      .from(artwork)
+      .where(and(
+        like(artwork.title, searchPattern),
+        isNull(artwork.deleted_at)
+      ))
+      .limit(limit);
+    
+    results.push(...artworkResults.map(a => ({ ...a, type: 'artwork' as const })));
+  } catch (error) {
+    console.error('Error searching artwork:', error);
+  }
+  
+  // Search tattoos
+  try {
+    const tattooResults = await db
+      .select({
+        id: tattoos.id,
+        slug: tattoos.slug,
+        title: tattoos.title,
+        image: tattoos.image,
+        category: tattoos.category,
+      })
+      .from(tattoos)
+      .where(and(
+        like(tattoos.title, searchPattern),
+        isNull(tattoos.deleted_at)
+      ))
+      .limit(limit);
+    
+    results.push(...tattooResults.map(t => ({ ...t, type: 'tattoo' as const })));
+  } catch (error) {
+    console.error('Error searching tattoos:', error);
+  }
+  
+  return results.slice(0, limit);
+}

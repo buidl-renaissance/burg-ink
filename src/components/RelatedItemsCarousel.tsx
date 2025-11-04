@@ -9,21 +9,20 @@ interface CarouselItem {
   slug: string;
   title: string;
   image: string | null;
+  type: 'artwork' | 'tattoo';
   category?: string | null;
 }
 
 interface RelatedItemsCarouselProps {
   items: CarouselItem[];
   currentItemId: number;
-  itemType: 'artwork' | 'tattoo';
   title?: string;
 }
 
 export function RelatedItemsCarousel({ 
   items, 
-  currentItemId, 
-  itemType,
-  title = 'More to Explore'
+  currentItemId,
+  title = 'Related Works'
 }: RelatedItemsCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -93,8 +92,8 @@ export function RelatedItemsCarousel({
       <CarouselContainer ref={scrollContainerRef}>
         <CarouselTrack>
           {filteredItems.map((item) => (
-            <CarouselCard key={item.id}>
-              <Link href={`/${itemType === 'artwork' ? 'artwork' : 'tattoos'}/${item.slug}`}>
+            <CarouselCard key={`${item.type}-${item.id}`}>
+              <Link href={`/${item.type === 'artwork' ? 'artwork' : 'tattoos'}/${item.slug}`}>
                 <CardImageContainer>
                   {item.image ? (
                     <Image
@@ -297,5 +296,19 @@ const CardCategory = styled.p`
   @media (max-width: 768px) {
     font-size: 0.8rem;
   }
+`;
+
+const TypeBadge = styled.span`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(150, 136, 95, 0.9);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  z-index: 1;
 `;
 

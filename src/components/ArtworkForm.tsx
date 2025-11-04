@@ -6,6 +6,7 @@ import { MediaSelector } from './MediaSelector';
 import { createArtwork, updateArtwork, getArtist } from '@/utils/api';
 import { Artwork, Artist } from '@/utils/interfaces';
 import { ArtistSearch } from './ArtistSearch';
+import { RelationshipManager } from './RelationshipManager';
 import Image from 'next/image';
 
 interface ArtworkFormProps {
@@ -224,6 +225,11 @@ export const ArtworkForm = forwardRef<ArtworkFormRef, ArtworkFormProps>(
           </SubmitButton>
         )}
       </form>
+
+      <RelationshipManager
+        entityType="artwork"
+        entityId={artwork?.id}
+      />
     </FormWrapper>
   );
 });

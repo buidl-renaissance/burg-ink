@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { getTattooBySlug, getAllTattoos } from '@/lib/db';
+import { getTattooBySlug, getAllTattoos, getLinkedWorks, LinkedWork } from '@/lib/db';
 import Head from 'next/head';
 import PageLayout from '@/components/PageLayout';
 import Image from 'next/image';
@@ -36,16 +36,11 @@ interface Tattoo {
 
 interface TattooDetailPageProps {
   tattoo: Tattoo;
-  relatedTattoos: Array<{
-    id: number;
-    slug: string;
-    title: string;
-    image: string | null;
-    category?: string | null;
-  }>;
+  relatedWorks: LinkedWork[];
+  otherTattoos: LinkedWork[];
 }
 
-export default function TattooDetailPage({ tattoo, relatedTattoos }: TattooDetailPageProps) {
+export default function TattooDetailPage({ tattoo, relatedWorks, otherTattoos }: TattooDetailPageProps) {
   return (
     <PageLayout>
       <Head>
@@ -95,12 +90,21 @@ export default function TattooDetailPage({ tattoo, relatedTattoos }: TattooDetai
         </TattooDetails>
       </TattooContainer>
 
-      <RelatedItemsCarousel
-        items={relatedTattoos}
-        currentItemId={tattoo.id}
-        itemType="tattoo"
-        title="More Tattoos"
-      />
+      {relatedWorks.length > 0 && (
+        <RelatedItemsCarousel
+          items={relatedWorks}
+          currentItemId={tattoo.id}
+          title="Related Works"
+        />
+      )}
+
+      {otherTattoos.length > 0 && (
+        <RelatedItemsCarousel
+          items={otherTattoos}
+          currentItemId={tattoo.id}
+          title="More Tattoos"
+        />
+      )}
     </PageLayout>
   );
 }
@@ -149,21 +153,31 @@ export const getServerSideProps = async ({
       };
     }
 
-    // Fetch related tattoos (limit to 12 items)
+    // Fetch linked works (manually linked items)
+    let relatedWorks: LinkedWork[] = [];
+    try {
+      relatedWorks = await getLinkedWorks('tattoo', tattoo.id);
+    } catch (error) {
+      console.error('Failed to fetch linked works:', error);
+    }
+
+    // Fetch other tattoos for discovery (excluding current and linked works)
     const allTattoos = await getAllTattoos();
-    const relatedTattoos = allTattoos
-      .filter((item: Tattoo) => item.id !== tattoo.id)
+    const linkedIds = new Set(relatedWorks.filter(w => w.type === 'tattoo').map(w => w.id));
+    const otherTattoos: LinkedWork[] = allTattoos
+      .filter((item: Tattoo) => item.id !== tattoo.id && !linkedIds.has(item.id))
       .slice(0, 12)
       .map((item: Tattoo) => ({
         id: item.id,
         slug: item.slug,
         title: item.title,
         image: item.image,
+        type: 'tattoo' as const,
         category: item.category,
       }));
     
     const metadata = await getMetadata(tattoo);
-    return { props: { tattoo, relatedTattoos, metadata } };
+    return { props: { tattoo, relatedWorks, otherTattoos, metadata } };
   } catch (error) {
     console.error('Failed to fetch tattoo:', error);
     return {
