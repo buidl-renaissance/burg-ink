@@ -190,7 +190,7 @@ export function RelationshipManager({
       ) : linkedWorks.length === 0 ? (
         <EmptyState>
           <p>No linked works yet.</p>
-          <p>Click "Add Link" to connect this {entityType} to other works.</p>
+          <p>Click &ldquo;Add Link&rdquo; to connect this {entityType} to other works.</p>
         </EmptyState>
       ) : (
         <WorksGrid>
