@@ -141,77 +141,72 @@ export const ArtworkForm = forwardRef<ArtworkFormRef, ArtworkFormProps>(
   return (
     <FormWrapper>
       <form ref={formRef} onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label>Select or Upload Media</Label>
-          <MediaSelector
-            selectedMediaUrl={imageUrl}
-            onSelect={handleMediaSelect}
-            accept="image/*,video/*"
-          />
-        </FormGroup>
+        <Section>
+          <SectionHeader>Media</SectionHeader>
+          <FormGroup>
+            <Label>Select or Upload Image or Video</Label>
+            <MediaSelector
+              selectedMediaUrl={imageUrl}
+              onSelect={handleMediaSelect}
+              accept="image/*,video/*"
+            />
+          </FormGroup>
 
-        {imageUrl && (
-          <PreviewSection>
-            <PreviewLabel>Selected Media Preview</PreviewLabel>
-            <ImagePreview>
+          {imageUrl && (
+            <MediaPreview>
               {isVideo(imageUrl) ? (
                 <video
                   src={imageUrl}
                   controls
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '8px' }}
                 >
                   Your browser does not support the video tag.
                 </video>
               ) : (
-                <Image
-                  src={imageUrl}
-                  alt="Artwork preview"
-                  fill
-                  style={{ objectFit: 'contain' }}
-                />
+                <PreviewImage>
+                  <Image
+                    src={imageUrl}
+                    alt="Artwork preview"
+                    fill
+                    style={{ objectFit: 'contain' }}
+                  />
+                </PreviewImage>
               )}
-            </ImagePreview>
-          </PreviewSection>
-        )}
+            </MediaPreview>
+          )}
+        </Section>
 
-        <FormGroup>
-          <Label htmlFor="title">Artwork Title</Label>
-          <Input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter artwork title"
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe your artwork..."
-          />
-        </FormGroup>
-
-        {/* <FormGroup>
-          <Label htmlFor="artistName">Artist Name</Label>
-          <Input
-            id="artistName"
-            type="text"
-            value={artistName}
-            onChange={(e) => setArtistName(e.target.value)}
-            placeholder="Your name or pseudonym"
-          />
-        </FormGroup> */}
-
-        {!defaultArtist && (
+        <Section>
+          <SectionHeader>Details</SectionHeader>
           <FormGroup>
-            <Label htmlFor="artist">Artist</Label>
-            <ArtistSearch onSelect={setArtist} />
+            <Label htmlFor="title">Artwork Title</Label>
+            <Input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter artwork title"
+            />
           </FormGroup>
-        )}
+
+          <FormGroup>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your artwork..."
+              rows={5}
+            />
+          </FormGroup>
+
+          {!defaultArtist && (
+            <FormGroup>
+              <Label htmlFor="artist">Artist</Label>
+              <ArtistSearch onSelect={setArtist} />
+            </FormGroup>
+          )}
+        </Section>
 
         {status && (
           <StatusMessage isError={status.isError}>
@@ -226,10 +221,12 @@ export const ArtworkForm = forwardRef<ArtworkFormRef, ArtworkFormProps>(
         )}
       </form>
 
-      <RelationshipManager
-        entityType="artwork"
-        entityId={artwork?.id}
-      />
+      {artwork?.id && (
+        <RelationshipManager
+          entityType="artwork"
+          entityId={artwork.id}
+        />
+      )}
     </FormWrapper>
   );
 });
@@ -306,29 +303,44 @@ const SubmitButton = styled.button`
   }
 `;
 
-const PreviewSection = styled.div`
-  margin-bottom: 1.5rem;
+const Section = styled.div`
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e9ecef;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
 `;
 
-const PreviewLabel = styled.div`
-  font-weight: 500;
-  color: #444;
-  margin-bottom: 0.5rem;
+const SectionHeader = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #96885f;
 `;
 
-const ImagePreview = styled.div`
-  margin: 0;
-  position: relative;
-  width: 100%;
-  height: 300px;
+const MediaPreview = styled.div`
+  margin-top: 1.5rem;
   border-radius: 8px;
   overflow: hidden;
+  background: #f8f9fa;
   border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+`;
+
+const PreviewImage = styled.div`
+  position: relative;
+  width: 100%;
+  height: 400px;
   background: #f8f9fa;
 `;
 
 const StatusMessage = styled.div<{ isError?: boolean }>`
   margin-top: 1rem;
+  margin-bottom: 1rem;
   padding: 0.75rem;
   border-radius: 4px;
   text-align: center;
