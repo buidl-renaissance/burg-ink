@@ -298,17 +298,3 @@ const CardCategory = styled.p`
   }
 `;
 
-const TypeBadge = styled.span`
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(150, 136, 95, 0.9);
-  color: white;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  z-index: 1;
-`;
-
