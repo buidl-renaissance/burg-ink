@@ -136,7 +136,7 @@ export const getServerSideProps = async ({
         id: item.id,
         slug: item.slug,
         title: item.title,
-        image: item.image,
+        image: item.image || null,
         type: 'artwork' as const,
         category: item.data?.category as string | null || null,
       }));
