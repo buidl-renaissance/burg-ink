@@ -13,14 +13,14 @@ const TattooInfoPage: FC = () => {
 
           <Section>
             <Paragraph>
-              Hi, I'm Andrea Burg, a multidisciplinary artist and tattooist with a decade of experience. 
+              Hi, I&apos;m Andrea Burg, a multidisciplinary artist and tattooist with a decade of experience. 
               My work is deeply rooted in intention, energy, and transformation, blending my artistic 
               background with spiritual practices to create tattoos that embody meaning, empowerment, 
               and confidence.
             </Paragraph>
             
             <Paragraph>
-              I hold a Bachelor's degree in Fine Arts from the College for Creative Studies, and my 
+              I hold a Bachelor&apos;s degree in Fine Arts from the College for Creative Studies, and my 
               artistic evolution has been profoundly shaped by my deep connection to the spiritual 
               energy of nature and my dedication to honor our Mother Earth through prayer and action. 
               Along this journey, I have received certifications in Usui/Holy Fire Reiki and Animal 
@@ -36,7 +36,7 @@ const TattooInfoPage: FC = () => {
             
             <Paragraph>
               For custom work, each tattoo is hand-drawn and one-of-a-kind, ensuring that your piece 
-              is a unique reflection of your personal journey. If you're drawn to a past design, I can 
+              is a unique reflection of your personal journey. If you&apos;re drawn to a past design, I can 
               customize it to make it truly yours.
             </Paragraph>
             
@@ -63,7 +63,7 @@ const TattooInfoPage: FC = () => {
             
             <Paragraph>
               I am currently only booking in Detroit, but I am open to guest artist opportunities—contact 
-              me if you'd like me to visit your city!
+              me if you&apos;d like me to visit your city!
             </Paragraph>
           </Section>
 
@@ -97,7 +97,7 @@ const TattooInfoPage: FC = () => {
             </BulletList>
             
             <Paragraph>
-              Deposits are non-refundable but will remain valid if you provide at least 48 hours' notice 
+              Deposits are non-refundable but will remain valid if you provide at least 48 hours&apos; notice 
               for rescheduling.
             </Paragraph>
             
@@ -139,7 +139,7 @@ const TattooInfoPage: FC = () => {
 
           <ClosingSection>
             <ClosingText>
-              Ready to create something powerful together? Let's bring your vision to life.
+              Ready to create something powerful together? Let&apos;s bring your vision to life.
             </ClosingText>
           </ClosingSection>
         </ContentWrapper>
