@@ -2,11 +2,30 @@
 
 import { FC } from 'react';
 import styled from 'styled-components';
+import Head from 'next/head';
 import PageLayout, { PageContainer } from '@/components/PageLayout';
 
 const TattooInfoPage: FC = () => {
   return (
     <PageLayout>
+      <Head>
+        <title>Tattoo Information - Rates, Booking & Process | Andrea Burg</title>
+        <meta 
+          name="description" 
+          content="Learn about Andrea Burg's tattoo services in Detroit, MI. Find information on rates ($200/hour), booking process, studio location, and the sacred approach to custom tattoo art." 
+        />
+        <meta 
+          name="keywords" 
+          content="tattoo artist Detroit, custom tattoos, tattoo rates, tattoo booking, spiritual tattoos, Andrea Burg tattoos, Detroit tattoo studio" 
+        />
+        <meta property="og:title" content="Tattoo Information - Rates, Booking & Process | Andrea Burg" />
+        <meta 
+          property="og:description" 
+          content="Learn about Andrea Burg's tattoo services in Detroit, MI. Custom hand-drawn tattoos with a spiritual approach." 
+        />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://burg.ink/tattoos/info" />
+      </Head>
       <PageContainer>
         <ContentWrapper>
           <MainTitle>Tattoo Information</MainTitle>

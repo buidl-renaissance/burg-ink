@@ -3,6 +3,7 @@
 import { FC } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
+import Head from 'next/head';
 import { ArtworkCard } from '@/components/ArtworkCard';
 import PageLayout, { PageContainer } from '../../components/PageLayout';
 import { getAllTattoos } from '@/lib/db';
@@ -40,6 +41,24 @@ interface TattoosPageProps {
 const TattoosPage: FC<TattoosPageProps> = ({ tattoos }) => {
   return (
     <PageLayout title="Tattoo Gallery">
+      <Head>
+        <title>Tattoo Gallery | Andrea Burg - Custom Tattoo Art</title>
+        <meta 
+          name="description" 
+          content="Explore Andrea Burg's tattoo portfolio. Custom hand-drawn tattoos blending artistic expertise with spiritual energy. Based in Detroit, MI. View designs and book a consultation." 
+        />
+        <meta 
+          name="keywords" 
+          content="Andrea Burg tattoos, Detroit tattoo artist, custom tattoo gallery, spiritual tattoos, hand-drawn tattoos, tattoo portfolio, burg.ink" 
+        />
+        <meta property="og:title" content="Tattoo Gallery | Andrea Burg - Custom Tattoo Art" />
+        <meta 
+          property="og:description" 
+          content="Explore Andrea Burg's tattoo portfolio. Custom hand-drawn tattoos blending artistic expertise with spiritual energy." 
+        />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://burg.ink/tattoos" />
+      </Head>
       <PageContainer>
         <TattooGrid>
           {tattoos.map((tattoo) => (
