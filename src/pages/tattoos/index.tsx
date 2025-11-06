@@ -84,6 +84,12 @@ const TattoosPage: FC<TattoosPageProps> = ({ tattoos }) => {
           reach out to discuss your ideas, pricing, and availability.
         </InquiryText>
         <InquiryButton>Book a Consultation</InquiryButton>
+        
+        <Link href="/tattoos/info" style={{ textDecoration: 'none' }}>
+          <InfoLink>
+            Learn more about my tattoo process, rates, and booking information →
+          </InfoLink>
+        </Link>
       </InquirySection>
     </PageLayout>
   );
@@ -174,6 +180,28 @@ const InquiryButton = styled.button`
   @media (max-width: 768px) {
     padding: 0.6rem 1.2rem;
     font-size: 0.9rem;
+  }
+`;
+
+const InfoLink = styled.div`
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  color: #96885f;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+
+  &:hover {
+    border-bottom: 2px solid #96885f;
+    transform: translateX(5px);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0.75rem;
   }
 `;
 
